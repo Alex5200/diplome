@@ -93,7 +93,24 @@ class MotorController:
             return False
 
     def move_joint(self, joint_index: int, position: int, speed=None, acc=DEFAULT_ACC):
+        """Движение по индексу сустава (0-5) — автоматически ищет motor_id."""
         motor_id = self.get_motor_id_for_joint(joint_index)
+        return self.move_to_position(motor_id, position, speed, acc)
+
+    def move_motor(self, motor_id: int, position: int, speed=None, acc=DEFAULT_ACC):
+        """Движение по реальному ID мотора напрямую.
+        Автоматически включает момент (torque) если он был выключен.
+        """
+        if not self.connected or not self.motor:
+            return False
+        # Включаем момент если нужно
+        if not self.torque_states.get(motor_id, False):
+            try:
+                with self._read_lock:
+                    self.motor.StartServo(motor_id)
+                self.torque_states[motor_id] = True
+            except Exception as e:
+                print(f"⚠️ Не удалось включить момент для мотора {motor_id}: {e}")
         return self.move_to_position(motor_id, position, speed, acc)
 
     def move_all_joints(self, positions: List[int], speed=DEFAULT_SPEED):
@@ -164,7 +181,7 @@ class MotorController:
     def get_manual_speed(self) -> int:
         return self._manual_speed
 
-    def update_motor_mapping(self, joint_index: int, motor_id: int, name: str = ""):
+    def update_motor_mapping(self, joint_index: int, motor_id: int, name: str = "", inverted: bool = False):
         key = f'joint_{joint_index}'
         from ..config.constants import JOINT_NAMES
         default_name = JOINT_NAMES[joint_index] if joint_index < len(JOINT_NAMES) else f'Сустав {joint_index}'
@@ -172,7 +189,8 @@ class MotorController:
             'motor_id': motor_id,
             'name': name or default_name,
             'min_pos': 0,
-            'max_pos': MAX_POSITION
+            'max_pos': MAX_POSITION,
+            'inverted': inverted,
         }
 
     def get_motor_mapping(self) -> dict:

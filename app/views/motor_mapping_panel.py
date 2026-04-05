@@ -52,6 +52,7 @@ class MotorMappingPanel(ttk.Frame):
         # Переменные для хранения настроек
         self.mapping_vars: Dict[int, tk.IntVar] = {}
         self.name_vars: Dict[int, tk.StringVar] = {}
+        self.inverted_vars: Dict[int, tk.BooleanVar] = {}
         self.mapping_widgets: Dict[int, Dict[str, any]] = {}
 
         self._create_widgets()
@@ -95,7 +96,7 @@ class MotorMappingPanel(ttk.Frame):
         mapping_frame = ttk.LabelFrame(main_frame, text="🔗 Соответствие суставов и моторов")
         mapping_frame.pack(fill='both', expand=True, pady=10)
 
-        headers = ['Сустав', 'ID мотора', 'Название', 'Текущая позиция']
+        headers = ['Сустав', 'ID мотора', 'Название', 'Инверсия', 'Текущая позиция']
         for col, header in enumerate(headers):
             ttk.Label(
                 mapping_frame, text=header, font=('Arial', 10, 'bold')
@@ -150,14 +151,24 @@ class MotorMappingPanel(ttk.Frame):
         name_entry = ttk.Entry(parent, textvariable=name_var, width=20)
         name_entry.grid(row=row, column=2, padx=10, pady=5)
 
+        # Чекбокс инверсии
+        inv_var = tk.BooleanVar(value=False)
+        self.inverted_vars[joint_idx] = inv_var
+        inv_cb = ttk.Checkbutton(
+            parent, variable=inv_var,
+            text="↔️ инв."
+        )
+        inv_cb.grid(row=row, column=3, padx=10, pady=5)
+
         # Метка позиции
         pos_label = ttk.Label(parent, text="--", font=('Consolas', 10))
-        pos_label.grid(row=row, column=3, padx=10, pady=5)
+        pos_label.grid(row=row, column=4, padx=10, pady=5)
 
         self.mapping_widgets[joint_idx] = {
             'combo': motor_combo,
             'name': name_entry,
-            'pos': pos_label
+            'inv': inv_cb,
+            'pos': pos_label,
         }
 
     def _load_current_mapping(self) -> None:
@@ -173,10 +184,13 @@ class MotorMappingPanel(ttk.Frame):
                     JOINT_NAMES[joint_idx] if joint_idx < len(JOINT_NAMES) else f'Сустав {joint_idx}'
                 )
 
+                inverted = mapping[key].get('inverted', False)
                 if joint_idx in self.mapping_vars:
                     self.mapping_vars[joint_idx].set(motor_id)
                 if joint_idx in self.name_vars:
                     self.name_vars[joint_idx].set(name)
+                if joint_idx in self.inverted_vars:
+                    self.inverted_vars[joint_idx].set(inverted)
 
     def _save_mapping(self) -> None:
         """Сохранение настроек соответствия."""
@@ -184,7 +198,8 @@ class MotorMappingPanel(ttk.Frame):
             if joint_idx in self.mapping_vars:
                 motor_id = self.mapping_vars[joint_idx].get()
                 name = self.name_vars[joint_idx].get()
-                self.controller.update_motor_mapping(joint_idx, motor_id, name)
+                inverted = self.inverted_vars.get(joint_idx, tk.BooleanVar()).get()
+                self.controller.update_motor_mapping(joint_idx, motor_id, name, inverted)
 
         self.controller.save_config()
         self.log("💾 Соответствие моторов сохранено", 'success')
