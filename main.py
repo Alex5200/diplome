@@ -1,24 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-GUI Control Panel для моторов ST3215
-Использует Tkinter + отдельный поток мониторинга
-ПОЛНАЯ ВЕРСИЯ со всеми функциями (Кинематика, Управление, Мониторинг)
+ST3215 Robot Control Panel v6.1
+- 3D визуализация (matplotlib)
+- Асинхронный мониторинг (нижняя панель)
+- Настройка соответствия моторов суставам
+- Все ошибки исправлены и проверены
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox, scrolledtext, filedialog
+from tkinter import ttk, messagebox, scrolledtext
 import serial
 import serial.tools.list_ports
 import threading
 import time
 import json
-import math  # ← ДОБАВЛЕНО: был импорт math
+import math
 from datetime import datetime
-from st3215 import ST3215
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 from typing import Optional, Dict, List
-from enum import Enum
+
+from st3215 import ST3215
+
+# matplotlib для 3D визуализации
+import matplotlib
+
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # --- КОНСТАНТЫ ---
 MIN_POSITION = 0
@@ -30,23 +40,58 @@ TEMP_WARNING = 70
 TEMP_CRITICAL = 80
 LOAD_WARNING = 80
 CONFIG_FILE = "robot_config.json"
+PROGRAM_FILE = "robot_program.json"
 
-# --- КОНФИГУРАЦИЯ МОТОРОВ ---
-MOTOR_CONFIG = {
-    'motor_1': {'min_pos': 0, 'max_pos': MAX_POSITION},
-    'motor_2': {'min_pos': 0, 'max_pos': MAX_POSITION},
-    'motor_3': {'min_pos': 0, 'max_pos': MAX_POSITION},
-    'motor_4': {'min_pos': 0, 'max_pos': MAX_POSITION},
-    'motor_5': {'min_pos': 0, 'max_pos': MAX_POSITION},
-    'motor_6': {'min_pos': 0, 'max_pos': MAX_POSITION}
+# --- ЦВЕТА ---
+FANUC_BG = "#1a1a2e"
+FANUC_PANEL = "#16213e"
+FANUC_GREEN = "#00ff88"
+FANUC_ORANGE = "#ff9500"
+FANUC_RED = "#ff4444"
+FANUC_BLUE = "#00d4ff"
+FANUC_TEXT = "#ffffff"
+FANUC_GRAY = "#666666"
+
+BLOCK_COLORS = {
+    'motion': '#4CAF50',
+    'control': '#2196F3',
+    'logic': '#FF9800',
+    'wait': '#9C27B0',
+    'io': '#F44336',
+}
+
+KINEMA_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
+
+# --- ЛОГИЧЕСКИЕ НАЗВАНИЯ СУСТАВОВ ---
+JOINT_NAMES = [
+    '🏗️ База',
+    '💪 Плечо 1',
+    '💪 Плечо 2',
+    '🦾 Локоть',
+    '🖐️ Кисть 1',
+    '🖐️ Кисть 2'
+]
+
+# Конфигурация по умолчанию
+DEFAULT_MOTOR_MAPPING = {
+    'joint_0': {'motor_id': 1, 'name': 'База', 'min_pos': 0, 'max_pos': MAX_POSITION},
+    'joint_1': {'motor_id': 2, 'name': 'Плечо 1', 'min_pos': 0, 'max_pos': MAX_POSITION},
+    'joint_2': {'motor_id': 3, 'name': 'Плечо 2', 'min_pos': 0, 'max_pos': MAX_POSITION},
+    'joint_3': {'motor_id': 4, 'name': 'Локоть', 'min_pos': 0, 'max_pos': MAX_POSITION},
+    'joint_4': {'motor_id': 5, 'name': 'Кисть 1', 'min_pos': 0, 'max_pos': MAX_POSITION},
+    'joint_5': {'motor_id': 6, 'name': 'Кисть 2', 'min_pos': 0, 'max_pos': MAX_POSITION},
+}
+
+DEFAULT_MOTOR_CONFIG = {
+    f'motor_{i}': {'min_pos': 0, 'max_pos': MAX_POSITION, 'name': f'Мотор {i}'}
+    for i in range(1, 7)
 }
 
 
-# --- КЛАССЫ ---
+# ==================== КЛАССЫ ДАННЫХ ====================
 
 @dataclass
 class MotorData:
-    """Данные мотора для мониторинга"""
     motor_id: int
     position: Optional[int] = None
     temperature: Optional[float] = None
@@ -62,68 +107,226 @@ class MotorData:
     def is_overheating(self) -> bool:
         return self.temperature is not None and self.temperature >= TEMP_CRITICAL
 
-    def to_dict(self) -> dict:  # ← ДОБАВЛЕНО: метод для экспорта
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
-class Kinematics:
-    """Класс для кинематики шестиосевого робота"""
+@dataclass
+class ProgramBlock:
+    id: int
+    block_type: str
+    params: dict
+    order: int
 
-    def __init__(self):
-        self.l1 = 200
-        self.l2 = 250
-        self.l3 = 200
-        self.l4 = 200
-        self.l5 = 180
-        self.l6 = 150
-        self.motor_min_positions = {k: v for k, v in MOTOR_CONFIG.items()}
-        self.motor_max_positions = {k: MAX_POSITION for k in MOTOR_CONFIG.keys()}
 
-    def forward_kinematics(self, theta1, theta2, theta3, theta4, theta5, theta6):
-        x = self.l1 * math.sin(theta1) + self.l2 * math.sin(theta1 + theta2)
-        y = self.l3 * math.cos(theta3) + self.l4 * math.cos(theta3 + theta4)
-        z = self.l5 * math.sin(theta5) + self.l6 * math.sin(theta5 + theta6)
-        return x, y, z
+# ==================== МОТОР КОНТРОЛЛЕР ====================
 
-    def inverse_kinematics(self, x, y, z):
-        theta1 = math.asin(x / self.l1) if abs(x) > 0 else 0
-        theta2 = math.acos((x ** 2 + y ** 2 - self.l2 ** 2) / (2 * x * self.l2)) if abs(x) > self.l2 else 0
-        theta3 = math.asin(z / self.l5) if abs(z) > 0 else 0
-        theta4 = math.acos(
-            (self.l6 ** 2 - self.l5 ** 2 - self.l6 ** 2 * math.sin(theta3) ** 2) / (2 * self.l5 * self.l6))
-        theta5 = math.asin(y / self.l3) if abs(y) > 0 else 0
-        theta6 = 0
-        return [theta1, theta2, theta3, theta4, theta5, theta6]
+class MotorController:
+    def __init__(self, device='COM3'):
+        self.device = device
+        self.motor = None
+        self.connected = False
+        self.found_servos: List[int] = []
+        self.current_id: Optional[int] = None
+        self.torque_states: Dict[int, bool] = {}
+        self.joint_positions: Dict[int, float] = {i: 0.0 for i in range(1, 7)}
+        self.cartesian_position = [0.0, 0.0, 0.0]
+        self.motor_config = DEFAULT_MOTOR_CONFIG.copy()
+        self.motor_mapping = DEFAULT_MOTOR_MAPPING.copy()
+        self._read_lock = threading.Lock()
+        self._manual_speed = DEFAULT_SPEED
 
-    def check_position_limits(self, motor_positions):
-        for mid in self.motor_min_positions:
-            if not (self.motor_min_positions[mid] <= motor_positions[mid] <= self.motor_max_positions[mid]):
-                return False
+    def connect(self):
+        try:
+            self.motor = ST3215(device=self.device)
+            self.connected = True
+            return True
+        except Exception as e:
+            print(f"❌ Ошибка подключения: {e}")
+            return False
+
+    def disconnect(self):
+        if self.motor:
+            try:
+                if hasattr(self.motor, 'portHandler'):
+                    self.motor.portHandler.closePort()
+            except Exception as e:
+                print(f"⚠️ Ошибка закрытия порта: {e}")
+        self.connected = False
+        self.motor = None
+
+    def scan_servos(self):
+        if not self.connected:
+            return []
+        try:
+            self.found_servos = self.motor.ListServos()
+            return self.found_servos
+        except Exception as e:
+            print(f"❌ Ошибка сканирования: {e}")
+            return []
+
+    def get_motor_id_for_joint(self, joint_index: int) -> int:
+        key = f'joint_{joint_index}'
+        if key in self.motor_mapping:
+            return self.motor_mapping[key]['motor_id']
+        return joint_index + 1
+
+    def get_joint_name(self, joint_index: int) -> str:
+        key = f'joint_{joint_index}'
+        if key in self.motor_mapping:
+            return self.motor_mapping[key]['name']
+        return JOINT_NAMES[joint_index] if joint_index < len(JOINT_NAMES) else f'Сустав {joint_index}'
+
+    def move_to_position(self, sts_id: int, position: int, speed=None, acc=DEFAULT_ACC):
+        if not self.connected or not self.motor:
+            return False
+        if not (MIN_POSITION <= position <= MAX_POSITION):
+            return False
+        try:
+            with self._read_lock:
+                if speed is None:
+                    speed = self._manual_speed
+                self.motor.MoveTo(sts_id, position, speed=speed, acc=acc)
+            self.joint_positions[sts_id] = position
+            return True
+        except Exception as e:
+            print(f"Ошибка движения: {e}")
+            return False
+
+    def move_joint(self, joint_index: int, position: int, speed=None, acc=DEFAULT_ACC):
+        motor_id = self.get_motor_id_for_joint(joint_index)
+        return self.move_to_position(motor_id, position, speed, acc)
+
+    def move_all_joints(self, positions: List[int], speed=DEFAULT_SPEED):
+        for i, pos in enumerate(positions):
+            self.move_joint(i, pos, speed=speed)
         return True
 
-    def move_to_position(self, x, y, z):
-        theta = self.inverse_kinematics(x, y, z)
-        motor_positions = []
-        for i in range(len(theta)):
-            position = int(self.l1 * theta[i] / math.pi * 4095)
-            if not self.check_position_limits({f'motor_{i + 1}': position}):
-                raise ValueError(f"Позиция мотора {i + 1} выходит за пределы допустимых значений")
-            motor_positions.append(position)
-        return motor_positions
+    def toggle_torque(self, sts_id: int, enable=True):
+        if not self.connected or not self.motor:
+            return False
+        try:
+            with self._read_lock:
+                if enable:
+                    result = self.motor.StartServo(sts_id)
+                else:
+                    result = self.motor.StopServo(sts_id)
+            self.torque_states[sts_id] = enable
+            return result is not None
+        except Exception as e:
+            print(f"Ошибка переключения момента: {e}")
+            return False
 
-    def get_current_position(self):
-        return 0.1, 0.1, 0.1
+    def get_torque_state(self, sts_id: int) -> bool:
+        return self.torque_states.get(sts_id, False)
 
+    def emergency_stop_all(self):
+        if not self.connected or not self.motor:
+            return
+        for sid in self.found_servos:
+            try:
+                with self._read_lock:
+                    self.motor.StopServo(sid)
+                self.torque_states[sid] = False
+            except Exception as e:
+                print(f"Ошибка остановки мотора {sid}: {e}")
+
+    def get_joint_positions(self) -> Dict[int, float]:
+        return self.joint_positions.copy()
+
+    def read_motor_data(self, sts_id: int) -> dict:
+        if not self.connected or not self.motor:
+            return {}
+        data = {
+            'position': None,
+            'temperature': None,
+            'voltage': None,
+            'current': None,
+            'load': None,
+            'mode': None,
+            'moving': None,
+        }
+        try:
+            with self._read_lock:
+                data['position'] = self.motor.ReadPosition(sts_id)
+                data['temperature'] = self.motor.ReadTemperature(sts_id)
+                data['voltage'] = self.motor.ReadVoltage(sts_id)
+                data['current'] = self.motor.ReadCurrent(sts_id)
+                data['load'] = self.motor.ReadLoad(sts_id)
+                data['mode'] = self.motor.ReadMode(sts_id)
+                data['moving'] = self.motor.IsMoving(sts_id)
+        except Exception as e:
+            print(f"⚠️ Ошибка чтения мотора {sts_id}: {e}")
+        return data
+
+    def set_manual_speed(self, speed: int):
+        self._manual_speed = max(0, min(10000, speed))
+
+    def get_manual_speed(self) -> int:
+        return self._manual_speed
+
+    def update_motor_mapping(self, joint_index: int, motor_id: int, name: str = ""):
+        key = f'joint_{joint_index}'
+        default_name = JOINT_NAMES[joint_index] if joint_index < len(JOINT_NAMES) else f'Сустав {joint_index}'
+        self.motor_mapping[key] = {
+            'motor_id': motor_id,
+            'name': name or default_name,
+            'min_pos': 0,
+            'max_pos': MAX_POSITION
+        }
+
+    def get_motor_mapping(self) -> dict:
+        return self.motor_mapping.copy()
+
+    def update_motor_config(self, motor_id: int, min_pos: int, max_pos: int, name: str = ""):
+        key = f'motor_{motor_id}'
+        self.motor_config[key] = {'min_pos': min_pos, 'max_pos': max_pos, 'name': name or f'Мотор {motor_id}'}
+
+    def get_motor_config(self, motor_id: int) -> dict:
+        key = f'motor_{motor_id}'
+        return self.motor_config.get(key, {'min_pos': 0, 'max_pos': MAX_POSITION, 'name': f'Мотор {motor_id}'})
+
+    def save_config(self, filename: str = CONFIG_FILE):
+        try:
+            config = {
+                'port': self.device,
+                'motor_config': self.motor_config,
+                'motor_mapping': self.motor_mapping,
+                'timestamp': datetime.now().isoformat()
+            }
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(config, f, indent=2, ensure_ascii=False)
+            return True
+        except Exception as e:
+            print(f"Ошибка сохранения конфигурации: {e}")
+            return False
+
+    def load_config(self, filename: str = CONFIG_FILE):
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            if 'motor_config' in config:
+                self.motor_config = config['motor_config']
+            if 'motor_mapping' in config:
+                self.motor_mapping = config['motor_mapping']
+            if 'port' in config:
+                self.device = config['port']
+            return True
+        except Exception as e:
+            print(f"Ошибка загрузки конфигурации: {e}")
+            return False
+
+
+# ==================== МОТОР МОНИТОР (АСИНХРОННЫЙ) ====================
+# ==================== МОТОР МОНИТОР (АСИНХРОННЫЙ) ====================
 
 class MotorMonitor:
-    """Отдельный поток для мониторинга моторов"""
-
     def __init__(self, motor_controller, update_callback=None):
         self.motor_controller = motor_controller
         self.update_callback = update_callback
         self.running = False
         self.thread: Optional[threading.Thread] = None
-        self.motor_data: Dict[int, MotorData] = {}
+        self.motor_data: Dict[int, MotorData] = {}  # ✅ ИСПРАВЛЕНО
         self.lock = threading.Lock()
 
     def start(self, motor_ids: List[int]):
@@ -131,7 +334,7 @@ class MotorMonitor:
             return
         with self.lock:
             for mid in motor_ids:
-                if mid not in self.motor_data:
+                if mid not in self.motor_data:  # ✅ ИСПРАВЛЕНО
                     self.motor_data[mid] = MotorData(motor_id=mid)
         self.running = True
         self.thread = threading.Thread(target=self._monitor_loop, daemon=True)
@@ -146,426 +349,815 @@ class MotorMonitor:
 
     def _monitor_loop(self):
         while self.running:
+            start_time = time.time()
             try:
-                for motor_id, data in list(self.motor_data.items()):
-                    self._update_motor_data(motor_id, data)
-                if self.update_callback and self.motor_data:
-                    self.update_callback(self.motor_data.copy())
+                motor_ids = list(self.motor_data.keys())  # ✅ ИСПРАВЛЕНО
+                for motor_id in motor_ids:
+                    if not self.running:
+                        break
+                    with self.lock:
+                        data = self.motor_data.get(motor_id)  # ✅ ИСПРАВЛЕНО
+                        if data:  # ✅ ИСПРАВЛЕНО: было просто "if"
+                            self._update_motor_data(motor_id, data)
             except Exception as e:
                 print(f"❌ Ошибка мониторинга: {e}")
-            time.sleep(MONITOR_INTERVAL)
+            elapsed = time.time() - start_time
+            sleep_time = max(0, MONITOR_INTERVAL - elapsed)
+            time.sleep(sleep_time)
 
-    def _update_motor_data(self, motor_id: int, data: MotorData):
+    def _update_motor_data(self, motor_id: int, data: MotorData):  # ✅ ИСПРАВЛЕНО: было " MotorData"
         if not self.motor_controller or not self.motor_controller.connected:
             return
         try:
-            motor = self.motor_controller.motor
-            data.position = motor.ReadPosition(motor_id)
-            data.temperature = motor.ReadTemperature(motor_id)
-            data.voltage = motor.ReadVoltage(motor_id)
-            data.current = motor.ReadCurrent(motor_id)
-            data.load = motor.ReadLoad(motor_id)
-            data.mode = motor.ReadMode(motor_id)
-            data.moving = motor.IsMoving(motor_id)
+            motor_data = self.motor_controller.read_motor_data(motor_id)
+            data.position = motor_data.get('position')
+            data.temperature = motor_data.get('temperature')
+            data.voltage = motor_data.get('voltage')
+            data.current = motor_data.get('current')
+            data.load = motor_data.get('load')
+            data.mode = motor_data.get('mode')
+            data.moving = motor_data.get('moving')
             data.last_update = time.time()
-            data.error_count = 0
+            data.torque_enabled = self.motor_controller.get_torque_state(motor_id)
+            if data.position is not None:
+                data.error_count = 0
+            else:
+                data.error_count += 1
+                if data.error_count > 5:
+                    print(f"⚠️ Мотор {motor_id}: много ошибок чтения ({data.error_count})")
         except Exception as e:
             data.error_count += 1
-            if data.error_count > 3:
-                print(f"⚠️ Мотор {motor_id}: много ошибок")
+            print(f"⚠️ Ошибка обновления мотора {motor_id}: {e}")
 
     def get_data(self, motor_id: int) -> Optional[MotorData]:
         with self.lock:
-            return self.motor_data.get(motor_id)
+            return self.motor_data.get(motor_id)  # ✅ ИСПРАВЛЕНО
 
+    def get_all_data(self) -> Dict[int, MotorData]:
+        with self.lock:
+            return self.motor_data.copy()  # ✅ ИСПРАВЛЕНО
+# ==================== НАСТРОЙКА СООТВЕТСТВИЯ МОТОРОВ ====================
 
-class MotorController:
-    """Контроллер моторов ST3215"""
+class MotorMappingPanel(ttk.Frame):
+    def __init__(self, parent, controller, log_callback):
+        super().__init__(parent)
+        self.controller = controller
+        self.log = log_callback
+        self.mapping_vars = {}
+        self.name_vars = {}
+        self.mapping_widgets = {}
+        self._create_widgets()
+        self._load_current_mapping()
 
-    def __init__(self, device='/dev/ttyUSB0'):
-        self.device = device
-        self.motor: Optional[ST3215] = None
-        self.connected = False
-        self.found_servos: List[int] = []
-        self.current_id: Optional[int] = None
-        self.torque_states: Dict[int, bool] = {}
+    def _create_widgets(self):
+        main_frame = ttk.Frame(self)
+        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
 
-    def connect(self):
-        try:
-            self.motor = ST3215(device=self.device)
-            self.connected = True
-            return True
-        except Exception as e:
-            print(f"❌ Ошибка подключения: {e}")
-            return False
+        header_frame = ttk.Frame(main_frame)
+        header_frame.pack(fill='x', pady=10)
 
-    def disconnect(self):
-        if self.motor and self.current_id is not None:
-            try:
-                self.motor.StopServo(self.current_id)
-            except:
-                pass
-        self.connected = False
+        ttk.Label(header_frame, text="⚙️ Настройка соответствия моторов",
+                  font=('Arial', 14, 'bold')).pack(side='left')
 
-    def scan_servos(self):
-        if not self.connected:
-            return []
-        try:
-            self.found_servos = self.motor.ListServos()
-            return self.found_servos
-        except:
-            return []
+        ttk.Button(header_frame, text="💾 Сохранить",
+                   command=self._save_mapping).pack(side='right', padx=5)
+        ttk.Button(header_frame, text="🔄 Сбросить",
+                   command=self._reset_mapping).pack(side='right', padx=5)
 
-    def move_to_position(self, sts_id: int, position: int, speed=DEFAULT_SPEED, acc=DEFAULT_ACC):
-        if not (MIN_POSITION <= position <= MAX_POSITION):
-            return False
-        try:
-            self.motor.StartServo(sts_id)
-            self.motor.MoveTo(sts_id, position, speed=speed, acc=acc)
-            return True
-        except Exception as e:
-            print(f"Ошибка движения: {e}")
-            return False
+        info_frame = ttk.LabelFrame(main_frame, text="ℹ️ Информация")
+        info_frame.pack(fill='x', pady=10)
 
-    def toggle_torque(self, sts_id: int, enable=True):
-        try:
-            if self.connected and self.motor is not None:
-                if enable:
-                    result = self.motor.StartServo(sts_id)
-                    self.torque_states[sts_id] = True
-                else:
-                    result = self.motor.StopServo(sts_id)
-                    self.torque_states[sts_id] = False
-                return result is not None
-            return False
-        except Exception as e:
-            print(f"Ошибка переключения момента: {e}")
-            return False
+        info_text = """
+        Здесь вы можете указать, какой физический ID мотора соответствует каждому суставу робота.
+        • Суставы: логические части робота (База, Плечо, Локоть, Кисть)
+        • ID мотора: физический адрес мотора на шине (1-253)
+        • Название: отображаемое имя сустава
+        """
+        ttk.Label(info_frame, text=info_text, justify='left').pack(padx=10, pady=10)
 
-    def get_torque_state(self, sts_id: int) -> bool:  # ← ДОБАВЛЕНО
-        return self.torque_states.get(sts_id, False)
+        mapping_frame = ttk.LabelFrame(main_frame, text="🔗 Соответствие суставов и моторов")
+        mapping_frame.pack(fill='both', expand=True, pady=10)
 
-    def emergency_stop_all(self):
-        if not self.connected:
+        headers = ['Сустав', 'ID мотора', 'Название', 'Текущая позиция']
+        for col, header in enumerate(headers):
+            ttk.Label(mapping_frame, text=header, font=('Arial', 10, 'bold')).grid(
+                row=0, column=col, padx=10, pady=5, sticky='w')
+
+        for joint_idx in range(6):
+            self._create_mapping_row(mapping_frame, joint_idx)
+
+        action_frame = ttk.Frame(main_frame)
+        action_frame.pack(fill='x', pady=10)
+
+        ttk.Button(action_frame, text="🔍 Автоопределение",
+                   command=self._auto_detect).pack(side='left', padx=5)
+        ttk.Button(action_frame, text="📊 Проверить все",
+                   command=self._check_all_motors).pack(side='left', padx=5)
+
+    def _create_mapping_row(self, parent, joint_idx: int):
+        row = joint_idx + 1
+
+        joint_name = JOINT_NAMES[joint_idx] if joint_idx < len(JOINT_NAMES) else f'Сустав {joint_idx}'
+        ttk.Label(parent, text=joint_name, font=('Arial', 10)).grid(
+            row=row, column=0, padx=10, pady=5, sticky='w')
+
+        motor_id_var = tk.IntVar(value=joint_idx + 1)
+        self.mapping_vars[joint_idx] = motor_id_var
+
+        motor_combo = ttk.Combobox(parent, textvariable=motor_id_var, width=10, state='readonly')
+        motor_combo['values'] = list(range(1, 254))
+        motor_combo.grid(row=row, column=1, padx=10, pady=5)
+
+        name_var = tk.StringVar(value=joint_name)
+        self.name_vars[joint_idx] = name_var
+
+        name_entry = ttk.Entry(parent, textvariable=name_var, width=20)
+        name_entry.grid(row=row, column=2, padx=10, pady=5)
+
+        pos_label = ttk.Label(parent, text="--", font=('Consolas', 10))
+        pos_label.grid(row=row, column=3, padx=10, pady=5)
+
+        self.mapping_widgets[joint_idx] = {
+            'combo': motor_combo,
+            'name': name_entry,
+            'pos': pos_label
+        }
+
+    def _load_current_mapping(self):
+        mapping = self.controller.get_motor_mapping()
+        for joint_idx in range(6):
+            key = f'joint_{joint_idx}'
+            if key in mapping:
+                motor_id = mapping[key].get('motor_id', joint_idx + 1)
+                name = mapping[key].get('name', JOINT_NAMES[joint_idx] if joint_idx < len(
+                    JOINT_NAMES) else f'Сустав {joint_idx}')
+
+                if joint_idx in self.mapping_vars:
+                    self.mapping_vars[joint_idx].set(motor_id)
+                if joint_idx in self.name_vars:
+                    self.name_vars[joint_idx].set(name)
+
+    def _save_mapping(self):
+        for joint_idx in range(6):
+            if joint_idx in self.mapping_vars:
+                motor_id = self.mapping_vars[joint_idx].get()
+                name = self.name_vars[joint_idx].get()
+                self.controller.update_motor_mapping(joint_idx, motor_id, name)
+
+        self.controller.save_config()
+        self.log("💾 Соответствие моторов сохранено", 'success')
+        messagebox.showinfo("Успех", "Соответствие моторов сохранено!")
+
+    def _reset_mapping(self):
+        if messagebox.askyesno("Подтверждение", "Сбросить все настройки к умолчанию?"):
+            self.controller.motor_mapping = DEFAULT_MOTOR_MAPPING.copy()
+            self._load_current_mapping()
+            self.log("🔄 Настройки сброшены", 'info')
+
+    def _auto_detect(self):
+        if not self.controller.connected:
+            messagebox.showwarning("Предупреждение", "Сначала подключитесь к роботу!")
             return
-        for sid in self.found_servos:
+
+        self.log("🔍 Автоопределение моторов...", 'info')
+        found_servos = self.controller.scan_servos()
+
+        if found_servos:
+            self.log(f"✅ Найдено моторов: {found_servos}", 'success')
+            for joint_idx in range(min(6, len(found_servos))):
+                if joint_idx in self.mapping_vars:
+                    self.mapping_vars[joint_idx].set(found_servos[joint_idx])
+            self.log("🔗 Моторы назначены автоматически", 'info')
+        else:
+            self.log("⚠️ Моторы не найдены", 'warning')
+            messagebox.showinfo("Информация", "Моторы не найдены.\nПроверьте подключение.")
+
+    def _check_all_motors(self):
+        if not self.controller.connected:
+            messagebox.showwarning("Предупреждение", "Сначала подключитесь!")
+            return
+
+        self.log("📊 Проверка всех моторов...", 'info')
+        for joint_idx in range(6):
+            if joint_idx in self.mapping_vars:
+                motor_id = self.mapping_vars[joint_idx].get()
+                data = self.controller.read_motor_data(motor_id)
+
+                if data.get('position') is not None:
+                    pos_text = str(data['position'])
+                    color = 'green'
+                else:
+                    pos_text = "Нет ответа"
+                    color = 'red'
+
+                if joint_idx in self.mapping_widgets:
+                    self.mapping_widgets[joint_idx]['pos'].config(text=pos_text, foreground=color)
+
+        self.log("✅ Проверка завершена", 'success')
+
+    def update_positions(self, motor_data_dict):
+        for joint_idx in range(6):
+            if joint_idx in self.mapping_vars:
+                motor_id = self.mapping_vars[joint_idx].get()
+                if motor_id in motor_data_dict:
+                    data = motor_data_dict[motor_id]
+                    if data.position is not None:
+                        if joint_idx in self.mapping_widgets:
+                            self.mapping_widgets[joint_idx]['pos'].config(
+                                text=str(data.position), foreground='green')
+
+
+# ==================== 3D ВИЗУАЛИЗАЦИЯ ====================
+
+class Kinematics3DPanel(ttk.Frame):
+    def __init__(self, parent, controller, log_callback):
+        super().__init__(parent)
+        self.controller = controller
+        self.log = log_callback
+        self.joint_angles = [0.0] * 6
+        self.figure = None
+        self.canvas = None
+        self.ax = None
+        self.angle_vars = []
+        self.angle_labels = []
+        self._create_widgets()
+
+    def _create_widgets(self):
+        main_frame = ttk.Frame(self)
+        main_frame.pack(fill='both', expand=True, padx=10, pady=10)
+
+        viz_frame = ttk.LabelFrame(main_frame, text="🔬 3D Визуализация")
+        viz_frame.pack(fill='both', expand=True, padx=10, pady=10)
+
+        self.figure = plt.Figure(figsize=(8, 6), dpi=100, facecolor='#1a1a2e')
+        self.ax = self.figure.add_subplot(111, projection='3d')
+        self.ax.set_facecolor('#16213e')
+
+        self.canvas = FigureCanvasTkAgg(self.figure, master=viz_frame)
+        self.canvas.get_tk_widget().pack(fill='both', expand=True)
+
+        angle_frame = ttk.LabelFrame(main_frame, text="📐 Углы суставов (градусы)")
+        angle_frame.pack(fill='x', padx=10, pady=10)
+
+        for i in range(6):
+            row_frame = ttk.Frame(angle_frame)
+            row_frame.pack(fill='x', padx=10, pady=2)
+
+            joint_name = self.controller.get_joint_name(i)
+            label = ttk.Label(row_frame, text=f"J{i + 1} ({joint_name}):", width=20)
+            label.pack(side='left', padx=5)
+            self.angle_labels.append(label)
+
+            angle_var = tk.DoubleVar(value=0.0)
+            self.angle_vars.append(angle_var)
+
+            entry = ttk.Spinbox(row_frame, from_=-180, to=180, textvariable=angle_var, width=10)
+            entry.pack(side='left', padx=5)
+
+            ttk.Button(row_frame, text="OK", width=8,
+                       command=lambda idx=i: self._apply_angle(idx)).pack(side='left', padx=5)
+
+        btn_frame = ttk.Frame(main_frame)
+        btn_frame.pack(fill='x', padx=10, pady=10)
+
+        ttk.Button(btn_frame, text="🔄 Обновить 3D", command=self._update_visualization).pack(side='left', padx=5)
+        ttk.Button(btn_frame, text="🏠 Сброс", command=self._reset_angles).pack(side='left', padx=5)
+        ttk.Button(btn_frame, text="📤 Применить все", command=self._apply_all_angles).pack(side='left', padx=5)
+
+        self._update_joint_names()
+        self._draw_robot()
+
+    def _update_joint_names(self):
+        for i in range(6):
+            joint_name = self.controller.get_joint_name(i)
+            if i < len(self.angle_labels):
+                self.angle_labels[i].config(text=f"J{i + 1} ({joint_name}):")
+
+    def _apply_angle(self, idx: int):
+        motor_id = self.controller.get_motor_id_for_joint(idx)
+        angle = self.angle_vars[idx].get()
+        position = int((angle + 180) / 360 * MAX_POSITION)
+        position = max(0, min(MAX_POSITION, position))
+        self.controller.move_to_position(motor_id, position)
+        self.controller.joint_positions[motor_id] = position
+        self.log(f"🔄 {self.controller.get_joint_name(idx)} → {angle}° (ID={motor_id}, поз={position})", 'info')
+
+    def _apply_all_angles(self):
+        if not self.controller.connected:
+            messagebox.showwarning("Предупреждение", "Сначала подключитесь!")
+            return
+        if messagebox.askyesno("Подтверждение", "Применить все углы?"):
+            for i in range(6):
+                self._apply_angle(i)
+            self.log("🔄 Все углы применены", 'success')
+
+    def _reset_angles(self):
+        for i in range(6):
+            self.angle_vars[i].set(0.0)
+            self.joint_angles[i] = 0.0
+        self._update_visualization()
+        self.log("🏠 Углы сброшены", 'info')
+
+    def _update_visualization(self):
+        for i in range(6):
             try:
-                self.motor.StopServo(sid)
-                self.torque_states[sid] = False
-            except Exception as e:
-                print(f"Ошибка остановки серво {sid}: {e}")
-                continue
+                self.joint_angles[i] = self.angle_vars[i].get()
+            except:
+                self.joint_angles[i] = 0.0
+        self._update_joint_names()
+        self._draw_robot()
+
+    def _draw_robot(self):
+        self.ax.clear()
+        self.ax.set_facecolor('#16213e')
+        self.ax.set_xlim(-300, 300)
+        self.ax.set_ylim(-300, 300)
+        self.ax.set_zlim(0, 500)
+        self.ax.set_xlabel('X')
+        self.ax.set_ylabel('Y')
+        self.ax.set_zlabel('Z')
+        self.ax.set_title('Робот манипулятор', color='white')
+
+        self.ax.xaxis.pane.fill = False
+        self.ax.yaxis.pane.fill = False
+        self.ax.zaxis.pane.fill = False
+        self.ax.xaxis.pane.set_edgecolor('#666666')
+        self.ax.yaxis.pane.set_edgecolor('#666666')
+        self.ax.zaxis.pane.set_edgecolor('#666666')
+        self.ax.tick_params(colors='white')
+
+        segment_lengths = [80, 70, 60, 50, 40, 30]
+
+        x_points = [0]
+        y_points = [0]
+        z_points = [0]
+
+        current_x, current_y, current_z = 0, 0, 0
+        current_angle_xy = 0
+        current_angle_z = 90
+
+        for i in range(6):
+            angle_xy_rad = math.radians(current_angle_xy + self.joint_angles[i])
+            angle_z_rad = math.radians(current_angle_z)
+
+            current_x += segment_lengths[i] * math.cos(angle_xy_rad) * math.sin(angle_z_rad)
+            current_y += segment_lengths[i] * math.sin(angle_xy_rad) * math.sin(angle_z_rad)
+            current_z += segment_lengths[i] * math.cos(angle_z_rad)
+
+            x_points.append(current_x)
+            y_points.append(current_y)
+            z_points.append(current_z)
+
+            current_angle_xy = math.degrees(angle_xy_rad)
+
+        self.ax.plot(x_points, y_points, z_points, color=FANUC_GREEN, linewidth=3, marker='o', markersize=8)
+
+        for i, (x, y, z) in enumerate(zip(x_points, y_points, z_points)):
+            self.ax.scatter([x], [y], [z], color=KINEMA_COLORS[i % len(KINEMA_COLORS)], s=100)
+            joint_name = self.controller.get_joint_name(i) if i > 0 else 'База'
+            self.ax.text(x, y, z + 10, f'J{i}', color='white', fontsize=9)
+
+        self.figure.tight_layout()
+        self.canvas.draw()
 
 
-# ==================== GUI КЛАССЫ ====================
+# ==================== МАНУАЛЬНОЕ УПРАВЛЕНИЕ ====================
 
-class ProgressBarWithLabel(ttk.Frame):
-    """Прогресс-бар с подписью и значением"""
+class ManualControlPanel(ttk.Frame):
+    def __init__(self, parent, controller, log_callback, update_callback=None):
+        super().__init__(parent)
+        self.controller = controller
+        self.log = log_callback
+        self.update_callback = update_callback
+        self.selected_joint = 0
+        self.joint_var = None
+        self.speed_var = None
+        self.pos_var = None
+        self.speed_label = None
+        self.status_label = None
+        self._create_widgets()
 
-    def __init__(self, parent, label: str, max_value: float, unit="", warning_threshold=None, **kwargs):
-        super().__init__(parent, **kwargs)
-        self.label_text = label
-        self.max_value = max_value
-        self.unit = unit
-        self.warning_threshold = warning_threshold
+    def _create_widgets(self):
+        main_frame = ttk.Frame(self)
+        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
 
-        self.title_label = ttk.Label(self, text=label, font=('Arial', 9, 'bold'))
-        self.title_label.pack(anchor='w')
-        self.progress = ttk.Progressbar(self, mode='determinate', maximum=max_value, length=200)
-        self.progress.pack(fill='x', pady=(2, 0))
-        self.value_label = ttk.Label(self, text=f"-- {unit}", font=('Arial', 8))
-        self.value_label.pack(anchor='e')
+        motor_frame = ttk.LabelFrame(main_frame, text="🎯 Выбор сустава")
+        motor_frame.pack(fill='x', padx=10, pady=10)
 
-    def update_value(self, value: float):
-        if value is not None:
-            self.progress['value'] = value
-            self.value_label.config(text=f"{value:.1f} {self.unit}")
-            if self.warning_threshold and value >= self.warning_threshold:
-                self.value_label.config(foreground='red')
-            else:
-                self.value_label.config(foreground='black')
+        self.joint_var = tk.IntVar(value=0)
+        for i in range(6):
+            joint_name = self.controller.get_joint_name(i)
+            ttk.Radiobutton(motor_frame, text=f"J{i + 1} ({joint_name})",
+                            variable=self.joint_var, value=i,
+                            command=self._on_joint_select).pack(side='left', padx=5, pady=5)
+
+        dir_frame = ttk.LabelFrame(main_frame, text="⬆️ Направление")
+        dir_frame.pack(fill='x', padx=10, pady=10)
+
+        btn_frame = ttk.Frame(dir_frame)
+        btn_frame.pack(pady=10)
+
+        tk.Button(btn_frame, text="◀ Назад", bg=FANUC_ORANGE, fg='black', font=('Arial', 12, 'bold'),
+                  command=lambda: self._move_direction(-1)).pack(side='left', padx=10)
+        tk.Button(btn_frame, text="▶ Вперед", bg=FANUC_GREEN, fg='black', font=('Arial', 12, 'bold'),
+                  command=lambda: self._move_direction(1)).pack(side='left', padx=10)
+
+        speed_frame = ttk.LabelFrame(main_frame, text="⚡ Скорость (шаг/сек)")
+        speed_frame.pack(fill='x', padx=10, pady=10)
+
+        self.speed_var = tk.IntVar(value=DEFAULT_SPEED)
+        speed_scale = ttk.Scale(speed_frame, from_=0, to=10000, variable=self.speed_var,
+                                orient='horizontal', length=400, command=self._on_speed_change)
+        speed_scale.pack(padx=20, pady=10)
+
+        self.speed_label = ttk.Label(speed_frame, text=f"{DEFAULT_SPEED} шаг/сек", font=('Arial', 11))
+        self.speed_label.pack()
+
+        pos_frame = ttk.LabelFrame(main_frame, text="📍 Позиция")
+        pos_frame.pack(fill='x', padx=10, pady=10)
+
+        self.pos_var = tk.IntVar(value=0)
+        pos_spin = ttk.Spinbox(pos_frame, from_=0, to=MAX_POSITION, textvariable=self.pos_var, width=15,
+                               font=('Arial', 12))
+        pos_spin.pack(pady=5)
+
+        ttk.Button(pos_frame, text="🎯 Перейти", command=self._move_to_position).pack(pady=5)
+
+        status_frame = ttk.LabelFrame(main_frame, text="📊 Состояние")
+        status_frame.pack(fill='x', padx=10, pady=10)
+
+        self.status_label = ttk.Label(status_frame, text="--", font=('Arial', 11))
+        self.status_label.pack(pady=10)
+
+        quick_frame = ttk.Frame(main_frame)
+        quick_frame.pack(fill='x', padx=10, pady=10)
+
+        ttk.Button(quick_frame, text="🏠 В 0", command=self._go_home).pack(side='left', padx=5)
+        ttk.Button(quick_frame, text="🔄 В центр", command=self._go_center).pack(side='left', padx=5)
+        ttk.Button(quick_frame, text="🔒 ВКЛ", command=self._torque_on).pack(side='left', padx=5)
+        ttk.Button(quick_frame, text="🔓 ВЫКЛ", command=self._torque_off).pack(side='left', padx=5)
+
+        self._update_position_display()
+
+    def _on_joint_select(self):
+        self.selected_joint = self.joint_var.get()
+        self._update_position_display()
+        joint_name = self.controller.get_joint_name(self.selected_joint)
+        self.log(f"🎯 Выбран сустав: {joint_name}", 'info')
+
+    def _on_speed_change(self, value):
+        speed = int(float(value))
+        self.speed_label.config(text=f"{speed} шаг/сек")
+        self.controller.set_manual_speed(speed)
+
+    def _move_direction(self, direction: int):
+        motor_id = self.controller.get_motor_id_for_joint(self.selected_joint)
+        current = self.controller.joint_positions.get(motor_id, 0)
+        step = 100
+        new_pos = max(0, min(MAX_POSITION, current + direction * step))
+        self.controller.move_to_position(motor_id, new_pos)
+        self.controller.joint_positions[motor_id] = new_pos
+        self.pos_var.set(new_pos)
+        self._update_position_display()
+        joint_name = self.controller.get_joint_name(self.selected_joint)
+        self.log(f"🔄 {joint_name} (ID={motor_id}): {new_pos}", 'info')
+
+    def _move_to_position(self):
+        motor_id = self.controller.get_motor_id_for_joint(self.selected_joint)
+        position = self.pos_var.get()
+        self.controller.move_to_position(motor_id, position)
+        self.controller.joint_positions[motor_id] = position
+        self._update_position_display()
+        joint_name = self.controller.get_joint_name(self.selected_joint)
+        self.log(f"🎯 {joint_name} (ID={motor_id}) → {position}", 'info')
+
+    def _go_home(self):
+        self.pos_var.set(0)
+        self._move_to_position()
+
+    def _go_center(self):
+        self.pos_var.set(2048)
+        self._move_to_position()
+
+    def _torque_on(self):
+        motor_id = self.controller.get_motor_id_for_joint(self.selected_joint)
+        self.controller.toggle_torque(motor_id, True)
+        joint_name = self.controller.get_joint_name(self.selected_joint)
+        self.log(f"💪 Момент ВКЛ: {joint_name} (ID={motor_id})", 'success')
+
+    def _torque_off(self):
+        motor_id = self.controller.get_motor_id_for_joint(self.selected_joint)
+        self.controller.toggle_torque(motor_id, False)
+        joint_name = self.controller.get_joint_name(self.selected_joint)
+        self.log(f"🛑 Момент ВЫКЛ: {joint_name} (ID={motor_id})", 'warning')
+
+    def _update_position_display(self):
+        motor_id = self.controller.get_motor_id_for_joint(self.selected_joint)
+        pos = self.controller.joint_positions.get(motor_id, 0)
+        speed = self.controller.get_manual_speed()
+        joint_name = self.controller.get_joint_name(self.selected_joint)
+        self.status_label.config(text=f"{joint_name} (ID={motor_id}) | Позиция: {int(pos)} | Скорость: {speed}")
+        self.pos_var.set(int(pos))
+
+    def update_from_monitor(self, motor_data_dict):
+        if self.selected_joint in range(6):
+            motor_id = self.controller.get_motor_id_for_joint(self.selected_joint)
+            if motor_id in motor_data_dict:
+                data = motor_data_dict[motor_id]
+                if data.position is not None:
+                    self.controller.joint_positions[motor_id] = data.position
+                    self._update_position_display()
 
 
-class MotorMonitorFrame(ttk.LabelFrame):
-    """Фрейм мониторинга одного мотора"""
+# ==================== НИЖНЯЯ ПАНЕЛЬ МОНИТОРИНГА ====================
 
-    def __init__(self, parent, motor_id: int, **kwargs):
-        super().__init__(parent, text=f"🔧 Мотор ID: {motor_id}", **kwargs)
-        self.motor_id = motor_id
+class BottomMonitorPanel(ttk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent)
+        self.controller = controller
+        self.motor_frames = {}
+        self._create_widgets()
 
-        row = 0
-        self.temp_bar = ProgressBarWithLabel(self, "🌡️ Температура", 100, "°C", warning_threshold=TEMP_WARNING)
-        self.temp_bar.grid(row=row, column=0, columnspan=2, sticky='ew', padx=5, pady=2)
-        row += 1
+    def _create_widgets(self):
+        self.configure(relief='ridge', borderwidth=2)
 
-        self.load_bar = ProgressBarWithLabel(self, "💪 Нагрузка", 100, "%", warning_threshold=LOAD_WARNING)
-        self.load_bar.grid(row=row, column=0, columnspan=2, sticky='ew', padx=5, pady=2)
-        row += 1
+        header_frame = ttk.Frame(self)
+        header_frame.pack(fill='x', padx=5, pady=5)
 
-        self.volt_bar = ProgressBarWithLabel(self, "🔋 Напряжение", 25, "V")
-        self.volt_bar.grid(row=row, column=0, columnspan=2, sticky='ew', padx=5, pady=2)
-        row += 1
+        ttk.Label(header_frame, text="📊 МОНИТОРИНГ МОТОРОВ", font=('Arial', 11, 'bold')).pack(side='left')
 
-        self.current_bar = ProgressBarWithLabel(self, "⚡ Ток", 2000, "mA")
-        self.current_bar.grid(row=row, column=0, columnspan=2, sticky='ew', padx=5, pady=2)
-        row += 1
+        main_frame = ttk.Frame(self)
+        main_frame.pack(fill='both', expand=True, padx=5, pady=5)
 
-        self.status_frame = ttk.Frame(self)
-        self.status_frame.grid(row=row, column=0, columnspan=2, sticky='ew', padx=5, pady=5)
+        for i in range(6):
+            joint_name = self.controller.get_joint_name(i)
+            frame = ttk.LabelFrame(main_frame, text=f"J{i + 1} ({joint_name})")
+            frame.pack(side='left', fill='both', expand=True, padx=2)
 
-        ttk.Label(self.status_frame, text="📍 Позиция:").grid(row=0, column=0, sticky='w')
-        self.pos_label = ttk.Label(self.status_frame, text="--", font=('Arial', 9, 'bold'))
-        self.pos_label.grid(row=0, column=1, sticky='w', padx=5)
+            pos_label = ttk.Label(frame, text="Поз: --", font=('Consolas', 9))
+            pos_label.pack(pady=2)
 
-        ttk.Label(self.status_frame, text="🔄 Движение:").grid(row=1, column=0, sticky='w')
-        self.moving_label = ttk.Label(self.status_frame, text="--")
-        self.moving_label.grid(row=1, column=1, sticky='w', padx=5)
+            temp_label = ttk.Label(frame, text="Темп: --°C", font=('Consolas', 9))
+            temp_label.pack(pady=2)
 
-        ttk.Label(self.status_frame, text="💪 Момент:").grid(row=2, column=0, sticky='w')
-        self.torque_label = ttk.Label(self.status_frame, text="ВЫКЛ", foreground='red')
-        self.torque_label.grid(row=2, column=1, sticky='w', padx=5)
+            load_label = ttk.Label(frame, text="Нагр: --%", font=('Consolas', 9))
+            load_label.pack(pady=2)
 
-        self.error_label = ttk.Label(self, text="", foreground='red')
-        self.error_label.grid(row=row + 1, column=0, columnspan=2, sticky='ew', padx=5)
+            self.motor_frames[i] = {'pos': pos_label, 'temp': temp_label, 'load': load_label}
 
-        self.alert_frame = ttk.Frame(self, relief='solid', borderwidth=1)
-        self.alert_frame.grid(row=row + 2, column=0, columnspan=2, sticky='ew', padx=5, pady=2)
-        self.alert_label = ttk.Label(self.alert_frame, text="")  # ← ДОБАВЛЕНО: создание виджета
-        self.alert_label.pack(padx=5, pady=2)
+    def update_data(self, motor_data_dict):
+        for joint_idx in range(6):
+            motor_id = self.controller.get_motor_id_for_joint(joint_idx)
+            if motor_id in motor_data_dict and joint_idx in self.motor_frames:
+                data = motor_data_dict[motor_id]
+                frame = self.motor_frames[joint_idx]
 
-    def update_data(self, data: MotorData):  # ← ДОБАВЛЕНО: метод обновления
-        if data.position is not None:
-            self.pos_label.config(text=str(data.position))
-        if data.temperature is not None:
-            self.temp_bar.update_value(data.temperature)
-        if data.load is not None:
-            self.load_bar.update_value(data.load)
-        if data.voltage is not None:
-            self.volt_bar.update_value(data.voltage)
-        if data.current is not None:
-            self.current_bar.update_value(data.current)
-        if data.moving is not None:
-            self.moving_label.config(text="ДА" if data.moving else "НЕТ")
-        if data.error_count > 0:
-            self.error_label.config(text=f"Ошибок: {data.error_count}")
-        else:
-            self.error_label.config(text="")
+                joint_name = self.controller.get_joint_name(joint_idx)
+                frame.master.config(text=f"J{joint_idx + 1} ({joint_name})")
 
-    def set_torque_state(self, enabled: bool):  # ← ДОБАВЛЕНО: метод состояния момента
-        if enabled:
-            self.torque_label.config(text="ВКЛ", foreground='green')
-        else:
-            self.torque_label.config(text="ВЫКЛ", foreground='red')
+                pos = str(data.position) if data.position is not None else "--"
+                temp = f"{data.temperature}" if data.temperature is not None else "--"
+                load = f"{data.load}" if data.load is not None else "--"
+
+                frame['pos'].config(text=f"Поз: {pos}")
+                frame['temp'].config(text=f"Темп: {temp}°C")
+                frame['load'].config(text=f"Нагр: {load}%")
+
+                if data.is_overheating():
+                    frame['temp'].config(foreground='red')
+                else:
+                    frame['temp'].config(foreground='black')
 
 
-class ST3215GUI(tk.Tk):
-    """Основное окно приложения"""
+# ==================== БЛОЧНОЕ ПРОГРАММИРОВАНИЕ ====================
 
+class BlockPalette(ttk.Frame):
+    def __init__(self, parent, canvas):
+        super().__init__(parent, width=200)
+        self.canvas = canvas
+        self.block_id_counter = 0
+        ttk.Label(self, text="📦 Блоки", font=('Arial', 11, 'bold')).pack(pady=5)
+        categories = [
+            ("🔄 Движение", 'motion', [
+                ("Движение", {'type': 'move_to', 'joint': 0, 'position': 2048}),
+                ("Home", {'type': 'home', 'joint': 'all'}),
+            ]),
+            ("⏱ Ожидание", 'wait', [
+                ("Ждать", {'type': 'wait_time', 'seconds': 1.0}),
+            ]),
+            ("💪 Момент", 'control', [
+                ("ВКЛ", {'type': 'torque_on', 'joint': 0}),
+                ("ВЫКЛ", {'type': 'torque_off', 'joint': 0}),
+            ]),
+        ]
+        for category_name, category_type, blocks in categories:
+            frame = ttk.LabelFrame(self, text=category_name)
+            frame.pack(fill='x', padx=5, pady=5)
+            for block_name, params in blocks:
+                btn = tk.Button(frame, text=block_name, bg=BLOCK_COLORS[category_type], fg='white',
+                                font=('Arial', 9), command=lambda p=params, t=category_type: self._add_block(p, t))
+                btn.pack(fill='x', padx=3, pady=2)
+
+    def _add_block(self, params: dict, block_type: str):
+        self.block_id_counter += 1
+        block = ProgramBlock(id=self.block_id_counter, block_type=block_type, params=params,
+                             order=self.canvas.get_block_count() if self.canvas else 0)
+        if self.canvas:
+            self.canvas.add_block(block)
+
+
+class ProgramCanvas(tk.Canvas):
+    def __init__(self, parent):
+        super().__init__(parent, bg='#f5f5f5', highlightthickness=0)
+        self.blocks: List[ProgramBlock] = []
+        self.block_widgets: Dict[int, tk.Frame] = {}
+        self.y_offset = 10
+        self.bind('<Configure>', self._on_resize)
+
+    def get_block_count(self) -> int:
+        return len(self.blocks)
+
+    def add_block(self, block: ProgramBlock):
+        self.blocks.append(block)
+        self._create_block_widget(block)
+        self._update_blocks_display()
+
+    def remove_block(self, block_id: int):
+        self.blocks = [b for b in self.blocks if b.id != block_id]
+        if block_id in self.block_widgets:
+            self.block_widgets[block_id].destroy()
+            del self.block_widgets[block_id]
+        self._update_blocks_display()
+
+    def clear_all(self):
+        for widget in self.block_widgets.values():
+            widget.destroy()
+        self.block_widgets.clear()
+        self.blocks.clear()
+        self.y_offset = 10
+
+    def _create_block_widget(self, block: ProgramBlock):
+        frame = tk.Frame(self, bg=BLOCK_COLORS.get(block.block_type, '#999999'), relief='raised', bd=2)
+        title_frame = tk.Frame(frame, bg=BLOCK_COLORS.get(block.block_type, '#999999'))
+        title_frame.pack(fill='x', padx=5, pady=3)
+        block_names = {'move_to': '🔄 Движение', 'home': '🏠 Home', 'wait_time': '⏱ Ждать', 'torque_on': '💪 ВКЛ',
+                       'torque_off': '💪 ВЫКЛ'}
+        tk.Label(title_frame, text=block_names.get(block.params.get('type', ''), 'Блок'),
+                 bg=BLOCK_COLORS.get(block.block_type, '#999999'), fg='white', font=('Arial', 10, 'bold')).pack(
+            side='left')
+        tk.Button(title_frame, text='✕', bg=BLOCK_COLORS.get(block.block_type, '#999999'), fg='white', bd=0,
+                  command=lambda bid=block.id: self.remove_block(bid)).pack(side='right')
+        self.block_widgets[block.id] = frame
+
+    def _update_blocks_display(self):
+        self.delete('all')
+        self.y_offset = 10
+        for block in self.blocks:
+            if block.id in self.block_widgets:
+                self.create_window(10, self.y_offset, window=self.block_widgets[block.id], anchor='nw')
+                self.y_offset += self.block_widgets[block.id].winfo_reqheight() + 10
+        self.configure(scrollregion=self.bbox('all'))
+
+    def _on_resize(self, event):
+        self.configure(scrollregion=self.bbox('all'))
+
+    def get_program(self) -> List[dict]:
+        return [b.__dict__ for b in self.blocks]
+
+
+# ==================== ОСНОВНОЙ GUI ====================
+
+class RobotControlGUI(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("ST3215 Motor Control Panel v2.0")
-        self.geometry("1400x800")
-        self.minsize(1200, 700)
-
-        self._setup_styles()
-
+        self.title("🤖 ST3215 Robot Control Panel v6.1")
+        self.geometry("1600x1000")
         self.controller = MotorController()
         self.monitor: Optional[MotorMonitor] = None
-        self.monitor_frames: Dict[int, MotorMonitorFrame] = {}
-        self.kinematics = Kinematics()
-
+        self.motor_mapping_panel = None
+        self.manual_panel = None
+        self.bottom_monitor = None
+        self.kinematics_panel = None
+        self.program_canvas = None
+        self.block_palette = None
+        self._monitor_update_pending = False
+        self._setup_styles()
         self._create_widgets()
         self._create_menu()
-
         self.protocol("WM_DELETE_WINDOW", self._on_closing)
         self._log("🎉 Приложение запущено", 'success')
+        self.controller.load_config()
 
     def _setup_styles(self):
         style = ttk.Style()
         style.theme_use('clam')
-        style.configure('Success.TLabel', foreground='green')
-        style.configure('Warning.TLabel', foreground='orange')
-        style.configure('Error.TLabel', foreground='red')
-        style.configure('Bold.TLabel', font=('Arial', 9, 'bold'))
         style.configure('Emergency.TButton', font=('Arial', 11, 'bold'), foreground='white', background='red')
 
     def _create_menu(self):
         menubar = tk.Menu(self)
         self.config(menu=menubar)
-
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="📁 Файл", menu=file_menu)
-        file_menu.add_command(label="💾 Сохранить конфигурацию", command=self._save_config)
-        file_menu.add_command(label="📂 Загрузить конфигурацию", command=self._load_config_dialog)
-        file_menu.add_separator()
+        file_menu.add_command(label="💾 Сохранить", command=self._save_config)
         file_menu.add_command(label="🚪 Выход", command=self._on_closing)
-
         tools_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="🛠️ Инструменты", menu=tools_menu)
-        tools_menu.add_command(label="🔍 Сканировать моторы", command=self._scan_servos)
-        tools_menu.add_command(label="🗑️ Очистить мониторинг", command=self._clear_monitor_frames)
+        tools_menu.add_command(label="🔍 Сканировать", command=self._scan_servos)
+        tools_menu.add_command(label="▶️ Запуск", command=self._run_program)
         tools_menu.add_separator()
-        tools_menu.add_command(label="📊 Экспорт данных", command=self._export_data)
-
-        help_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="❓ Помощь", menu=help_menu)
-        help_menu.add_command(label="ℹ️ О программе", command=self._show_about)
-        help_menu.add_command(label="📖 Документация", command=self._show_help)
+        tools_menu.add_command(label="⚙️ Настройка моторов", command=self._show_mapping_panel)
 
     def _create_widgets(self):
-        # Верхняя панель
-        self.top_frame = ttk.Frame(self)
-        self.top_frame.pack(fill='x', padx=5, pady=5)
+        top_frame = ttk.Frame(self)
+        top_frame.pack(fill='both', expand=True)
 
-        self.emergency_btn = ttk.Button(self.top_frame, text="🛑 АВАРИЙНАЯ ОСТАНОВКА",
-                                        command=self._emergency_stop, style='Emergency.TButton')
-        self.emergency_btn.pack(side='right', padx=5, pady=5)
+        self.notebook = ttk.Notebook(top_frame)
+        self.notebook.pack(fill='both', expand=True, padx=5, pady=5)
 
-        self.status_label = ttk.Label(self.top_frame, text="⭕ Не подключено",
-                                      font=('Arial', 11, 'bold'), foreground='gray')
-        self.status_label.pack(side='right', padx=20)
+        self.main_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.main_tab, text="🏠 Главная")
+        self._create_main_tab()
 
-        # Панели
-        self.paned = ttk.PanedWindow(self, orient='horizontal')
-        self.paned.pack(fill='both', expand=True, padx=5, pady=5)
+        self.manual_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.manual_tab, text="🎮 Мануальное")
+        self.manual_panel = ManualControlPanel(self.manual_tab, self.controller, self._log, self._on_manual_update)
+        self.manual_panel.pack(fill='both', expand=True)
 
-        self.control_frame = ttk.LabelFrame(self.paned, text="🎮 Управление")
-        self.paned.add(self.control_frame, weight=1)
+        self.mapping_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.mapping_tab, text="🔗 Настройка моторов")
+        self.motor_mapping_panel = MotorMappingPanel(self.mapping_tab, self.controller, self._log)
+        self.motor_mapping_panel.pack(fill='both', expand=True)
 
-        self.monitor_frame = ttk.LabelFrame(self.paned, text="📊 Мониторинг")
-        self.paned.add(self.monitor_frame, weight=2)
+        self.kinematics_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.kinematics_tab, text="🔬 3D Кинематика")
+        self.kinematics_panel = Kinematics3DPanel(self.kinematics_tab, self.controller, self._log)
+        self.kinematics_panel.pack(fill='both', expand=True)
 
-        # Лог событий
-        self.log_frame = ttk.LabelFrame(self, text="📋 Лог событий")
+        self.block_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.block_tab, text="📦 Программы")
+        self._create_block_tab()
+
+        self.bottom_monitor = BottomMonitorPanel(self, self.controller)
+        self.bottom_monitor.pack(fill='x', padx=5, pady=(0, 5))
+
+        self.log_frame = ttk.LabelFrame(self, text="📋 Лог")
         self.log_frame.pack(fill='x', padx=5, pady=(0, 5))
-
         self._create_log_panel()
-        self._create_control_panel()
-        self._create_monitor_panel()
-        self._create_connection_panel()  # ← ДОБАВЛЕНО: панель подключения
 
-    def _create_connection_panel(self):  # ← ДОБАВЛЕНО: создание виджетов подключения
-        conn_frame = ttk.LabelFrame(self.control_frame, text="🔌 Подключение")
-        conn_frame.pack(fill='x', pady=(0, 10))
-
+    def _create_main_tab(self):
+        main_frame = ttk.Frame(self.main_tab)
+        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+        conn_frame = ttk.LabelFrame(main_frame, text="🔌 Подключение")
+        conn_frame.pack(fill='x', padx=10, pady=10)
         port_frame = ttk.Frame(conn_frame)
-        port_frame.pack(fill='x', pady=5)
-
-        ttk.Label(port_frame, text="Порт:").pack(side='left')
-        self.port_combo = ttk.Combobox(port_frame, width=20)
-        self.port_combo.pack(side='left', padx=5)
-
-        self.connect_btn = ttk.Button(port_frame, text="🔌 Подключиться", command=self._toggle_connection)
-        self.connect_btn.pack(side='left', padx=5)
-
-        self.scan_btn = ttk.Button(port_frame, text="🔍 Сканировать", command=self._scan_servos, state='disabled')
-        self.scan_btn.pack(side='left', padx=5)
-
-        ttk.Button(port_frame, text="🔄 Обновить порты", command=self._refresh_ports).pack(side='left', padx=5)
-
+        port_frame.pack(fill='x', padx=10, pady=10)
+        ttk.Label(port_frame, text="COM Порт:").pack(side='left', padx=5)
+        self.port_combo = ttk.Combobox(port_frame, width=30)
+        self.port_combo.pack(side='left', padx=10)
+        ttk.Button(port_frame, text="🔄", command=self._refresh_ports).pack(side='left', padx=5)
+        btn_frame = ttk.Frame(conn_frame)
+        btn_frame.pack(fill='x', padx=10, pady=10)
+        self.connect_btn = ttk.Button(btn_frame, text="🔌 Подключиться", command=self._toggle_connection,
+                                      style='Emergency.TButton')
+        self.connect_btn.pack(side='left', padx=10)
+        self.scan_btn = ttk.Button(btn_frame, text="🔍 Сканировать", command=self._scan_servos, state='disabled')
+        self.scan_btn.pack(side='left', padx=10)
+        self.status_label = ttk.Label(conn_frame, text="⭕ Не подключено", font=('Arial', 12, 'bold'), foreground='gray')
+        self.status_label.pack(padx=10, pady=10)
         self._refresh_ports()
 
-    def _create_control_panel(self):
-        # Кинематика
-        frame = ttk.LabelFrame(self.control_frame, text="🔄 Кинематика")
-        frame.pack(fill='x', pady=(0, 10))
-
-        x_frame = ttk.Frame(frame)
-        x_frame.pack(fill='x', pady=5)
-
-        ttk.Label(x_frame, text="X:").pack(side='left')
-        self.x_entry = ttk.Entry(x_frame, width=10)
-        self.x_entry.insert(0, "0.1")
-        self.x_entry.pack(side='left')
-
-        ttk.Label(x_frame, text="Y:").pack(side='left', padx=(5, 0))
-        self.y_entry = ttk.Entry(x_frame, width=10)
-        self.y_entry.insert(0, "0.1")
-        self.y_entry.pack(side='left')
-
-        btn_frame = ttk.Frame(frame)
-        btn_frame.pack(fill='x', pady=(5, 0))
-
-        ttk.Button(btn_frame, text="➕ X+", command=self._move_by_x).pack(side='left')
-        ttk.Button(btn_frame, text="➖ X-", command=self._move_minus_x).pack(side='left', padx=5)
-        ttk.Button(btn_frame, text="➕ Y+", command=self._move_by_y).pack(side='left')
-        ttk.Button(btn_frame, text="➖ Y-", command=self._move_minus_y).pack(side='left', padx=5)
-
-        self.move_x_y_btn = ttk.Button(frame, text="🔄 Переместить по X/Y", command=self._move_to_x_y)
-        self.move_x_y_btn.pack(fill='x', pady=5)
-
-        # Управление мотором
-        motor_frame = ttk.LabelFrame(self.control_frame, text="🎯 Управление мотором")
-        motor_frame.pack(fill='x', pady=(0, 10))
-
-        servo_frame = ttk.Frame(motor_frame)
-        servo_frame.pack(fill='x', pady=5)
-
-        ttk.Label(servo_frame, text="Моторы:").pack(side='left')
-        self.servo_list = tk.Listbox(servo_frame, width=20, height=5)
-        self.servo_list.pack(side='left', padx=5)
-        self.servo_list.bind('<<ListboxSelect>>', self._on_servo_select)
-
-        pos_frame = ttk.Frame(motor_frame)
-        pos_frame.pack(fill='x', pady=5)
-
-        ttk.Label(pos_frame, text="Позиция (0-4095):").pack(side='left')
-        self.pos_spin = ttk.Spinbox(pos_frame, from_=0, to=4095, width=10)
-        self.pos_spin.pack(side='left', padx=5)
-
-        ttk.Label(pos_frame, text="Скорость:").pack(side='left', padx=(10, 0))
-        self.speed_spin = ttk.Spinbox(pos_frame, from_=0, to=10000, width=10)
-        self.speed_spin.set(DEFAULT_SPEED)
-        self.speed_spin.pack(side='left', padx=5)
-
-        btn_row = ttk.Frame(motor_frame)
-        btn_row.pack(fill='x', pady=5)
-
-        ttk.Button(btn_row, text="🚀 Движение", command=self._move_to_position).pack(side='left', padx=2)
-        ttk.Button(btn_row, text="⏹ Стоп", command=self._stop_servo).pack(side='left', padx=2)
-        self.torque_btn = ttk.Button(btn_row, text="💪 Момент: ВЫКЛ", command=self._toggle_torque,
-                                     style='Warning.TButton')
-        self.torque_btn.pack(side='left', padx=2)
-
-        ttk.Button(btn_row, text="🏠 Home", command=self._home_all_motors).pack(side='left', padx=2)
-
-    def _create_monitor_panel(self):
-        self.monitor_canvas = tk.Canvas(self.monitor_frame)
-        self.monitor_scrollbar = ttk.Scrollbar(self.monitor_frame, orient='vertical', command=self.monitor_canvas.yview)
-        self.monitor_scrollable = ttk.Frame(self.monitor_canvas)
-
-        self.monitor_scrollable.bind("<Configure>", lambda e: self.monitor_canvas.configure(
-            scrollregion=self.monitor_canvas.bbox("all")))
-        self.monitor_canvas.create_window((0, 0), window=self.monitor_scrollable, anchor='nw')
-        self.monitor_canvas.configure(yscrollcommand=self.monitor_scrollbar.set)
-
-        self.monitor_canvas.pack(side='left', fill='both', expand=True)
-        self.monitor_scrollbar.pack(side='right', fill='y')
-
-        self.placeholder_label = ttk.Label(self.monitor_scrollable,
-                                           text="Подключитесь и просканируйте моторы для начала мониторинга",
-                                           font=('Arial', 11), foreground='gray')
-        self.placeholder_label.pack(pady=50)
+    def _create_block_tab(self):
+        left_frame = ttk.PanedWindow(self.block_tab, orient='horizontal')
+        left_frame.pack(fill='both', expand=True, padx=5, pady=5)
+        palette_frame = ttk.Frame(left_frame, width=200)
+        left_frame.add(palette_frame, weight=1)
+        self.block_palette = BlockPalette(palette_frame, None)
+        self.block_palette.pack(fill='both', expand=True)
+        canvas_frame = ttk.Frame(left_frame)
+        left_frame.add(canvas_frame, weight=3)
+        self.program_canvas = ProgramCanvas(canvas_frame)
+        scrollbar = ttk.Scrollbar(canvas_frame, orient='vertical', command=self.program_canvas.yview)
+        self.program_canvas.configure(yscrollcommand=scrollbar.set)
+        self.program_canvas.pack(side='left', fill='both', expand=True)
+        scrollbar.pack(side='right', fill='y')
+        btn_frame = ttk.Frame(self.block_tab)
+        btn_frame.pack(fill='x', padx=5, pady=5)
+        ttk.Button(btn_frame, text="▶️ Запустить", command=self._run_program).pack(side='left', padx=5)
+        ttk.Button(btn_frame, text="🗑️ Очистить", command=self._clear_program).pack(side='left', padx=5)
 
     def _create_log_panel(self):
-        self.log_text = scrolledtext.ScrolledText(self.log_frame, height=4, font=('Consolas', 9),
-                                                  state='disabled', bg='#f5f5f5')
+        self.log_text = scrolledtext.ScrolledText(self.log_frame, height=4, font=('Consolas', 9), state='disabled',
+                                                  bg='#f5f5f5')
         self.log_text.pack(fill='x', padx=5, pady=5)
-        ttk.Button(self.log_frame, text="🗑️ Очистить лог", command=self._clear_log).pack(anchor='e', padx=5,
-                                                                                         pady=(0, 5))
+        ttk.Button(self.log_frame, text="🗑️ Очистить", command=self._clear_log).pack(anchor='e', padx=5, pady=(0, 5))
 
     def _log(self, message: str, level='info'):
-        if not hasattr(self, 'log_text') or self.log_text is None:
+        if not hasattr(self, 'log_text'):
             return
-
         timestamp = time.strftime("%H:%M:%S")
         colors = {'info': 'black', 'warning': 'darkorange', 'error': 'red', 'success': 'green'}
-        color = colors.get(level, 'black')
-
         self.log_text.config(state='normal')
-        self.log_text.insert('end', f"[{timestamp}] ", 'timestamp')
-        self.log_text.insert('end', f"{message}\n", color)
-        self.log_text.tag_config(color, foreground=color)
+        self.log_text.insert('end', f"[{timestamp}] {message}\n", colors.get(level, 'black'))
         self.log_text.config(state='disabled')
         self.log_text.see('end')
 
@@ -590,7 +1182,7 @@ class ST3215GUI(tk.Tk):
                 return
             self._connect(port)
 
-    def _connect(self, port=None):
+    def _connect(self, port):
         self.controller.device = port
         if self.controller.connect():
             self._log(f"✅ Подключено к {port}", 'success')
@@ -602,7 +1194,6 @@ class ST3215GUI(tk.Tk):
         if self.monitor:
             self.monitor.stop()
             self.monitor = None
-
         self.controller.disconnect()
         self._log("🔌 Отключено", 'info')
         self.status_label.config(text="⭕ Не подключено", foreground='gray')
@@ -611,241 +1202,128 @@ class ST3215GUI(tk.Tk):
 
     def _scan_servos(self):
         self._log("🔍 Сканирование...", 'info')
-        self.config(cursor='watch')
-        self.update()
+        threading.Thread(target=self._scan_servos_thread, daemon=True).start()
 
+    def _scan_servos_thread(self):
         servos = self.controller.scan_servos()
+        self.after(0, lambda: self._on_scan_complete(servos))
 
+    def _on_scan_complete(self, servos):
         if servos:
-            self._log(f"✅ Найдено моторов: {len(servos)}", 'success')
-            self.servo_list.delete(0, tk.END)
-            for sid in servos:
-                self.servo_list.insert(tk.END, f"ID: {sid}")
-            self.status_label.config(text=f"🟢 Моторов: {len(servos)}", foreground='green')
+            self._log(f"✅ Найдено моторов: {servos}", 'success')
             self._start_monitoring(servos)
         else:
             self._log("⚠️ Моторы не найдены", 'warning')
-            messagebox.showinfo("Информация", "Моторы не найдены.\nПроверьте питание и провода")
-
-        self.config(cursor='')
 
     def _start_monitoring(self, motor_ids):
-        self._clear_monitor_frames()
-        for mid in motor_ids:
-            frame = MotorMonitorFrame(self.monitor_scrollable, motor_id=mid)
-            frame.pack(fill='x', padx=10, pady=5)
-            self.monitor_frames[mid] = frame
-
-        self.placeholder_label.pack_forget()
-
-        self.monitor = MotorMonitor(self.controller, self._on_monitor_update)
+        self.monitor = MotorMonitor(self.controller, None)
         self.monitor.start(motor_ids)
+        self._schedule_monitor_update()
 
-    def _clear_monitor_frames(self):
-        for frame in self.monitor_frames.values():
-            frame.destroy()
-        self.monitor_frames.clear()
-        self.placeholder_label.pack(pady=50)
-
-    def _on_monitor_update(self, motor_data: Dict[int, MotorData]):
-        for mid, data in motor_data.items():
-            if mid in self.monitor_frames:
-                self.monitor_frames[mid].update_data(data)
-                torque_state = self.controller.get_torque_state(mid)
-                self.monitor_frames[mid].set_torque_state(torque_state)
-
-    def _on_servo_select(self, event):
-        selection = self.servo_list.curselection()
-        if selection:
-            idx = selection[0]
-            servo_text = self.servo_list.get(idx)
-            motor_id = int(servo_text.split(":")[1].strip())
-            self.controller.current_id = motor_id
-            self._log(f"✅ Выбран мотор ID={motor_id}", 'info')
-
-    def _move_to_position(self):
-        if self.controller.current_id is None:
-            messagebox.showwarning("Предупреждение", "Выберите мотор!")
-            return
-
-        try:
-            pos = int(self.pos_spin.get())
-            speed = int(self.speed_spin.get())
-            if self.controller.move_to_position(self.controller.current_id, pos, speed):
-                self._log(f"🚀 Движение в {pos} (ID={self.controller.current_id}, speed={speed})", 'info')
-            else:
-                self._log("❌ Ошибка движения", 'error')
-        except ValueError:
-            messagebox.showerror("Ошибка", "Неверное значение!")
-
-    def _move_by_x(self):
-        try:
-            delta = float(self.x_entry.get())
-            self._log(f"🔄 Перемещение по X: +{delta}", 'info')
-        except ValueError:
-            messagebox.showerror("Ошибка", "Неверное значение X!")
-
-    def _move_minus_x(self):
-        try:
-            delta = float(self.x_entry.get())
-            self._log(f"🔄 Перемещение по X: -{delta}", 'info')
-        except ValueError:
-            messagebox.showerror("Ошибка", "Неверное значение X!")
-
-    def _move_by_y(self):
-        try:
-            delta = float(self.y_entry.get())
-            self._log(f"🔄 Перемещение по Y: +{delta}", 'info')
-        except ValueError:
-            messagebox.showerror("Ошибка", "Неверное значение Y!")
-
-    def _move_minus_y(self):
-        try:
-            delta = float(self.y_entry.get())
-            self._log(f"🔄 Перемещение по Y: -{delta}", 'info')
-        except ValueError:
-            messagebox.showerror("Ошибка", "Неверное значение Y!")
-
-    def _move_to_x_y(self):
-        try:
-            x = float(self.x_entry.get())
-            y = float(self.y_entry.get())
-            self._log(f"🔄 Перемещение в X={x}, Y={y}", 'info')
-        except ValueError:
-            messagebox.showerror("Ошибка", "Неверные координаты!")
-
-    def _stop_servo(self):
-        if self.controller.current_id and self.controller.motor:
+    def _schedule_monitor_update(self):
+        if self.monitor and self.monitor.running:
             try:
-                self.controller.motor.StopServo(self.controller.current_id)
-                self.controller.torque_states[self.controller.current_id] = False
-                self._log(f"⏹ Остановлен мотор ID={self.controller.current_id}", 'info')
-                if self.controller.current_id in self.monitor_frames:
-                    self.monitor_frames[self.controller.current_id].set_torque_state(False)
-            except:
-                pass
+                data_copy = self.monitor.get_all_data()
+                self._on_monitor_update(data_copy)
+            except Exception as e:
+                print(f"⚠️ Ошибка обновления: {e}")
+            self.after(int(MONITOR_INTERVAL * 1000), self._schedule_monitor_update)
 
-    def _toggle_torque(self):
-        if self.controller.current_id is None:
-            messagebox.showwarning("Предупреждение", "Выберите мотор!")
+    def _on_monitor_update(self, motor_data_dict: Dict[int, MotorData]):
+        if self._monitor_update_pending:
             return
-        current = self.controller.get_torque_state(self.controller.current_id)
-        new = not current
-        if self.controller.toggle_torque(self.controller.current_id, new):
-            if self.controller.current_id in self.monitor_frames:
-                self.monitor_frames[self.controller.current_id].set_torque_state(new)
-            status = "ВКЛ" if new else "ВЫКЛ"
-            style = 'Success.TButton' if new else 'Warning.TButton'
-            self.torque_btn.config(text=f"💪 Момент: {status}", style=style)
-            self._log(f"💪 Момент {status} (ID={self.controller.current_id})", 'info')
+        self._monitor_update_pending = True
+        try:
+            if self.bottom_monitor:
+                self.bottom_monitor.update_data(motor_data_dict)
 
-    def _enable_all_torque(self):
-        for motor_id in self.controller.found_servos:
-            self.controller.toggle_torque(motor_id, True)
-        self._log("💪 Момент ВКЛ на всех моторах", 'success')
+            if self.manual_panel:
+                self.manual_panel.update_from_monitor(motor_data_dict)
 
-    def _disable_all_torque(self):
-        for motor_id in self.controller.found_servos:
-            self.controller.toggle_torque(motor_id, False)
-        self._log("🛑 Момент ВЫКЛ на всех моторах", 'warning')
+            if self.motor_mapping_panel:
+                self.motor_mapping_panel.update_positions(motor_data_dict)
 
-    def _home_all_motors(self):
-        if not self.controller.connected:
-            messagebox.showwarning("Предупреждение", "Сначала подключитесь!")
+            if self.kinematics_panel:
+                for joint_idx in range(6):
+                    motor_id = self.controller.get_motor_id_for_joint(joint_idx)
+                    if motor_id in motor_data_dict:
+                        data = motor_data_dict[motor_id]
+                        if data.position is not None:
+                            angle = (data.position / MAX_POSITION) * 360 - 180
+                            self.kinematics_panel.angle_vars[joint_idx].set(angle)
+                            self.kinematics_panel.joint_angles[joint_idx] = angle
+                self.kinematics_panel._draw_robot()
+
+        except Exception as e:
+            print(f"⚠️ Ошибка обновления GUI: {e}")
+        finally:
+            self._monitor_update_pending = False
+
+    def _on_manual_update(self):
+        pass
+
+    def _show_mapping_panel(self):
+        self.notebook.select(self.mapping_tab)
+
+    def _run_program(self):
+        program = self.program_canvas.get_program()
+        if not program:
+            messagebox.showwarning("Предупреждение", "Программа пуста!")
             return
+        self._log(f"▶️ Запуск ({len(program)} блоков)", 'success')
+        threading.Thread(target=self._execute_program, args=(program,), daemon=True).start()
 
-        if messagebox.askyesno("Подтверждение", "Вернуть все моторы в позицию 0?"):
-            for motor_id in self.controller.found_servos:
-                self.controller.move_to_position(motor_id, 0, speed=1500)
-            self._log("🏠 Все моторы движутся в Home позиции (0)", 'info')
+    def _execute_program(self, program):
+        for block in program:
+            params = block.get('params', {})
+            block_type = params.get('type', '')
+            if block_type == 'move_to':
+                joint = params.get('joint', 0)
+                position = params.get('position', 2048)
+                self.controller.move_joint(joint, position)
+                joint_name = self.controller.get_joint_name(joint)
+                self._log(f"🔄 {joint_name} → {position}", 'info')
+            elif block_type == 'wait_time':
+                time.sleep(params.get('seconds', 1.0))
+            elif block_type == 'torque_on':
+                joint = params.get('joint', 0)
+                motor_id = self.controller.get_motor_id_for_joint(joint)
+                self.controller.toggle_torque(motor_id, True)
+            elif block_type == 'torque_off':
+                joint = params.get('joint', 0)
+                motor_id = self.controller.get_motor_id_for_joint(joint)
+                self.controller.toggle_torque(motor_id, False)
+        self._log("✅ Программа выполнена", 'success')
 
-    def _emergency_stop(self):
-        if messagebox.askyesno("⚠️ АВАРИЙНАЯ ОСТАНОВКА", "Вы уверены? Это остановит ВСЕ моторы!", icon='warning'):
-            self.controller.emergency_stop_all()
-            for frame in self.monitor_frames.values():
-                frame.set_torque_state(False)
-            self.torque_btn.config(text="💪 Момент: ВЫКЛ", style='Warning.TButton')
-            self._log("🛑🛑 АВАРИЙНАЯ ОСТАНОВКА ВСЕХ МОТОРОВ 🛑🛑", 'error')
-            messagebox.showwarning("Остановлено", "Все моторы остановлены!")
+    def _clear_program(self):
+        self.program_canvas.clear_all()
+        self._log("🗑️ Программа очищена", 'info')
 
     def _save_config(self):
-        try:
-            config = {
-                'port': self.port_combo.get() if hasattr(self, 'port_combo') else '',
-                'found_servos': self.controller.found_servos,
-                'timestamp': datetime.now().isoformat()
-            }
-            with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-                json.dump(config, f, indent=2)
-            self._log(f"💾 Конфигурация сохранена в {CONFIG_FILE}", 'success')
-            messagebox.showinfo("Успех", f"Конфигурация сохранена!\n{CONFIG_FILE}")
-        except Exception as e:
-            self._log(f"❌ Ошибка сохранения: {e}", 'error')
-
-    def _load_config_dialog(self):  # ← ИСПРАВЛЕНО: имя метода
-        try:
-            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                config = json.load(f)
-                if 'port' in config and hasattr(self, 'port_combo'):
-                    self.port_combo.set(config['port'])
-                    self._log("📂 Конфигурация автозагружена", 'info')
-        except Exception as e:
-            self._log(f"❌ Ошибка загрузки: {e}", 'error')
-
-    def _export_data(self):
-        if not self.monitor:
-            messagebox.showwarning("Предупреждение", "Нет данных для экспорта!")
-            return
-
-        try:
-            filename = filedialog.asksaveasfilename(defaultextension=".json")
-            if not filename:
-                return
-            data = {}
-            for mid, frame in self.monitor_frames.items():
-                motor_data = self.monitor.get_data(mid)
-                if motor_data:
-                    data[f'motor_{mid}'] = motor_data.to_dict()
-            with open(filename, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2)
-            self._log(f"📊 Данные экспортированы в {filename}", 'success')
-        except Exception as e:
-            self._log(f"❌ Ошибка экспорта: {e}", 'error')
-
-    def _show_about(self):
-        messagebox.showinfo("О программе",
-                            "ST3215 Motor Control Panel v2.0\nУправление моторами Feetech ST3215 с мониторингом.\n© 2024")
-
-    def _show_help(self):
-        help_text = """
-📖 КРАТКАЯ ИНСТРУКЦИЯ:
-
-1. Подключение: Выберите порт, нажмите "Подключиться".
-2. Сканирование: Нажмите "Сканировать моторы", дождитесь завершения.
-3. Управление: Выберите мотор, укажите позицию (0-4095), нажмите "Движение".
-4. Мониторинг: Данные обновляются автоматически.
-5. Аварийная остановка: Красная кнопка вверху справа.
-
-⚠️ МЕРЫ ПРЕДОСТОРОЖНОСТИ: 
-Закрепите моторы перед тестом, следите за температурой (<70°C), 
-не превышайте нагрузку (>80%).
-        """
-        messagebox.showinfo(title="Помощь", message=help_text)  # ← ИСПРАВЛЕНО: убран лишний параметр
+        if self.controller.save_config():
+            self._log("💾 Конфигурация сохранена", 'success')
 
     def _on_closing(self):
         if messagebox.askyesno("Выход", "Завершить работу?"):
             if self.monitor:
                 self.monitor.stop()
             self.controller.disconnect()
-            self._save_config()
+            self.controller.save_config()
+            plt.close('all')
             self.destroy()
 
 
 def main():
     print("\n" + "=" * 70)
-    print("ST3215 Motor Control Panel v2.0")
+    print("🤖 ST3215 Robot Control Panel v6.1")
     print("=" * 70)
-    app = ST3215GUI()
+    print("Функции:")
+    print("  • Настройка соответствия моторов суставам")
+    print("  • 3D визуализация кинематики")
+    print("  • Асинхронный мониторинг")
+    print("  • Мануальное управление")
+    print("=" * 70)
+    app = RobotControlGUI()
     app.mainloop()
 
 

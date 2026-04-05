@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import tkinter; print\\('tkinter: OK'\\)\")",
+      "Bash(python:*)",
+      "Bash(find /c/Users/SahaA/Documents/GitHub/diplome -name \"*.py\" -type f ! -path \"*/.venv/*\" ! -path \"*/__pycache__/*\" -exec grep -l \"ST3215\\\\|st3215\" {})",
+      "Bash(find /c/Users/SahaA/Documents/GitHub/diplome -type f \\\\\\(-name *.xml -o -name *.urdf -o -name *.mjcf \\\\\\))",
+      "Bash(grep -ri \"mujoco\\\\|mjcf\\\\|urdf\" /c/Users/SahaA/Documents/GitHub/diplome --include=*.py --include=*.json --include=*.md)",
+      "Bash(find /c/Users/SahaA/Documents/GitHub/diplome/app -type f -name *.py)",
+      "Bash(grep -r \"class\\\\|def \" /c/Users/SahaA/Documents/GitHub/diplome/app/views/*.py)",
+      "Bash(npm list:*)",
+      "Bash(npm install:*)"
+    ]
+  }
+}

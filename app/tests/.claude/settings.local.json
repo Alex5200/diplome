@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m py_compile app/main.py app/views/main_window.py app/views/manual_control_panel.py app/views/bottom_monitor_panel.py app/views/kinematics_3d_panel.py)"
+    ]
+  }
+}
