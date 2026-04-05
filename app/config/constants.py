@@ -20,7 +20,7 @@ TEMP_WARNING = 70
 TEMP_CRITICAL = 80
 LOAD_WARNING = 80
 
-# --- ЦВЕТА ---
+# --- ТЁМНАЯ ТЕМА (FANUC) ---
 FANUC_BG = "#1a1a2e"
 FANUC_PANEL = "#16213e"
 FANUC_GREEN = "#00ff88"
@@ -29,6 +29,20 @@ FANUC_RED = "#ff4444"
 FANUC_BLUE = "#00d4ff"
 FANUC_TEXT = "#ffffff"
 FANUC_GRAY = "#666666"
+
+# --- СВЕТЛАЯ ТЕМА ---
+LIGHT_BG = "#f4f6f8"
+LIGHT_PANEL = "#ffffff"
+LIGHT_BORDER = "#d0d7de"
+LIGHT_TEXT = "#1a1a2e"
+LIGHT_TEXT2 = "#444444"
+LIGHT_GREEN = "#1a7f37"
+LIGHT_ORANGE = "#bf8700"
+LIGHT_RED = "#cf222e"
+LIGHT_BLUE = "#0969da"
+LIGHT_ACCENT = "#0078d7"
+LIGHT_HOVER = "#e8ecf0"
+LIGHT_SELECT = "#dbeafe"
 
 BLOCK_COLORS = {
     'motion': '#4CAF50',
