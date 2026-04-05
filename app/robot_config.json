@@ -52,7 +52,7 @@
       "name": "Плечо 2",
       "min_pos": 0,
       "max_pos": 4095,
-      "inverted": true
+      "inverted": Flse
     },
     "joint_3": {
       "motor_id": 5,
@@ -62,14 +62,14 @@
       "inverted": false
     },
     "joint_4": {
-      "motor_id": 3,
+      "motor_id": 6,
       "name": "Кисть 1",
       "min_pos": 0,
       "max_pos": 4095,
       "inverted": false
     },
     "joint_5": {
-      "motor_id": 6,
+      "motor_id": 3,
       "name": "Кисть 2",
       "min_pos": 0,
       "max_pos": 4095,

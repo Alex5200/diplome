@@ -32,5 +32,49 @@
       "name": "Кисть 2"
     }
   },
-  "timestamp": "2026-04-01T19:52:01.829836"
+  "motor_mapping": {
+    "joint_0": {
+      "motor_id": 1,
+      "name": "База",
+      "min_pos": 0,
+      "max_pos": 4095,
+      "inverted": true
+    },
+    "joint_1": {
+      "motor_id": 2,
+      "name": "Плечо 1",
+      "min_pos": 0,
+      "max_pos": 4095,
+      "inverted": false
+    },
+    "joint_2": {
+      "motor_id": 4,
+      "name": "Плечо 2",
+      "min_pos": 0,
+      "max_pos": 4095,
+      "inverted": false
+    },
+    "joint_3": {
+      "motor_id": 5,
+      "name": "Локоть",
+      "min_pos": 0,
+      "max_pos": 4095,
+      "inverted": false
+    },
+    "joint_4": {
+      "motor_id": 6,
+      "name": "Кисть 1",
+      "min_pos": 0,
+      "max_pos": 4095,
+      "inverted": false
+    },
+    "joint_5": {
+      "motor_id": 3,
+      "name": "Кисть 2",
+      "min_pos": 0,
+      "max_pos": 4095,
+      "inverted": false
+    }
+  },
+  "timestamp": "2026-04-05T18:36:17.071521"
 }
