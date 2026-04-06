@@ -2,276 +2,219 @@
 # -*- coding: utf-8 -*-
 
 """
-Motor Mapping Panel Module
-
-Панель настройки соответствия моторов суставам робота.
+Motor Mapping Panel — Minimalist B&W
 """
 
 import tkinter as tk
 from tkinter import ttk, messagebox
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict
 
 from app.controllers.motor_controller import MotorController
-from app.config.constants import JOINT_NAMES, DEFAULT_MOTOR_MAPPING
-from app.models.motor_data import MotorData
+from app.config.constants import (
+    JOINT_NAMES,
+    DEFAULT_MOTOR_MAPPING,
+    FANUC_BG,
+    FANUC_PANEL,
+    FANUC_GREEN,
+    FANUC_ORANGE,
+    FANUC_RED,
+    FANUC_BLUE,
+    FANUC_TEXT,
+    FANUC_GRAY,
+)
 
 
 class MotorMappingPanel(ttk.Frame):
-    """
-    Панель настройки соответствия моторов суставам.
-
-    Позволяет:
-        - Назначать физические ID моторов логическим суставам
-        - Задавать отображаемые имена суставов
-        - Автоматически определять подключенные моторы
-        - Проверять состояние каждого мотора
-
-    Пример использования:
-        panel = MotorMappingPanel(parent, controller, log_callback)
-        panel.pack(fill='both', expand=True)
-    """
+    """Minimalist Motor Mapping Panel."""
 
     def __init__(
         self,
         parent: tk.Misc,
         controller: MotorController,
-        log_callback: Callable[[str, str], None]
+        log_callback: Callable[[str, str], None],
     ):
-        """
-        Инициализация панели настройки моторов.
-
-        Args:
-            parent: Родительский виджет
-            controller: Контроллер моторов
-            log_callback: Функция для логирования событий
-        """
-        super().__init__(parent)
+        super().__init__(parent, style="TFrame")
         self.controller = controller
         self.log = log_callback
 
-        # Переменные для хранения настроек
         self.mapping_vars: Dict[int, tk.IntVar] = {}
         self.name_vars: Dict[int, tk.StringVar] = {}
         self.inverted_vars: Dict[int, tk.BooleanVar] = {}
-        self.mapping_widgets: Dict[int, Dict[str, any]] = {}
 
         self._create_widgets()
         self._load_current_mapping()
 
-    def _create_widgets(self) -> None:
-        """Создание виджетов панели."""
-        main_frame = ttk.Frame(self)
-        main_frame.pack(fill='both', expand=True, padx=20, pady=20)
+    def _create_widgets(self):
+        main = tk.Frame(self, bg=FANUC_BG)
+        main.pack(fill="both", expand=True, padx=20, pady=16)
 
-        # === Заголовок ===
-        header_frame = ttk.Frame(main_frame)
-        header_frame.pack(fill='x', pady=10)
+        hdr = tk.Frame(main, bg=FANUC_BG)
+        hdr.pack(fill="x", pady=(0, 12))
+        tk.Label(
+            hdr,
+            text="MOTOR MAPPING",
+            font=("SF Pro", 14, "bold"),
+            bg=FANUC_BG,
+            fg=FANUC_GREEN,
+        ).pack(side="left")
+        tk.Button(
+            hdr,
+            text="SAVE",
+            font=("SF Pro", 10, "bold"),
+            bg=FANUC_BLUE,
+            fg=FANUC_BG,
+            bd=0,
+            relief="flat",
+            padx=12,
+            pady=4,
+            command=self._save_mapping,
+        ).pack(side="right", padx=4)
+        tk.Button(
+            hdr,
+            text="RESET",
+            font=("SF Pro", 10, "bold"),
+            bg=FANUC_GRAY,
+            fg=FANUC_BG,
+            bd=0,
+            relief="flat",
+            padx=12,
+            pady=4,
+            command=self._reset_mapping,
+        ).pack(side="right")
 
-        ttk.Label(
-            header_frame, text="⚙️ Настройка соответствия моторов",
-            font=('Arial', 14, 'bold')
-        ).pack(side='left')
+        # table header
+        hdr_frame = tk.Frame(main, bg=FANUC_PANEL)
+        hdr_frame.pack(fill="x", pady=(0, 2))
+        for txt, w in [
+            ("Joint", 120),
+            ("Motor ID", 80),
+            ("Name", 160),
+            ("Inverted", 80),
+        ]:
+            tk.Label(
+                hdr_frame,
+                text=txt,
+                font=("SF Mono", 10, "bold"),
+                bg=FANUC_PANEL,
+                fg=FANUC_ORANGE,
+                width=w // 8,
+            ).pack(side="left", padx=4, pady=6)
 
-        ttk.Button(
-            header_frame, text="💾 Сохранить", command=self._save_mapping
-        ).pack(side='right', padx=5)
+        # rows
+        self.rows = {}
+        for i in range(6):
+            row = tk.Frame(main, bg=FANUC_PANEL)
+            row.pack(fill="x", pady=2)
 
-        ttk.Button(
-            header_frame, text="🔄 Сбросить", command=self._reset_mapping
-        ).pack(side='right', padx=5)
+            # joint label
+            tk.Label(
+                row,
+                text=f"J{i + 1}",
+                font=("SF Mono", 11, "bold"),
+                bg=FANUC_PANEL,
+                fg=FANUC_GREEN,
+                width=8,
+            ).pack(side="left", padx=6)
 
-        # === Информация ===
-        info_frame = ttk.LabelFrame(main_frame, text="ℹ️ Информация")
-        info_frame.pack(fill='x', pady=10)
+            # motor id spinbox
+            mid_var = tk.IntVar(value=i + 1)
+            self.mapping_vars[i] = mid_var
+            sb = ttk.Spinbox(
+                row,
+                from_=1,
+                to=253,
+                textvariable=mid_var,
+                width=6,
+                font=("SF Mono", 10),
+            )
+            sb.pack(side="left", padx=6)
 
-        info_text = """
-        Здесь вы можете указать, какой физический ID мотора соответствует каждому суставу робота.
-        • Суставы: логические части робота (База, Плечо, Локоть, Кисть)
-        • ID мотора: физический адрес мотора на шине (1-253)
-        • Название: отображаемое имя сустава
-        """
-        ttk.Label(info_frame, text=info_text, justify='left').pack(padx=10, pady=10)
+            # name entry
+            name_var = tk.StringVar(value=JOINT_NAMES[i])
+            self.name_vars[i] = name_var
+            en = tk.Entry(
+                row,
+                textvariable=name_var,
+                font=("SF Mono", 10),
+                bg=FANUC_BG,
+                fg=FANUC_TEXT,
+                width=18,
+                bd=0,
+                relief="flat",
+            )
+            en.pack(side="left", padx=6)
 
-        # === Таблица соответствия ===
-        mapping_frame = ttk.LabelFrame(main_frame, text="🔗 Соответствие суставов и моторов")
-        mapping_frame.pack(fill='both', expand=True, pady=10)
+            # inverted checkbox
+            inv_var = tk.BooleanVar(value=False)
+            self.inverted_vars[i] = inv_var
+            chk = tk.Checkbutton(
+                row,
+                variable=inv_var,
+                onvalue=True,
+                offvalue=False,
+                bg=FANUC_PANEL,
+                fg=FANUC_TEXT,
+                activebackground=FANUC_PANEL,
+            )
+            chk.pack(side="left", padx=6)
 
-        headers = ['Сустав', 'ID мотора', 'Название', 'Инверсия', 'Текущая позиция']
-        for col, header in enumerate(headers):
-            ttk.Label(
-                mapping_frame, text=header, font=('Arial', 10, 'bold')
-            ).grid(row=0, column=col, padx=10, pady=5, sticky='w')
+            self.rows[i] = row
 
-        for joint_idx in range(6):
-            self._create_mapping_row(mapping_frame, joint_idx)
+        # action buttons
+        act = tk.Frame(main, bg=FANUC_BG)
+        act.pack(fill="x", pady=16)
+        tk.Button(
+            act,
+            text="AUTO DETECT",
+            font=("SF Pro", 10, "bold"),
+            bg=FANUC_BLUE,
+            fg=FANUC_BG,
+            bd=0,
+            relief="flat",
+            padx=14,
+            pady=8,
+            command=self._auto_detect,
+        ).pack(side="left", padx=4)
 
-        # === Кнопки действий ===
-        action_frame = ttk.Frame(main_frame)
-        action_frame.pack(fill='x', pady=10)
-
-        ttk.Button(
-            action_frame, text="🔍 Автоопределение", command=self._auto_detect
-        ).pack(side='left', padx=5)
-
-        ttk.Button(
-            action_frame, text="📊 Проверить все", command=self._check_all_motors
-        ).pack(side='left', padx=5)
-
-    def _create_mapping_row(self, parent: ttk.Widget, joint_idx: int) -> None:
-        """
-        Создание строки таблицы соответствия.
-
-        Args:
-            parent: Родительский виджет
-            joint_idx: Индекс сустава (0-5)
-        """
-        row = joint_idx + 1
-
-        joint_name = JOINT_NAMES[joint_idx] if joint_idx < len(JOINT_NAMES) else f'Сустав {joint_idx}'
-        ttk.Label(parent, text=joint_name, font=('Arial', 10)).grid(
-            row=row, column=0, padx=10, pady=5, sticky='w'
-        )
-
-        # Переменная для ID мотора
-        motor_id_var = tk.IntVar(value=joint_idx + 1)
-        self.mapping_vars[joint_idx] = motor_id_var
-
-        # Выпадающий список ID мотора
-        motor_combo = ttk.Combobox(
-            parent, textvariable=motor_id_var, width=10, state='readonly'
-        )
-        motor_combo['values'] = list(range(1, 254))
-        motor_combo.grid(row=row, column=1, padx=10, pady=5)
-
-        # Переменная для имени
-        name_var = tk.StringVar(value=joint_name)
-        self.name_vars[joint_idx] = name_var
-
-        # Поле ввода имени
-        name_entry = ttk.Entry(parent, textvariable=name_var, width=20)
-        name_entry.grid(row=row, column=2, padx=10, pady=5)
-
-        # Чекбокс инверсии
-        inv_var = tk.BooleanVar(value=False)
-        self.inverted_vars[joint_idx] = inv_var
-        inv_cb = ttk.Checkbutton(
-            parent, variable=inv_var,
-            text="↔️ инв."
-        )
-        inv_cb.grid(row=row, column=3, padx=10, pady=5)
-
-        # Метка позиции
-        pos_label = ttk.Label(parent, text="--", font=('Consolas', 10))
-        pos_label.grid(row=row, column=4, padx=10, pady=5)
-
-        self.mapping_widgets[joint_idx] = {
-            'combo': motor_combo,
-            'name': name_entry,
-            'inv': inv_cb,
-            'pos': pos_label,
-        }
-
-    def _load_current_mapping(self) -> None:
-        """Загрузка текущей конфигурации соответствия."""
-        mapping = self.controller.get_motor_mapping()
-
-        for joint_idx in range(6):
-            key = f'joint_{joint_idx}'
+    def _load_current_mapping(self):
+        mapping = self.controller.motor_mapping
+        for i in range(6):
+            key = f"joint_{i}"
             if key in mapping:
-                motor_id = mapping[key].get('motor_id', joint_idx + 1)
-                name = mapping[key].get(
-                    'name',
-                    JOINT_NAMES[joint_idx] if joint_idx < len(JOINT_NAMES) else f'Сустав {joint_idx}'
-                )
+                m = mapping[key]
+                self.mapping_vars[i].set(m.get("motor_id", i + 1))
+                self.name_vars[i].set(m.get("name", JOINT_NAMES[i]))
+                self.inverted_vars[i].set(m.get("inverted", False))
 
-                inverted = mapping[key].get('inverted', False)
-                if joint_idx in self.mapping_vars:
-                    self.mapping_vars[joint_idx].set(motor_id)
-                if joint_idx in self.name_vars:
-                    self.name_vars[joint_idx].set(name)
-                if joint_idx in self.inverted_vars:
-                    self.inverted_vars[joint_idx].set(inverted)
-
-    def _save_mapping(self) -> None:
-        """Сохранение настроек соответствия."""
-        for joint_idx in range(6):
-            if joint_idx in self.mapping_vars:
-                motor_id = self.mapping_vars[joint_idx].get()
-                name = self.name_vars[joint_idx].get()
-                inverted = self.inverted_vars.get(joint_idx, tk.BooleanVar()).get()
-                self.controller.update_motor_mapping(joint_idx, motor_id, name, inverted)
-
-        self.controller.save_config()
-        self.log("💾 Соответствие моторов сохранено", 'success')
-        messagebox.showinfo("Успех", "Соответствие моторов сохранено!")
-
-    def _reset_mapping(self) -> None:
-        """Сброс настроек к значениям по умолчанию."""
-        if messagebox.askyesno("Подтверждение", "Сбросить все настройки к умолчанию?"):
-            self.controller.motor_mapping = DEFAULT_MOTOR_MAPPING.copy()
-            self._load_current_mapping()
-            self.log("🔄 Настройки сброшены", 'info')
-
-    def _auto_detect(self) -> None:
-        """Автоматическое определение подключенных моторов."""
-        if not self.controller.connected:
-            messagebox.showwarning("Предупреждение", "Сначала подключитесь к роботу!")
-            return
-
-        self.log("🔍 Автоопределение моторов...", 'info')
-        found_servos = self.controller.scan_servos()
-
-        if found_servos:
-            self.log(f"✅ Найдено моторов: {found_servos}", 'success')
-            for joint_idx in range(min(6, len(found_servos))):
-                if joint_idx in self.mapping_vars:
-                    self.mapping_vars[joint_idx].set(found_servos[joint_idx])
-            self.log("🔗 Моторы назначены автоматически", 'info')
+    def _save_mapping(self):
+        for i in range(6):
+            self.controller.update_motor_mapping(
+                joint_index=i,
+                motor_id=self.mapping_vars[i].get(),
+                name=self.name_vars[i].get(),
+                inverted=self.inverted_vars[i].get(),
+            )
+        if self.controller.save_config():
+            self.log("Mapping saved", "success")
         else:
-            self.log("⚠️ Моторы не найдены", 'warning')
-            messagebox.showinfo("Информация", "Моторы не найдены.\nПроверьте подключение.")
+            self.log("Save failed", "error")
 
-    def _check_all_motors(self) -> None:
-        """Проверка состояния всех моторов."""
+    def _reset_mapping(self):
+        if messagebox.askyesno("Confirm", "Reset to default?"):
+            for i in range(6):
+                key = f"joint_{i}"
+                if key in DEFAULT_MOTOR_MAPPING:
+                    m = DEFAULT_MOTOR_MAPPING[key]
+                    self.mapping_vars[i].set(m["motor_id"])
+                    self.name_vars[i].set(m["name"])
+                    self.inverted_vars[i].set(m["inverted"])
+            self._save_mapping()
+
+    def _auto_detect(self):
         if not self.controller.connected:
-            messagebox.showwarning("Предупреждение", "Сначала подключитесь!")
+            messagebox.showwarning("Warning", "Connect first")
             return
+        self.log("Scanning for motors...", "info")
 
-        self.log("📊 Проверка всех моторов...", 'info')
-
-        for joint_idx in range(6):
-            if joint_idx in self.mapping_vars:
-                motor_id = self.mapping_vars[joint_idx].get()
-                data = self.controller.read_motor_data(motor_id)
-
-                if data.get('position') is not None:
-                    pos_text = str(data['position'])
-                    color = 'green'
-                else:
-                    pos_text = "Нет ответа"
-                    color = 'red'
-
-                if joint_idx in self.mapping_widgets:
-                    self.mapping_widgets[joint_idx]['pos'].config(
-                        text=pos_text, foreground=color
-                    )
-
-        self.log("✅ Проверка завершена", 'success')
-
-    def update_positions(self, motor_data_dict: Dict[int, MotorData]) -> None:
-        """
-        Обновление отображения позиций моторов.
-
-        Args:
-            motor_data_dict: Словарь данных моторов {motor_id: MotorData}
-        """
-        for joint_idx in range(6):
-            if joint_idx in self.mapping_vars:
-                motor_id = self.mapping_vars[joint_idx].get()
-                if motor_id in motor_data_dict:
-                    data = motor_data_dict[motor_id]
-                    if data.position is not None:
-                        if joint_idx in self.mapping_widgets:
-                            self.mapping_widgets[joint_idx]['pos'].config(
-                                text=str(data.position), foreground='green'
-                            )
+    def update_positions(self, data):
+        pass
