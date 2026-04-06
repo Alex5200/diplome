@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 ST3215 Robot Control Application
@@ -33,29 +32,27 @@ ST3215 Robot Control Application
 
 import sys
 import tkinter as tk
-from tkinter import ttk
 from pathlib import Path
+from tkinter import ttk
 
 # Добавляем родительскую директорию в path для импорта st3215
 parent_dir = Path(__file__).parent.parent
 if str(parent_dir) not in sys.path:
     sys.path.insert(0, str(parent_dir))
 
-from app.views.main_window import RobotControlGUI
 from app.config.constants import (
+    LIGHT_ACCENT,
     LIGHT_BG,
+    LIGHT_BLUE,
+    LIGHT_BORDER,
+    LIGHT_HOVER,
     LIGHT_PANEL,
+    LIGHT_RED,
+    LIGHT_SELECT,
     LIGHT_TEXT,
     LIGHT_TEXT2,
-    LIGHT_BORDER,
-    LIGHT_GREEN,
-    LIGHT_ORANGE,
-    LIGHT_RED,
-    LIGHT_BLUE,
-    LIGHT_ACCENT,
-    LIGHT_HOVER,
-    LIGHT_SELECT,
 )
+from app.views.main_window import RobotControlGUI
 
 
 def apply_light_theme(root: tk.Tk) -> None:
