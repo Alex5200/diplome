@@ -20,43 +20,56 @@ TEMP_WARNING = 70
 TEMP_CRITICAL = 80
 LOAD_WARNING = 80
 
-# --- ТЁМНАЯ ТЕМА (FANUC) ---
-FANUC_BG = "#1a1a2e"
-FANUC_PANEL = "#16213e"
-FANUC_GREEN = "#00ff88"
-FANUC_ORANGE = "#ff9500"
-FANUC_RED = "#ff4444"
-FANUC_BLUE = "#00d4ff"
-FANUC_TEXT = "#ffffff"
-FANUC_GRAY = "#666666"
+# --- ПАСТЕЛЬНАЯ ТЕМА ---
+# Фон приложения (теплый кремовый)
+FANUC_BG = "#faf8f5"
+# Панели / карточки (белый с теплым оттенком)
+FANUC_PANEL = "#ffffff"
+# Пастельный мятный — основной акцент (успех, активные элементы)
+FANUC_GREEN = "#7dd3c0"
+# Пастельный персиковый — предупреждения, внимание
+FANUC_ORANGE = "#f5b971"
+# Пастельный коралловый — ошибки, стоп
+FANUC_RED = "#e8927c"
+# Пастельный голубой — информация, ссылки
+FANUC_BLUE = "#8ab4f8"
+# Основной текст — ЧЁРНЫЙ для максимального контраста
+FANUC_TEXT = "#000000"
+# Текст вторичный (тёмно-серый для less important)
+FANUC_TEXT2 = "#4a4a5a"
+# Разделители (тёмно-серый для видимости)
+FANUC_GRAY = "#8a8580"
 
-# --- СВЕТЛАЯ ТЕМА ---
-LIGHT_BG = "#f4f6f8"
+# --- СВЕТЛАЯ ПАСТЕЛЬНАЯ ТЕМА ---
+LIGHT_BG = "#faf8f5"
 LIGHT_PANEL = "#ffffff"
-LIGHT_BORDER = "#d0d7de"
-LIGHT_TEXT = "#1a1a2e"
-LIGHT_TEXT2 = "#444444"
-LIGHT_GREEN = "#1a7f37"
-LIGHT_ORANGE = "#bf8700"
-LIGHT_RED = "#cf222e"
-LIGHT_BLUE = "#0969da"
-LIGHT_ACCENT = "#0078d7"
-LIGHT_HOVER = "#e8ecf0"
-LIGHT_SELECT = "#dbeafe"
+LIGHT_BORDER = "#e8e4e0"
+LIGHT_TEXT = "#000000"  # Чёрный для контраста
+LIGHT_TEXT2 = "#4a4a5a"  # Тёмно-серый для secondary
+LIGHT_GREEN = "#7dd3c0"
+LIGHT_ORANGE = "#f5b971"
+LIGHT_RED = "#e8927c"
+LIGHT_BLUE = "#8ab4f8"
+LIGHT_ACCENT = "#7dd3c0"
+LIGHT_HOVER = "#f0ece8"
+LIGHT_SELECT = "#7dd3c0"
 
+TEXT_COLOR = "#000000"
+
+# Блоки — пастельные оттенки для различимости
 BLOCK_COLORS = {
-    'motion': '#4CAF50',
-    'control': '#2196F3',
-    'logic': '#FF9800',
-    'wait': '#9C27B0',
-    'io': '#F44336',
+    "motion": "#a8e6cf",  # пастельный мятный
+    "control": "#b8d4e3",  # пастельный голубой
+    "logic": "#f4d03f",  # пастельный желтый
+    "wait": "#f8c471",  # пастельный персиковый
+    "io": "#d7bde2",  # пастельный лавандовый
 }
 
-KINEMA_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
+KINEMA_COLORS = ["#7dd3c0", "#a8e6cf", "#b8d4e3", "#8ab4f8", "#d7bde2", "#f5b971"]
 
 # --- FANUC РЕЖИМЫ ---
-JOG_MODE_JOINT = 'joint'
-JOG_MODE_CARTESIAN = 'cartesian'
+JOG_MODE_JOINT = "joint"
+JOG_MODE_CARTESIAN = "cartesian"
 
 # --- ПОЗИЦИОННЫЕ РЕГИСТРЫ ---
 MAX_POSITION_REGISTERS = 100
@@ -68,26 +81,72 @@ SPEED_OVERRIDE_MAX = 100
 SPEED_OVERRIDE_DEFAULT = 50
 
 # --- ЛОГИЧЕСКИЕ НАЗВАНИЯ СУСТАВОВ ---
+NUM_JOINTS = 6  # Количество суставов робота
 JOINT_NAMES = [
-    '🏗️ База',
-    '💪 Плечо 1',
-    '💪 Плечо 2',
-    '🦾 Локоть',
-    '🖐️ Кисть 1',
-    '🖐️ Кисть 2'
+    "База",
+    "Плечо 1",
+    "Плечо 2",
+    "Локоть",
+    "Кисть 1",
+    "Кисть 2",
 ]
 
 # Конфигурация по умолчанию
 DEFAULT_MOTOR_MAPPING = {
-    'joint_0': {'motor_id': 1, 'name': 'База', 'min_pos': 0, 'max_pos': MAX_POSITION, 'inverted': True},
-    'joint_1': {'motor_id': 2, 'name': 'Плечо 1', 'min_pos': 0, 'max_pos': MAX_POSITION, 'inverted': False},
-    'joint_2': {'motor_id': 4, 'name': 'Плечо 2', 'min_pos': 0, 'max_pos': MAX_POSITION, 'inverted': True},
-    'joint_3': {'motor_id': 5, 'name': 'Локоть', 'min_pos': 0, 'max_pos': MAX_POSITION, 'inverted': False},
-    'joint_4': {'motor_id': 3, 'name': 'Кисть 1', 'min_pos': 0, 'max_pos': MAX_POSITION, 'inverted': False},
-    'joint_5': {'motor_id': 6, 'name': 'Кисть 2', 'min_pos': 0, 'max_pos': MAX_POSITION, 'inverted': False},
+    "joint_0": {
+        "motor_id": 1,
+        "name": "База",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": True,
+    },
+    "joint_1": {
+        "motor_id": 2,
+        "name": "Плечо 1",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": False,
+    },
+    "joint_2": {
+        "motor_id": 4,
+        "name": "Плечо 2",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": True,
+    },
+    "joint_3": {
+        "motor_id": 5,
+        "name": "Локоть",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": False,
+    },
+    "joint_4": {
+        "motor_id": 3,
+        "name": "Кисть 1",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": False,
+    },
+    "joint_5": {
+        "motor_id": 6,
+        "name": "Кисть 2",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": False,
+    },
 }
 
 DEFAULT_MOTOR_CONFIG = {
-    f'motor_{i}': {'min_pos': 0, 'max_pos': MAX_POSITION, 'name': f'Мотор {i}'}
-    for i in range(1, 7)
+    f"motor_{i}": {"min_pos": 0, "max_pos": MAX_POSITION, "name": f"Мотор {i}"} for i in range(1, 7)
 }
+
+# --- МАСШТАБИРОВАНИЕ ПОД МОНИТОР ---
+# Процент от ширины экрана для определения размера окна
+WINDOW_SCALE_PERCENT = 80  # 80% от ширины экрана
+# Минимальный и максимальный масштаб (процент от базового размера)
+MIN_SCALE_PERCENT = 50
+MAX_SCALE_PERCENT = 150
+# Базовый размер окна (при 100% масштабе)
+BASE_WINDOW_WIDTH = 1400
+BASE_WINDOW_HEIGHT = 900
