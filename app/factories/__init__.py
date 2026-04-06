@@ -16,6 +16,7 @@ from ..config.constants import DEFAULT_MOTOR_MAPPING, MAX_POSITION
 @dataclass
 class MotorConfig:
     """Конфигурация мотора."""
+
     motor_id: int
     name: str = ""
     min_position: int = 0
@@ -92,9 +93,7 @@ class MotorFactory:
             )
 
         if not (0 <= initial_position <= MAX_POSITION):
-            raise ValueError(
-                f"initial_position должен быть в диапазоне 0-{MAX_POSITION}"
-            )
+            raise ValueError(f"initial_position должен быть в диапазоне 0-{MAX_POSITION}")
 
         config = MotorConfig(
             motor_id=motor_id,
@@ -132,10 +131,14 @@ class MotorFactory:
             return position
         return MAX_POSITION - position
 
-    def position_to_angle(self, position: int, min_pos: int = 0,
-                          max_pos: int = MAX_POSITION,
-                          min_angle: float = -180.0,
-                          max_angle: float = 180.0) -> float:
+    def position_to_angle(
+        self,
+        position: int,
+        min_pos: int = 0,
+        max_pos: int = MAX_POSITION,
+        min_angle: float = -180.0,
+        max_angle: float = 180.0,
+    ) -> float:
         """
         Конвертация позиции в угол.
 
@@ -153,10 +156,14 @@ class MotorFactory:
         normalized = (position - min_pos) / (max_pos - min_pos)
         return min_angle + normalized * (max_angle - min_angle)
 
-    def angle_to_position(self, angle: float, min_pos: int = 0,
-                          max_pos: int = MAX_POSITION,
-                          min_angle: float = -180.0,
-                          max_angle: float = 180.0) -> int:
+    def angle_to_position(
+        self,
+        angle: float,
+        min_pos: int = 0,
+        max_pos: int = MAX_POSITION,
+        min_angle: float = -180.0,
+        max_angle: float = 180.0,
+    ) -> int:
         """
         Конвертация угла в позицию.
 
@@ -188,16 +195,16 @@ class MotorFactory:
         configs = {}
 
         for joint_key, joint_data in mapping.items():
-            motor_id = joint_data.get('motor_id')
+            motor_id = joint_data.get("motor_id")
             if motor_id is None:
                 continue
 
             config = MotorConfig(
                 motor_id=motor_id,
-                name=joint_data.get('name', f"Motor {motor_id}"),
-                min_position=joint_data.get('min_pos', 0),
-                max_position=joint_data.get('max_pos', MAX_POSITION),
-                inverted=joint_data.get('inverted', False),
+                name=joint_data.get("name", f"Motor {motor_id}"),
+                min_position=joint_data.get("min_pos", 0),
+                max_position=joint_data.get("max_pos", MAX_POSITION),
+                inverted=joint_data.get("inverted", False),
             )
             configs[motor_id] = config
 
