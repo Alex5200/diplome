@@ -79,13 +79,9 @@ class MonitorNode(Node):
             }
             temps[str(mid)] = data.temperature
             if data.temperature >= TEMP_CRITICAL:
-                alarms.append(
-                    {"motor": mid, "type": "TEMP_CRITICAL", "value": data.temperature}
-                )
+                alarms.append({"motor": mid, "type": "TEMP_CRITICAL", "value": data.temperature})
             elif data.temperature >= TEMP_WARNING:
-                alarms.append(
-                    {"motor": mid, "type": "TEMP_WARNING", "value": data.temperature}
-                )
+                alarms.append({"motor": mid, "type": "TEMP_WARNING", "value": data.temperature})
 
         self._pub_diag.publish(String(data=json.dumps(diag)))
         self._pub_temps.publish(String(data=json.dumps(temps)))

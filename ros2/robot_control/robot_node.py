@@ -63,18 +63,14 @@ class RobotNode(Node):
             self.get_logger().info(f"Connected to robot on {port}")
             self._start_monitor(rate_hz)
         else:
-            self.get_logger().warn(
-                f"Could not connect to {port} — running in offline mode"
-            )
+            self.get_logger().warn(f"Could not connect to {port} — running in offline mode")
 
         # Publishers
         self._pub_joints = self.create_publisher(JointState, "/robot/joint_states", 10)
         self._pub_status = self.create_publisher(String, "/robot/status", 10)
 
         # Subscribers
-        self.create_subscription(
-            JointTrajectoryPoint, "/robot/joint_cmd", self._on_joint_cmd, 10
-        )
+        self.create_subscription(JointTrajectoryPoint, "/robot/joint_cmd", self._on_joint_cmd, 10)
         self.create_subscription(Empty, "/robot/stop", self._on_stop, 10)
 
         # Service
@@ -149,9 +145,7 @@ class RobotNode(Node):
                 self._ctrl.scan_motors()
                 self._start_monitor(self.get_parameter("monitor_rate_hz").value)
             res.success = ok
-            res.message = (
-                f"Connected to {port}" if ok else f"Failed to connect to {port}"
-            )
+            res.message = f"Connected to {port}" if ok else f"Failed to connect to {port}"
         else:
             if self._monitor:
                 self._monitor.stop()

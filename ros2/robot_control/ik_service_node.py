@@ -50,16 +50,12 @@ class IKServiceNode(Node):
             req = json.loads(msg.data)
             x, y, z = float(req["x"]), float(req["y"]), float(req["z"])
         except (KeyError, ValueError, json.JSONDecodeError) as e:
-            self._pub.publish(
-                String(data=json.dumps({"success": False, "error": str(e)}))
-            )
+            self._pub.publish(String(data=json.dumps({"success": False, "error": str(e)})))
             return
 
         result = self._ik.solve(x, y, z)
         if result is None:
-            self._pub.publish(
-                String(data=json.dumps({"success": False, "error": "unreachable"}))
-            )
+            self._pub.publish(String(data=json.dumps({"success": False, "error": "unreachable"})))
         else:
             angles, error = result
             self._pub.publish(
