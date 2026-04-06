@@ -21,8 +21,8 @@ ST3215 Robot Control Application
     controller.connect()
 """
 
-__version__ = '6.1.0'
-__author__ = 'Alexandr Lyachov'
+__version__ = "6.1.0"
+__author__ = "Alexandr Lyachov"
 
 from app.config.constants import (
     MIN_POSITION,
@@ -45,24 +45,24 @@ from app.models.motor_data import MotorData, ProgramBlock
 
 __all__ = [
     # Version
-    '__version__',
-    '__author__',
+    "__version__",
+    "__author__",
     # Constants
-    'MIN_POSITION',
-    'MAX_POSITION',
-    'DEFAULT_SPEED',
-    'DEFAULT_ACC',
-    'MONITOR_INTERVAL',
-    'TEMP_WARNING',
-    'TEMP_CRITICAL',
-    'CONFIG_FILE',
-    'PROGRAM_FILE',
-    'JOINT_NAMES',
-    'DEFAULT_MOTOR_MAPPING',
-    'DEFAULT_MOTOR_CONFIG',
-    'BLOCK_COLORS',
-    'KINEMA_COLORS',
+    "MIN_POSITION",
+    "MAX_POSITION",
+    "DEFAULT_SPEED",
+    "DEFAULT_ACC",
+    "MONITOR_INTERVAL",
+    "TEMP_WARNING",
+    "TEMP_CRITICAL",
+    "CONFIG_FILE",
+    "PROGRAM_FILE",
+    "JOINT_NAMES",
+    "DEFAULT_MOTOR_MAPPING",
+    "DEFAULT_MOTOR_CONFIG",
+    "BLOCK_COLORS",
+    "KINEMA_COLORS",
     # Models
-    'MotorData',
-    'ProgramBlock',
+    "MotorData",
+    "ProgramBlock",
 ]
