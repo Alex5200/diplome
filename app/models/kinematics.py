@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Kinematics Model for 6-DOF Robot Arm
@@ -16,9 +15,10 @@ Kinematics Model for 6-DOF Robot Arm
 """
 
 import math
-import numpy as np
-from typing import Tuple, List, Optional
 from dataclasses import dataclass
+from typing import list
+
+import numpy as np
 
 
 @dataclass
@@ -47,12 +47,12 @@ class RobotKinematics6DOF:
     """
 
     # Длины звеньев в мм (от пользователя)
-    L0 = 19.0  # База
-    L1 = 104.0  # Плечо 1
-    L2 = 95.0  # Плечо 2
-    L3 = 34.0  # Локоть/Запястье 1
-    L4 = 35.0  # Запястье 2
-    L5 = 0.0  # Инструмент (может быть настроен)
+    L0: float = 19.0  # База
+    L1: float = 104.0  # Плечо 1
+    L2: float = 95.0  # Плечо 2
+    L3: float = 34.0  # Локоть/Запястье 1
+    L4: float = 35.0  # Запястье 2
+    L5: float = 0.0  # Инструмент (может быть настроен)
 
     def __init__(self):
         """Инициализация кинематической модели."""
@@ -68,9 +68,9 @@ class RobotKinematics6DOF:
         ]
 
         # Текущие углы суставов (в градусах)
-        self.joint_angles: List[float] = [0.0] * 6
+        self.joint_angles: list[float] = [0.0] * 6
 
-    def set_joint_angles(self, angles_deg: List[float]) -> None:
+    def set_joint_angles(self, angles_deg: list[float]) -> None:
         """
         Установка углов всех суставов.
 
@@ -90,14 +90,12 @@ class RobotKinematics6DOF:
             angle_deg: Угол в градусах
         """
         if not 0 <= joint_idx < 6:
-            raise ValueError(f"Индекс сустава должен быть 0-5, получен {joint_idx}")
+            raise ValueError(f"Индекс сустава должен быть 1-6, получен {joint_idx}")
         self.joint_angles[joint_idx] = angle_deg
 
     def forward_kinematics(
-        self, angles_deg: Optional[List[float]] = None
-    ) -> Tuple[
-        List[Tuple[float, float, float]], List[Tuple[float, float, float, float]]
-    ]:
+        self, angles_deg: list[float] | None = None
+    ) -> tuple[list[tuple[float, float, float]], list[tuple[float, float, float, float]]]:
         """
         Расчет прямой кинематики.
 
@@ -148,9 +146,7 @@ class RobotKinematics6DOF:
 
         return positions, orientations
 
-    def _dh_matrix(
-        self, theta: float, d: float, a: float, alpha: float
-    ) -> List[List[float]]:
+    def _dh_matrix(self, theta: float, d: float, a: float, alpha: float) -> list[list[float]]:
         """
         Создание DH матрицы трансформации.
 
@@ -175,13 +171,11 @@ class RobotKinematics6DOF:
             [0, 0, 0, 1],
         ]
 
-    def _identity_matrix(self) -> List[List[float]]:
+    def _identity_matrix(self) -> list[list[float]]:
         """Единичная матрица 4x4."""
         return [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
 
-    def _matrix_multiply(
-        self, A: List[List[float]], B: List[List[float]]
-    ) -> List[List[float]]:
+    def _matrix_multiply(self, A: list[list[float]], B: list[list[float]]) -> list[list[float]]:
         """Умножение матриц 4x4."""
         result = [[0.0] * 4 for _ in range(4)]
         for i in range(4):
@@ -190,7 +184,7 @@ class RobotKinematics6DOF:
                     result[i][j] += A[i][k] * B[k][j]
         return result
 
-    def _extract_euler_angles(self, T: List[List[float]]) -> Tuple[float, float, float]:
+    def _extract_euler_angles(self, T: list[list[float]]) -> tuple[float, float, float]:
         """
         Извлечение Euler углов (ZYX порядок) из матрицы трансформации.
 
@@ -221,8 +215,8 @@ class RobotKinematics6DOF:
         return roll, pitch, yaw
 
     def get_end_effector_position(
-        self, angles_deg: Optional[List[float]] = None
-    ) -> Tuple[float, float, float]:
+        self, angles_deg: list[float] | None = None
+    ) -> tuple[float, float, float]:
         """
         Получение позиции конечного эффектора (инструмента).
 
@@ -236,8 +230,8 @@ class RobotKinematics6DOF:
         return positions[-1] if positions else (0.0, 0.0, 0.0)
 
     def get_end_effector_orientation(
-        self, angles_deg: Optional[List[float]] = None
-    ) -> Tuple[float, float, float]:
+        self, angles_deg: list[float] | None = None
+    ) -> tuple[float, float, float]:
         """
         Получение ориентации конечного эффектора.
 
@@ -251,8 +245,8 @@ class RobotKinematics6DOF:
         return orientations[-1] if orientations else (0.0, 0.0, 0.0)
 
     def get_all_joint_positions(
-        self, angles_deg: Optional[List[float]] = None
-    ) -> List[Tuple[float, float, float]]:
+        self, angles_deg: list[float] | None = None
+    ) -> list[tuple[float, float, float]]:
         """
         Получение позиций всех суставов.
 
@@ -267,8 +261,8 @@ class RobotKinematics6DOF:
         return [(0.0, 0.0, 0.0)] + positions
 
     def get_link_vectors(
-        self, angles_deg: Optional[List[float]] = None
-    ) -> List[Tuple[float, float, float]]:
+        self, angles_deg: list[float] | None = None
+    ) -> list[tuple[float, float, float]]:
         """
         Получение векторов каждого звена.
 
@@ -298,7 +292,7 @@ class RobotKinematics6DOF:
         """
         return self.L0 + self.L1 + self.L2 + self.L3 + self.L4 + self.L5
 
-    def get_workspace_bounds(self) -> Tuple[float, float, float, float, float, float]:
+    def get_workspace_bounds(self) -> tuple[float, float, float, float, float, float]:
         """
         Расчет границ рабочей зоны.
 
@@ -371,7 +365,7 @@ class InverseKinematics6DOF:
         yaw: float = 0.0,
         max_iterations: int = 300,
         tolerance: float = 1.0,
-    ) -> Optional[List[float]]:
+    ) -> list[float] | None:
         """
         Решение обратной кинематики с множественными начальными приближениями.
 
@@ -405,9 +399,7 @@ class InverseKinematics6DOF:
             angles = self._numerical_solve(x, y, z, guess, max_iterations, tolerance)
             if angles:
                 pos = self.kinematics.get_end_effector_position(angles)
-                error = math.sqrt(
-                    (pos[0] - x) ** 2 + (pos[1] - y) ** 2 + (pos[2] - z) ** 2
-                )
+                error = math.sqrt((pos[0] - x) ** 2 + (pos[1] - y) ** 2 + (pos[2] - z) ** 2)
 
                 # Штраф за подход снизу (elbow-down):
                 # Elbow-up: J2 > 0, J3 < 0 → робот нависает сверху (предпочтительно)
@@ -426,9 +418,7 @@ class InverseKinematics6DOF:
                         best_score = score
                         best_angles = angles
                 elif best_angles is None or error < (
-                    best_score - elbow_penalty
-                    if best_score != float("inf")
-                    else float("inf")
+                    best_score - elbow_penalty if best_score != float("inf") else float("inf")
                 ):
                     # Если ещё нет хорошего решения, берём хоть что-то
                     if error + elbow_penalty < best_score:
@@ -437,9 +427,7 @@ class InverseKinematics6DOF:
 
         return best_angles
 
-    def _generate_initial_guesses(
-        self, x: float, y: float, z: float
-    ) -> List[List[float]]:
+    def _generate_initial_guesses(self, x: float, y: float, z: float) -> list[list[float]]:
         """
         Генерация начальных приближений для IK.
 
@@ -526,10 +514,10 @@ class InverseKinematics6DOF:
         x: float,
         y: float,
         z: float,
-        initial_angles: List[float],
+        initial_angles: list[float],
         max_iterations: int,
         tolerance: float,
-    ) -> Optional[List[float]]:
+    ) -> list[float] | None:
         """
         Численное решение методом Damped Least Squares (Levenberg-Marquardt).
 
@@ -541,9 +529,7 @@ class InverseKinematics6DOF:
 
         for iteration in range(max_iterations):
             current_pos = self.kinematics.get_end_effector_position(angles)
-            error = np.array(
-                [x - current_pos[0], y - current_pos[1], z - current_pos[2]]
-            )
+            error = np.array([x - current_pos[0], y - current_pos[1], z - current_pos[2]])
             error_norm = np.linalg.norm(error)
 
             if error_norm < tolerance:
@@ -584,7 +570,7 @@ class InverseKinematics6DOF:
             return angles
         return None
 
-    def _compute_jacobian(self, angles: List[float], delta: float = 0.5) -> np.ndarray:
+    def _compute_jacobian(self, angles: list[float], delta: float = 0.5) -> np.ndarray:
         """
         Численное вычисление якобиана 3x6 (мм/градус).
 
@@ -599,9 +585,7 @@ class InverseKinematics6DOF:
             angles_minus[j] -= delta
 
             pos_plus = np.array(self.kinematics.get_end_effector_position(angles_plus))
-            pos_minus = np.array(
-                self.kinematics.get_end_effector_position(angles_minus)
-            )
+            pos_minus = np.array(self.kinematics.get_end_effector_position(angles_minus))
 
             J[:, j] = (pos_plus - pos_minus) / (2 * delta)
 
@@ -616,7 +600,7 @@ def test_kinematics():
 
     kin = RobotKinematics6DOF()
 
-    print(f"\nДлины звеньев (мм):")
+    print("\nДлины звеньев (мм):")
     print(f"  L0 (База) = {kin.L0}")
     print(f"  L1 (Плечо 1) = {kin.L1}")
     print(f"  L2 (Плечо 2) = {kin.L2}")
@@ -631,15 +615,13 @@ def test_kinematics():
     print("-" * 40)
     positions, orientations = kin.forward_kinematics([0, 0, 0, 0, 0, 0])
 
-    print(f"\nПозиции суставов:")
-    print(f"  База:     (0.0, 0.0, 0.0)")
+    print("\nПозиции суставов:")
+    print("  База:     (0.0, 0.0, 0.0)")
     for i, (pos, orient) in enumerate(zip(positions, orientations)):
         print(f"  J{i + 1}:     ({pos[0]:6.1f}, {pos[1]:6.1f}, {pos[2]:6.1f}) мм")
 
     end_pos = kin.get_end_effector_position()
-    print(
-        f"\nПозиция инструмента: ({end_pos[0]:.1f}, {end_pos[1]:.1f}, {end_pos[2]:.1f}) мм"
-    )
+    print(f"\nПозиция инструмента: ({end_pos[0]:.1f}, {end_pos[1]:.1f}, {end_pos[2]:.1f}) мм")
 
     # Тест 2: Различные углы
     print("\n" + "-" * 40)
@@ -650,8 +632,8 @@ def test_kinematics():
 
     positions, orientations = kin.forward_kinematics(test_angles)
 
-    print(f"\nПозиции суставов:")
-    print(f"  База:     (0.0, 0.0, 0.0)")
+    print("\nПозиции суставов:")
+    print("  База:     (0.0, 0.0, 0.0)")
     for i, (pos, orient) in enumerate(zip(positions, orientations)):
         roll, pitch, yaw = (
             math.degrees(orient[0]),
@@ -663,9 +645,7 @@ def test_kinematics():
         )
 
     end_pos = kin.get_end_effector_position(test_angles)
-    print(
-        f"\nПозиция инструмента: ({end_pos[0]:.1f}, {end_pos[1]:.1f}, {end_pos[2]:.1f}) мм"
-    )
+    print(f"\nПозиция инструмента: ({end_pos[0]:.1f}, {end_pos[1]:.1f}, {end_pos[2]:.1f}) мм")
 
     # Тест 3: Конвертация позиций
     print("\n" + "-" * 40)
