@@ -62,19 +62,19 @@
       "inverted": false
     },
     "joint_4": {
-      "motor_id": 6,
+      "motor_id": 3,
       "name": "Кисть 1",
       "min_pos": 0,
       "max_pos": 4095,
       "inverted": false
     },
     "joint_5": {
-      "motor_id": 3,
+      "motor_id": 6,
       "name": "Кисть 2",
       "min_pos": 0,
       "max_pos": 4095,
       "inverted": false
     }
   },
-  "timestamp": "2026-04-05T18:36:17.071521"
+  "timestamp": "2026-04-05T21:16:40.590538"
 }
