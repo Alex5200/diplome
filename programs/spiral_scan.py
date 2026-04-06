@@ -19,9 +19,7 @@ from app.controllers.motor_controller import MotorController
 
 class SpiralScan(BaseProgram):
     name = "Spiral Scan"
-    description = (
-        "Traces an outward spiral trajectory for workspace mapping or surface scanning"
-    )
+    description = "Traces an outward spiral trajectory for workspace mapping or surface scanning"
 
     def __init__(
         self,
@@ -46,9 +44,7 @@ class SpiralScan(BaseProgram):
 
     def _execute(self) -> bool:
         total_points = self.turns * self.ppt
-        self._log(
-            f"Spiral scan: r={self.max_radius}mm, {self.turns} turns, {total_points} points"
-        )
+        self._log(f"Spiral scan: r={self.max_radius}mm, {self.turns} turns, {total_points} points")
 
         # Move to center first
         if not self._go_to_xyz(self.cx, self.cy, self.z):
