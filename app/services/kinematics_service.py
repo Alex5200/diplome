@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Kinematics Service Module
@@ -8,19 +7,20 @@ Kinematics Service Module
 Абстрагирует работу с прямой/обратной кинематикой.
 """
 
-from typing import Optional, List, Tuple, Dict, Any
 from dataclasses import dataclass
+from typing import Any
 
 from ..core.base_service import BaseService
-from ..models.kinematics import RobotKinematics6DOF, InverseKinematics6DOF
+from ..models.kinematics import InverseKinematics6DOF, RobotKinematics6DOF
 
 
 @dataclass
 class KinematicsResult:
     """Результат кинематического расчета."""
+
     success: bool
-    angles: Optional[List[float]] = None
-    position: Optional[Tuple[float, float, float]] = None
+    angles: list[float] | None = None
+    position: tuple[float, float, float] | None = None
     error: float = 0.0
     message: str = ""
 
@@ -38,32 +38,32 @@ class KinematicsService(BaseService):
 
     def __init__(self):
         """Инициализация сервиса."""
-        super().__init__('KinematicsService')
+        super().__init__("KinematicsService")
 
         self._kinematics = RobotKinematics6DOF()
         self._ik_solver = InverseKinematics6DOF(self._kinematics)
 
         # Кэш последних результатов
-        self._last_fk_result: Optional[KinematicsResult] = None
-        self._last_ik_result: Optional[KinematicsResult] = None
+        self._last_fk_result: KinematicsResult | None = None
+        self._last_ik_result: KinematicsResult | None = None
 
     def _do_initialize(self) -> bool:
         """Инициализация сервиса."""
-        self._emit_event('kinematics_initialized', {
-            'max_reach': self._kinematics.get_total_reach()
-        })
+        self._emit_event(
+            "kinematics_initialized", {"max_reach": self._kinematics.get_total_reach()}
+        )
         return True
 
-    def _get_extra_status(self) -> Dict[str, Any]:
+    def _get_extra_status(self) -> dict[str, Any]:
         """Дополнительный статус."""
         return {
-            'max_reach': self._kinematics.get_total_reach(),
-            'last_ik_success': self._last_ik_result.success if self._last_ik_result else None,
+            "max_reach": self._kinematics.get_total_reach(),
+            "last_ik_success": self._last_ik_result.success if self._last_ik_result else None,
         }
 
     # ==================== Прямая кинематика ====================
 
-    def forward_kinematics(self, angles: List[float]) -> KinematicsResult:
+    def forward_kinematics(self, angles: list[float]) -> KinematicsResult:
         """
         Расчет прямой кинематики.
 
@@ -75,23 +75,15 @@ class KinematicsService(BaseService):
         """
         try:
             position = self._kinematics.get_end_effector_position(angles)
-            result = KinematicsResult(
-                success=True,
-                position=position,
-                error=0.0,
-                message="OK"
-            )
+            result = KinematicsResult(success=True, position=position, error=0.0, message="OK")
             self._last_fk_result = result
             return result
         except Exception as e:
-            result = KinematicsResult(
-                success=False,
-                message=str(e)
-            )
+            result = KinematicsResult(success=False, message=str(e))
             self._last_fk_result = result
             return result
 
-    def get_all_joint_positions(self, angles: List[float]) -> List[Tuple[float, float, float]]:
+    def get_all_joint_positions(self, angles: list[float]) -> list[tuple[float, float, float]]:
         """
         Получение позиций всех суставов.
 
@@ -105,9 +97,9 @@ class KinematicsService(BaseService):
 
     # ==================== Обратная кинематика ====================
 
-    def inverse_kinematics(self, x: float, y: float, z: float,
-                           max_iterations: int = 300,
-                           tolerance: float = 1.0) -> KinematicsResult:
+    def inverse_kinematics(
+        self, x: float, y: float, z: float, max_iterations: int = 300, tolerance: float = 1.0
+    ) -> KinematicsResult:
         """
         Расчет обратной кинематики.
 
@@ -122,10 +114,7 @@ class KinematicsService(BaseService):
         # Проверка досягаемости
         reach_check = self.check_reachability(x, y, z)
         if not reach_check.success:
-            result = KinematicsResult(
-                success=False,
-                message=reach_check.message
-            )
+            result = KinematicsResult(success=False, message=reach_check.message)
             self._last_ik_result = result
             return result
 
@@ -134,22 +123,23 @@ class KinematicsService(BaseService):
 
         if angles is None:
             result = KinematicsResult(
-                success=False,
-                message=f"IK не сошлась для точки ({x:.1f}, {y:.1f}, {z:.1f})"
+                success=False, message=f"IK не сошлась для точки ({x:.1f}, {y:.1f}, {z:.1f})"
             )
             self._last_ik_result = result
             return result
 
         # Проверка точности
         actual_pos = self._kinematics.get_end_effector_position(angles)
-        error = ((actual_pos[0] - x)**2 + **(actual_pos[1] - y)2 + (actual_pos[2] - z)**2)**0.5
+        error = (
+            (actual_pos[0] - x) ** 2 + (actual_pos[1] - y) ** 2 + (actual_pos[2] - z) ** 2
+        ) ** 0.5
 
         result = KinematicsResult(
             success=True,
             angles=angles,
             position=actual_pos,
             error=error,
-            message=f"Ошибка: {error:.2f} мм"
+            message=f"Ошибка: {error:.2f} мм",
         )
         self._last_ik_result = result
         return result
@@ -164,46 +154,45 @@ class KinematicsService(BaseService):
         Returns:
             Результат с информацией о досягаемости
         """
-        distance = (x**2 + y**2 + z**2)**0.5
+        distance = (x**2 + y**2 + z**2) ** 0.5
         max_reach = self._kinematics.get_total_reach()
 
         if distance > max_reach:
             return KinematicsResult(
                 success=False,
-                message=f"Точка вне досягаемости: {distance:.1f} > {max_reach:.1f} мм"
+                message=f"Точка вне досягаемости: {distance:.1f} > {max_reach:.1f} мм",
             )
 
         # Дополнительная проверка: минимальное расстояние
-        min_reach = 50  # Минимальное расстояние от базы
+        min_reach = 20  # Минимальное расстояние от базы
         if distance < min_reach:
             return KinematicsResult(
                 success=False,
-                message=f"Точка слишком близко к базе: {distance:.1f} < {min_reach} мм"
+                message=f"Точка слишком близко к базе: {distance:.1f} < {min_reach} мм",
             )
 
         return KinematicsResult(
-            success=True,
-            message=f"Точка достижима (расстояние: {distance:.1f} мм)"
+            success=True, message=f"Точка достижима (расстояние: {distance:.1f} мм)"
         )
 
     # ==================== Утилиты ====================
 
-    def get_link_lengths(self) -> Dict[str, float]:
+    def get_link_lengths(self) -> dict[str, float]:
         """Получение длин звеньев."""
         return {
-            'L0': self._kinematics.L0,
-            'L1': self._kinematics.L1,
-            'L2': self._kinematics.L2,
-            'L3': self._kinematics.L3,
-            'L4': self._kinematics.L4,
-            'L5': self._kinematics.L5,
+            "L0": self._kinematics.L0,
+            "L1": self._kinematics.L1,
+            "L2": self._kinematics.L2,
+            "L3": self._kinematics.L3,
+            "L4": self._kinematics.L4,
+            "L5": self._kinematics.L5,
         }
 
     def get_max_reach(self) -> float:
         """Максимальная досягаемость."""
         return self._kinematics.get_total_reach()
 
-    def get_workspace_bounds(self) -> Tuple[float, float, float, float, float, float]:
+    def get_workspace_bounds(self) -> tuple[float, float, float, float, float, float]:
         """Границы рабочей зоны."""
         return self._kinematics.get_workspace_bounds()
 
@@ -215,10 +204,10 @@ class KinematicsService(BaseService):
         """Конвертация позиции в угол."""
         return RobotKinematics6DOF.position_to_motor_angle(position)
 
-    def get_last_ik_result(self) -> Optional[KinematicsResult]:
+    def get_last_ik_result(self) -> KinematicsResult | None:
         """Последний результат IK."""
         return self._last_ik_result
 
-    def get_last_fk_result(self) -> Optional[KinematicsResult]:
+    def get_last_fk_result(self) -> KinematicsResult | None:
         """Последний результат FK."""
         return self._last_fk_result

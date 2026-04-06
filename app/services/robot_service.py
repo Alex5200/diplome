@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Robot Service Module
@@ -9,17 +8,16 @@ Robot Service Module
 """
 
 import threading
-from typing import Optional, List, Dict, Any, Callable
+from collections.abc import Callable
 from datetime import datetime
+from typing import Any
 
-from ..core.base_service import BaseService
-from ..core.events import event_bus
-from ..controllers.motor_controller import MotorController
-from ..models.motor_data import MotorData, JointState, RobotState, MotorStatus
 from ..config.constants import (
-    DEFAULT_MOTOR_MAPPING, JOINT_NAMES,
-    TEMP_WARNING, TEMP_CRITICAL, LOAD_WARNING
+    JOINT_NAMES,
 )
+from ..controllers.motor_controller import MotorController
+from ..core.base_service import BaseService
+from ..models.motor_data import JointState, MotorData, RobotState
 
 
 class RobotService(BaseService):
@@ -41,16 +39,16 @@ class RobotService(BaseService):
 
     def __init__(self):
         """Инициализация сервиса робота."""
-        super().__init__('RobotService')
+        super().__init__("RobotService")
 
         self._controller = MotorController()
         self._robot_state = RobotState()
-        self._monitor_thread: Optional[threading.Thread] = None
+        self._monitor_thread: threading.Thread | None = None
         self._monitor_running = False
         self._monitor_interval = 0.5  # секунды
 
         # Callback для обновлений состояния
-        self._state_callback: Optional[Callable[[RobotState], None]] = None
+        self._state_callback: Callable[[RobotState], None] | None = None
 
         # Инициализация суставов
         self._init_joints()
@@ -64,9 +62,9 @@ class RobotService(BaseService):
 
     def _do_initialize(self) -> bool:
         """Инициализация сервиса."""
-        self._emit_event('robot_initializing', {})
+        self._emit_event("robot_initializing", {})
         self._init_joints()
-        self._emit_event('robot_initialized', {})
+        self._emit_event("robot_initialized", {})
         return True
 
     def _do_start(self) -> None:
@@ -77,11 +75,11 @@ class RobotService(BaseService):
         """Остановка мониторинга."""
         self._stop_monitoring()
 
-    def _get_extra_status(self) -> Dict[str, Any]:
+    def _get_extra_status(self) -> dict[str, Any]:
         """Дополнительный статус."""
         return {
-            'robot_state': self._robot_state.to_dict(),
-            'controller_connected': self._controller.connected,
+            "robot_state": self._robot_state.to_dict(),
+            "controller_connected": self._controller.connected,
         }
 
     # ==================== Подключение ====================
@@ -99,7 +97,7 @@ class RobotService(BaseService):
         self._controller.device = port
         if self._controller.connect():
             self._robot_state.is_connected = True
-            self._emit_event('robot_connected', {'port': port})
+            self._emit_event("robot_connected", {"port": port})
             self._log(f"✅ Подключено к {port}")
             return True
         return False
@@ -109,7 +107,7 @@ class RobotService(BaseService):
         self._controller.disconnect()
         self._robot_state.is_connected = False
         self._stop_monitoring()
-        self._emit_event('robot_disconnected', {})
+        self._emit_event("robot_disconnected", {})
         self._log("🔌 Отключено")
 
     @property
@@ -119,7 +117,7 @@ class RobotService(BaseService):
 
     # ==================== Сканирование ====================
 
-    def scan_motors(self) -> List[int]:
+    def scan_motors(self) -> list[int]:
         """
         Сканирование моторов.
 
@@ -127,13 +125,12 @@ class RobotService(BaseService):
             Список найденных ID
         """
         found = self._controller.scan_servos()
-        self._emit_event('motors_scanned', {'found': found})
+        self._emit_event("motors_scanned", {"found": found})
         return found
 
     # ==================== Управление ====================
 
-    def move_joint(self, joint_index: int, angle_deg: float,
-                   speed: Optional[int] = None) -> bool:
+    def move_joint(self, joint_index: int, angle_deg: float, speed: int | None = None) -> bool:
         """
         Движение сустава к углу.
 
@@ -158,16 +155,18 @@ class RobotService(BaseService):
         if success:
             joint.angle_deg = angle_deg
             joint.position = position
-            self._emit_event('joint_moved', {
-                'joint': joint_index,
-                'angle': angle_deg,
-                'position': position,
-            })
+            self._emit_event(
+                "joint_moved",
+                {
+                    "joint": joint_index,
+                    "angle": angle_deg,
+                    "position": position,
+                },
+            )
 
         return success
 
-    def move_joints(self, angles: List[float],
-                    speed: Optional[int] = None) -> bool:
+    def move_joints(self, angles: list[float], speed: int | None = None) -> bool:
         """
         Движение нескольких суставов.
 
@@ -191,7 +190,7 @@ class RobotService(BaseService):
         if success:
             for i, angle in enumerate(angles[:6]):
                 self._robot_state.joints[i].angle_deg = angle
-            self._emit_event('joints_moved', {'angles': angles})
+            self._emit_event("joints_moved", {"angles": angles})
 
         return success
 
@@ -211,10 +210,13 @@ class RobotService(BaseService):
 
         if success:
             self._robot_state.joints[joint_index].torque_enabled = enable
-            self._emit_event('torque_changed', {
-                'joint': joint_index,
-                'enabled': enable,
-            })
+            self._emit_event(
+                "torque_changed",
+                {
+                    "joint": joint_index,
+                    "enabled": enable,
+                },
+            )
 
         return success
 
@@ -222,8 +224,8 @@ class RobotService(BaseService):
         """Экстренная остановка всех моторов."""
         self._controller.emergency_stop_all()
         self._robot_state.is_moving = False
-        self._emit_event('emergency_stop', {})
-        self._log("🛑 ЭКСТРЕННАЯ ОСТАНОВКА", level='error')
+        self._emit_event("emergency_stop", {})
+        self._log("🛑 ЭКСТРЕННАЯ ОСТАНОВКА", level="error")
 
     # ==================== Мониторинг ====================
 
@@ -233,9 +235,7 @@ class RobotService(BaseService):
             return
 
         self._monitor_running = True
-        self._monitor_thread = threading.Thread(
-            target=self._monitor_loop, daemon=True
-        )
+        self._monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
         self._monitor_thread.start()
 
     def _stop_monitoring(self) -> None:
@@ -256,7 +256,7 @@ class RobotService(BaseService):
                     self._state_callback(self._robot_state)
 
             except Exception as e:
-                self._emit_event('monitor_error', {'error': str(e)})
+                self._emit_event("monitor_error", {"error": str(e)})
 
             threading.Event().wait(self._monitor_interval)
 
@@ -276,12 +276,12 @@ class RobotService(BaseService):
             if data:
                 motor_data = MotorData(
                     motor_id=motor_id,
-                    position=data.get('position'),
-                    temperature=data.get('temperature'),
-                    voltage=data.get('voltage'),
-                    current=data.get('current'),
-                    load=data.get('load'),
-                    moving=data.get('moving'),
+                    position=data.get("position"),
+                    temperature=data.get("temperature"),
+                    voltage=data.get("voltage"),
+                    current=data.get("current"),
+                    load=data.get("load"),
+                    moving=data.get("moving"),
                     last_update=timestamp.timestamp(),
                 )
                 self._robot_state.motors[motor_id] = motor_data
@@ -292,9 +292,7 @@ class RobotService(BaseService):
                     joint.angle_deg = joint.to_angle(motor_data.position)
 
         # Проверка движения
-        self._robot_state.is_moving = any(
-            m.is_moving() for m in self._robot_state.motors.values()
-        )
+        self._robot_state.is_moving = any(m.is_moving() for m in self._robot_state.motors.values())
 
     def set_state_callback(self, callback: Callable[[RobotState], None]) -> None:
         """
@@ -307,20 +305,19 @@ class RobotService(BaseService):
 
     def get_robot_state(self) -> RobotState:
         """Получение текущего состояния."""
-        return self._robot_state.copy() if hasattr(self._robot_state, 'copy') else self._robot_state
+        return self._robot_state.copy() if hasattr(self._robot_state, "copy") else self._robot_state
 
-    def get_joint_angles(self) -> List[float]:
+    def get_joint_angles(self) -> list[float]:
         """Получение углов всех суставов."""
         return [j.angle_deg for j in self._robot_state.joints]
 
     # ==================== Конфигурация ====================
 
-    def get_motor_mapping(self) -> Dict[str, Any]:
+    def get_motor_mapping(self) -> dict[str, Any]:
         """Получение соответствия моторов."""
         return self._controller.get_motor_mapping()
 
-    def update_motor_mapping(self, joint_index: int, motor_id: int,
-                             name: str = "") -> None:
+    def update_motor_mapping(self, joint_index: int, motor_id: int, name: str = "") -> None:
         """Обновление соответствия мотора."""
         self._controller.update_motor_mapping(joint_index, motor_id, name)
 
@@ -334,6 +331,6 @@ class RobotService(BaseService):
 
     # ==================== Утилиты ====================
 
-    def _log(self, message: str, level: str = 'info') -> None:
+    def _log(self, message: str, level: str = "info") -> None:
         """Логирование сообщения."""
-        self._emit_event('log_message', {'message': message, 'level': level})
+        self._emit_event("log_message", {"message": message, "level": level})

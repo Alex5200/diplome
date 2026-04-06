@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Services Module - Бизнес-логика приложения
@@ -10,12 +9,12 @@ Services Module - Бизнес-логика приложения
 - ProgramService - выполнение программ
 """
 
-from .robot_service import RobotService
 from .kinematics_service import KinematicsService
 from .program_service import ProgramService
+from .robot_service import RobotService
 
 __all__ = [
-    "RobotService",
     "KinematicsService",
     "ProgramService",
+    "RobotService",
 ]
