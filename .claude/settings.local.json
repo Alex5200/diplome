@@ -9,7 +9,25 @@
       "Bash(find /c/Users/SahaA/Documents/GitHub/diplome/app -type f -name *.py)",
       "Bash(grep -r \"class\\\\|def \" /c/Users/SahaA/Documents/GitHub/diplome/app/views/*.py)",
       "Bash(npm list:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(find /Users/alexandr/Documents/GitHub/diplome2026 -type d -not -path */.*)",
+      "Bash(wc -l /Users/alexandr/Documents/GitHub/diplome2026/app/views/*.py)",
+      "Bash(wc -l /Users/alexandr/Documents/GitHub/diplome2026/app/models/*.py /Users/alexandr/Documents/GitHub/diplome2026/app/controllers/*.py /Users/alexandr/Documents/GitHub/diplome2026/app/services/*.py)",
+      "Bash(wc -l /Users/alexandr/Documents/GitHub/diplome2026/programs/*.py)",
+      "Bash(node build_chapters.js)",
+      "Bash(/usr/local/bin/node --version)",
+      "Bash(/opt/homebrew/bin/node --version)",
+      "Bash(~/.nvm/versions/node/*/bin/node)",
+      "Bash(--version)",
+      "Read(//usr/local/bin/**)",
+      "Read(//opt/homebrew/Cellar/node/25.9.0_1/bin/**)",
+      "Read(//usr/local/**)",
+      "Read(//opt/**)",
+      "Bash(/opt/homebrew/bin/node build_chapters.js)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//Users/alexandr/Documents/GitHub/diplome2026/**)",
+      "Bash(wc -l ch*.js)"
     ]
   }
 }
