@@ -15,6 +15,7 @@ Services:
 Usage:
     ros2 run robot_control robot_node --ros-args -p port:=COM3
 """
+
 from __future__ import annotations
 
 import json
@@ -62,14 +63,18 @@ class RobotNode(Node):
             self.get_logger().info(f"Connected to robot on {port}")
             self._start_monitor(rate_hz)
         else:
-            self.get_logger().warn(f"Could not connect to {port} — running in offline mode")
+            self.get_logger().warn(
+                f"Could not connect to {port} — running in offline mode"
+            )
 
         # Publishers
         self._pub_joints = self.create_publisher(JointState, "/robot/joint_states", 10)
         self._pub_status = self.create_publisher(String, "/robot/status", 10)
 
         # Subscribers
-        self.create_subscription(JointTrajectoryPoint, "/robot/joint_cmd", self._on_joint_cmd, 10)
+        self.create_subscription(
+            JointTrajectoryPoint, "/robot/joint_cmd", self._on_joint_cmd, 10
+        )
         self.create_subscription(Empty, "/robot/stop", self._on_stop, 10)
 
         # Service
@@ -99,6 +104,7 @@ class RobotNode(Node):
             pos_rad = 0.0
             if data:
                 import math
+
                 angle_deg = (data.position / 4095.0) * 360.0 - 180.0
                 pos_rad = math.radians(angle_deg)
             msg.position.append(pos_rad)
@@ -119,6 +125,7 @@ class RobotNode(Node):
         if not self._ctrl.is_connected:
             return
         import math
+
         motors = self._ctrl.get_connected_motors()
         for i, pos_rad in enumerate(msg.positions):
             if i >= len(motors):
@@ -142,7 +149,9 @@ class RobotNode(Node):
                 self._ctrl.scan_motors()
                 self._start_monitor(self.get_parameter("monitor_rate_hz").value)
             res.success = ok
-            res.message = f"Connected to {port}" if ok else f"Failed to connect to {port}"
+            res.message = (
+                f"Connected to {port}" if ok else f"Failed to connect to {port}"
+            )
         else:
             if self._monitor:
                 self._monitor.stop()
