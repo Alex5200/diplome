@@ -20,7 +20,9 @@ from app.controllers.motor_controller import MotorController
 
 class WaveDemo(BaseProgram):
     name = "Wave Demo"
-    description = "Sinusoidal wave motion on shoulder joints with base rotation — demo/attract sequence"
+    description = (
+        "Sinusoidal wave motion on shoulder joints with base rotation — demo/attract sequence"
+    )
 
     def __init__(self, controller: MotorController, cycles: int = 3, speed: int = 1500):
         super().__init__(controller, speed)
