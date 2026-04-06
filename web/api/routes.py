@@ -2,6 +2,7 @@
 REST API routes for robot control.
 All heavy logic lives in shared/ (app/); this layer is thin HTTP glue.
 """
+
 from __future__ import annotations
 
 from typing import Optional
@@ -67,7 +68,9 @@ async def get_status():
                     "voltage": data.voltage,
                     "current": data.current,
                     "load": data.load,
-                    "status": data.status.value if hasattr(data.status, "value") else str(data.status),
+                    "status": data.status.value
+                    if hasattr(data.status, "value")
+                    else str(data.status),
                 }
     return {"connected": _controller.is_connected, "motors": motors}
 

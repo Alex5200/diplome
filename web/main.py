@@ -16,6 +16,7 @@ Endpoints:
     POST /api/ik               — Inverse kinematics solve
     WS   /ws                   — Real-time motor telemetry
 """
+
 import sys
 import os
 
@@ -49,4 +50,5 @@ async def index():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("web.main:app", host="0.0.0.0", port=8000, reload=True)
