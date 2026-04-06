@@ -103,8 +103,7 @@ DEFAULT_MOTOR_MAPPING = {
 }
 
 DEFAULT_MOTOR_CONFIG = {
-    f"motor_{i}": {"min_pos": 0, "max_pos": MAX_POSITION, "name": f"Мотор {i}"}
-    for i in range(1, 7)
+    f"motor_{i}": {"min_pos": 0, "max_pos": MAX_POSITION, "name": f"Мотор {i}"} for i in range(1, 7)
 }
 
 
@@ -198,9 +197,7 @@ class MotorController:
         if key in self.motor_mapping:
             return self.motor_mapping[key]["name"]
         return (
-            JOINT_NAMES[joint_index]
-            if joint_index < len(JOINT_NAMES)
-            else f"Сустав {joint_index}"
+            JOINT_NAMES[joint_index] if joint_index < len(JOINT_NAMES) else f"Сустав {joint_index}"
         )
 
     def move_to_position(self, sts_id: int, position: int, speed=None, acc=DEFAULT_ACC):
@@ -294,9 +291,7 @@ class MotorController:
     def update_motor_mapping(self, joint_index: int, motor_id: int, name: str = ""):
         key = f"joint_{joint_index}"
         default_name = (
-            JOINT_NAMES[joint_index]
-            if joint_index < len(JOINT_NAMES)
-            else f"Сустав {joint_index}"
+            JOINT_NAMES[joint_index] if joint_index < len(JOINT_NAMES) else f"Сустав {joint_index}"
         )
         self.motor_mapping[key] = {
             "motor_id": motor_id,
@@ -308,9 +303,7 @@ class MotorController:
     def get_motor_mapping(self) -> dict:
         return self.motor_mapping.copy()
 
-    def update_motor_config(
-        self, motor_id: int, min_pos: int, max_pos: int, name: str = ""
-    ):
+    def update_motor_config(self, motor_id: int, min_pos: int, max_pos: int, name: str = ""):
         key = f"motor_{motor_id}"
         self.motor_config[key] = {
             "min_pos": min_pos,
@@ -425,9 +418,7 @@ class MotorMonitor:
             else:
                 data.error_count += 1
                 if data.error_count > 5:
-                    print(
-                        f"⚠️ Мотор {motor_id}: много ошибок чтения ({data.error_count})"
-                    )
+                    print(f"⚠️ Мотор {motor_id}: много ошибок чтения ({data.error_count})")
         except Exception as e:
             data.error_count += 1
             print(f"⚠️ Ошибка обновления мотора {motor_id}: {e}")
@@ -486,9 +477,7 @@ class MotorMappingPanel(ttk.Frame):
         """
         ttk.Label(info_frame, text=info_text, justify="left").pack(padx=10, pady=10)
 
-        mapping_frame = ttk.LabelFrame(
-            main_frame, text="🔗 Соответствие суставов и моторов"
-        )
+        mapping_frame = ttk.LabelFrame(main_frame, text="🔗 Соответствие суставов и моторов")
         mapping_frame.pack(fill="both", expand=True, pady=10)
 
         headers = ["Сустав", "ID мотора", "Название", "Текущая позиция"]
@@ -503,20 +492,18 @@ class MotorMappingPanel(ttk.Frame):
         action_frame = ttk.Frame(main_frame)
         action_frame.pack(fill="x", pady=10)
 
-        ttk.Button(
-            action_frame, text="🔍 Автоопределение", command=self._auto_detect
-        ).pack(side="left", padx=5)
-        ttk.Button(
-            action_frame, text="📊 Проверить все", command=self._check_all_motors
-        ).pack(side="left", padx=5)
+        ttk.Button(action_frame, text="🔍 Автоопределение", command=self._auto_detect).pack(
+            side="left", padx=5
+        )
+        ttk.Button(action_frame, text="📊 Проверить все", command=self._check_all_motors).pack(
+            side="left", padx=5
+        )
 
     def _create_mapping_row(self, parent, joint_idx: int):
         row = joint_idx + 1
 
         joint_name = (
-            JOINT_NAMES[joint_idx]
-            if joint_idx < len(JOINT_NAMES)
-            else f"Сустав {joint_idx}"
+            JOINT_NAMES[joint_idx] if joint_idx < len(JOINT_NAMES) else f"Сустав {joint_idx}"
         )
         ttk.Label(parent, text=joint_name, font=("Arial", 10)).grid(
             row=row, column=0, padx=10, pady=5, sticky="w"
@@ -525,9 +512,7 @@ class MotorMappingPanel(ttk.Frame):
         motor_id_var = tk.IntVar(value=joint_idx + 1)
         self.mapping_vars[joint_idx] = motor_id_var
 
-        motor_combo = ttk.Combobox(
-            parent, textvariable=motor_id_var, width=10, state="readonly"
-        )
+        motor_combo = ttk.Combobox(parent, textvariable=motor_id_var, width=10, state="readonly")
         motor_combo["values"] = list(range(1, 254))
         motor_combo.grid(row=row, column=1, padx=10, pady=5)
 
@@ -597,9 +582,7 @@ class MotorMappingPanel(ttk.Frame):
             self.log("🔗 Моторы назначены автоматически", "info")
         else:
             self.log("⚠️ Моторы не найдены", "warning")
-            messagebox.showinfo(
-                "Информация", "Моторы не найдены.\nПроверьте подключение."
-            )
+            messagebox.showinfo("Информация", "Моторы не найдены.\nПроверьте подключение.")
 
     def _check_all_motors(self):
         if not self.controller.connected:
@@ -620,9 +603,7 @@ class MotorMappingPanel(ttk.Frame):
                     color = "red"
 
                 if joint_idx in self.mapping_widgets:
-                    self.mapping_widgets[joint_idx]["pos"].config(
-                        text=pos_text, foreground=color
-                    )
+                    self.mapping_widgets[joint_idx]["pos"].config(text=pos_text, foreground=color)
 
         self.log("✅ Проверка завершена", "success")
 
@@ -684,9 +665,7 @@ class Kinematics3DPanel(ttk.Frame):
             angle_var = tk.DoubleVar(value=0.0)
             self.angle_vars.append(angle_var)
 
-            entry = ttk.Spinbox(
-                row_frame, from_=-180, to=180, textvariable=angle_var, width=10
-            )
+            entry = ttk.Spinbox(row_frame, from_=-180, to=180, textvariable=angle_var, width=10)
             entry.pack(side="left", padx=5)
 
             ttk.Button(
@@ -699,15 +678,13 @@ class Kinematics3DPanel(ttk.Frame):
         btn_frame = ttk.Frame(main_frame)
         btn_frame.pack(fill="x", padx=10, pady=10)
 
-        ttk.Button(
-            btn_frame, text="🔄 Обновить 3D", command=self._update_visualization
-        ).pack(side="left", padx=5)
-        ttk.Button(btn_frame, text="🏠 Сброс", command=self._reset_angles).pack(
+        ttk.Button(btn_frame, text="🔄 Обновить 3D", command=self._update_visualization).pack(
             side="left", padx=5
         )
-        ttk.Button(
-            btn_frame, text="📤 Применить все", command=self._apply_all_angles
-        ).pack(side="left", padx=5)
+        ttk.Button(btn_frame, text="🏠 Сброс", command=self._reset_angles).pack(side="left", padx=5)
+        ttk.Button(btn_frame, text="📤 Применить все", command=self._apply_all_angles).pack(
+            side="left", padx=5
+        )
 
         self._update_joint_names()
         self._draw_robot()
@@ -788,12 +765,8 @@ class Kinematics3DPanel(ttk.Frame):
             angle_xy_rad = math.radians(current_angle_xy + self.joint_angles[i])
             angle_z_rad = math.radians(current_angle_z)
 
-            current_x += (
-                segment_lengths[i] * math.cos(angle_xy_rad) * math.sin(angle_z_rad)
-            )
-            current_y += (
-                segment_lengths[i] * math.sin(angle_xy_rad) * math.sin(angle_z_rad)
-            )
+            current_x += segment_lengths[i] * math.cos(angle_xy_rad) * math.sin(angle_z_rad)
+            current_y += segment_lengths[i] * math.sin(angle_xy_rad) * math.sin(angle_z_rad)
             current_z += segment_lengths[i] * math.cos(angle_z_rad)
 
             x_points.append(current_x)
@@ -813,9 +786,7 @@ class Kinematics3DPanel(ttk.Frame):
         )
 
         for i, (x, y, z) in enumerate(zip(x_points, y_points, z_points)):
-            self.ax.scatter(
-                [x], [y], [z], color=KINEMA_COLORS[i % len(KINEMA_COLORS)], s=100
-            )
+            self.ax.scatter([x], [y], [z], color=KINEMA_COLORS[i % len(KINEMA_COLORS)], s=100)
             joint_name = self.controller.get_joint_name(i) if i > 0 else "База"
             self.ax.text(x, y, z + 10, f"J{i}", color="white", fontsize=9)
 
@@ -915,9 +886,7 @@ class ManualControlPanel(ttk.Frame):
         )
         pos_spin.pack(pady=5)
 
-        ttk.Button(pos_frame, text="🎯 Перейти", command=self._move_to_position).pack(
-            pady=5
-        )
+        ttk.Button(pos_frame, text="🎯 Перейти", command=self._move_to_position).pack(pady=5)
 
         status_frame = ttk.LabelFrame(main_frame, text="📊 Состояние")
         status_frame.pack(fill="x", padx=10, pady=10)
@@ -928,18 +897,12 @@ class ManualControlPanel(ttk.Frame):
         quick_frame = ttk.Frame(main_frame)
         quick_frame.pack(fill="x", padx=10, pady=10)
 
-        ttk.Button(quick_frame, text="🏠 В 0", command=self._go_home).pack(
-            side="left", padx=5
-        )
+        ttk.Button(quick_frame, text="🏠 В 0", command=self._go_home).pack(side="left", padx=5)
         ttk.Button(quick_frame, text="🔄 В центр", command=self._go_center).pack(
             side="left", padx=5
         )
-        ttk.Button(quick_frame, text="🔒 ВКЛ", command=self._torque_on).pack(
-            side="left", padx=5
-        )
-        ttk.Button(quick_frame, text="🔓 ВЫКЛ", command=self._torque_off).pack(
-            side="left", padx=5
-        )
+        ttk.Button(quick_frame, text="🔒 ВКЛ", command=self._torque_on).pack(side="left", padx=5)
+        ttk.Button(quick_frame, text="🔓 ВЫКЛ", command=self._torque_off).pack(side="left", padx=5)
 
         self._update_position_display()
 
@@ -1031,9 +994,9 @@ class BottomMonitorPanel(ttk.Frame):
         header_frame = ttk.Frame(self)
         header_frame.pack(fill="x", padx=5, pady=5)
 
-        ttk.Label(
-            header_frame, text="📊 МОНИТОРИНГ МОТОРОВ", font=("Arial", 11, "bold")
-        ).pack(side="left")
+        ttk.Label(header_frame, text="📊 МОНИТОРИНГ МОТОРОВ", font=("Arial", 11, "bold")).pack(
+            side="left"
+        )
 
         main_frame = ttk.Frame(self)
         main_frame.pack(fill="both", expand=True, padx=5, pady=5)
@@ -1269,9 +1232,7 @@ class RobotControlGUI(tk.Tk):
         tools_menu.add_command(label="🔍 Сканировать", command=self._scan_servos)
         tools_menu.add_command(label="▶️ Запуск", command=self._run_program)
         tools_menu.add_separator()
-        tools_menu.add_command(
-            label="⚙️ Настройка моторов", command=self._show_mapping_panel
-        )
+        tools_menu.add_command(label="⚙️ Настройка моторов", command=self._show_mapping_panel)
 
     def _create_widgets(self):
         top_frame = ttk.Frame(self)
@@ -1293,16 +1254,12 @@ class RobotControlGUI(tk.Tk):
 
         self.mapping_tab = ttk.Frame(self.notebook)
         self.notebook.add(self.mapping_tab, text="🔗 Настройка моторов")
-        self.motor_mapping_panel = MotorMappingPanel(
-            self.mapping_tab, self.controller, self._log
-        )
+        self.motor_mapping_panel = MotorMappingPanel(self.mapping_tab, self.controller, self._log)
         self.motor_mapping_panel.pack(fill="both", expand=True)
 
         self.kinematics_tab = ttk.Frame(self.notebook)
         self.notebook.add(self.kinematics_tab, text="🔬 3D Кинематика")
-        self.kinematics_panel = Kinematics3DPanel(
-            self.kinematics_tab, self.controller, self._log
-        )
+        self.kinematics_panel = Kinematics3DPanel(self.kinematics_tab, self.controller, self._log)
         self.kinematics_panel.pack(fill="both", expand=True)
 
         self.block_tab = ttk.Frame(self.notebook)
@@ -1326,9 +1283,7 @@ class RobotControlGUI(tk.Tk):
         ttk.Label(port_frame, text="COM Порт:").pack(side="left", padx=5)
         self.port_combo = ttk.Combobox(port_frame, width=30)
         self.port_combo.pack(side="left", padx=10)
-        ttk.Button(port_frame, text="🔄", command=self._refresh_ports).pack(
-            side="left", padx=5
-        )
+        ttk.Button(port_frame, text="🔄", command=self._refresh_ports).pack(side="left", padx=5)
         btn_frame = ttk.Frame(conn_frame)
         btn_frame.pack(fill="x", padx=10, pady=10)
         self.connect_btn = ttk.Button(
@@ -1403,9 +1358,7 @@ class RobotControlGUI(tk.Tk):
             "success": "green",
         }
         self.log_text.config(state="normal")
-        self.log_text.insert(
-            "end", f"[{timestamp}] {message}\n", colors.get(level, "black")
-        )
+        self.log_text.insert("end", f"[{timestamp}] {message}\n", colors.get(level, "black"))
         self.log_text.config(state="disabled")
         self.log_text.see("end")
 
@@ -1519,9 +1472,7 @@ class RobotControlGUI(tk.Tk):
             messagebox.showwarning("Предупреждение", "Программа пуста!")
             return
         self._log(f"▶️ Запуск ({len(program)} блоков)", "success")
-        threading.Thread(
-            target=self._execute_program, args=(program,), daemon=True
-        ).start()
+        threading.Thread(target=self._execute_program, args=(program,), daemon=True).start()
 
     def _execute_program(self, program):
         for block in program:

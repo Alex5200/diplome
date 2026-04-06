@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Main Window Module — FANUC-Style Robot Control GUI
@@ -12,10 +11,7 @@ import json
 import threading
 import time
 import tkinter as tk
-from datetime import datetime
-from re import T
 from tkinter import filedialog, messagebox, scrolledtext, ttk
-from typing import Dict, List, Optional
 
 import matplotlib.pyplot as plt
 
@@ -34,7 +30,6 @@ from app.config.constants import (
     JOG_MODE_CARTESIAN,
     JOG_MODE_JOINT,
     MAX_POSITION,
-    MAX_POSITION_REGISTERS,
     MAX_SCALE_PERCENT,
     MIN_SCALE_PERCENT,
     MONITOR_INTERVAL,
@@ -46,7 +41,6 @@ from app.config.constants import (
 )
 from app.controllers import MotorController, MotorMonitor
 from app.models.kinematics import InverseKinematics6DOF, RobotKinematics6DOF
-from app.models.motor_data import MotorData
 from app.utils.config_manager import ConfigManager
 from app.utils.logger import AppLogger
 from app.utils.program_executor import ProgramExecutor
@@ -144,9 +138,7 @@ class FANUCStatusBar(tk.Frame):
         self.cycle_label.pack(side="right", padx=5)
 
         # Индикатор подключения
-        self.conn_canvas = tk.Canvas(
-            self, width=14, height=14, bg=FANUC_BG, highlightthickness=0
-        )
+        self.conn_canvas = tk.Canvas(self, width=14, height=14, bg=FANUC_BG, highlightthickness=0)
         self.conn_canvas.pack(side="right", padx=5)
         self.set_connected(False)
 
@@ -154,9 +146,7 @@ class FANUCStatusBar(tk.Frame):
 
     @staticmethod
     def _sep(parent):
-        tk.Frame(parent, width=1, bg=FANUC_GRAY).pack(
-            side="left", fill="y", padx=4, pady=6
-        )
+        tk.Frame(parent, width=1, bg=FANUC_GRAY).pack(side="left", fill="y", padx=4, pady=6)
 
     def _update_clock(self):
         self.clock_label.config(text=time.strftime("%H:%M:%S"))
@@ -207,7 +197,7 @@ class PositionRegisterPanel(ttk.Frame):
         self.log = log_callback
 
         # Регистры: {index: {'angles': [...], 'comment': str}}
-        self.registers: Dict[int, dict] = {}
+        self.registers: dict[int, dict] = {}
 
         self._create_widgets()
 
@@ -327,9 +317,7 @@ class PositionRegisterPanel(ttk.Frame):
         table_frame.pack(fill="both", expand=True)
 
         columns = ("pr", "j1", "j2", "j3", "j4", "j5", "j6", "x", "y", "z", "comment")
-        self.tree = ttk.Treeview(
-            table_frame, columns=columns, show="headings", height=15
-        )
+        self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", height=15)
 
         col_widths = {
             "pr": 50,
@@ -362,9 +350,7 @@ class PositionRegisterPanel(ttk.Frame):
             self.tree.heading(col, text=col_titles[col])
             self.tree.column(col, width=col_widths[col], anchor="center")
 
-        scrollbar = ttk.Scrollbar(
-            table_frame, orient="vertical", command=self.tree.yview
-        )
+        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
         self.tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
@@ -380,7 +366,7 @@ class PositionRegisterPanel(ttk.Frame):
         )
         self.status_label.pack(fill="x", pady=(5, 0))
 
-    def _get_current_angles(self) -> List[float]:
+    def _get_current_angles(self) -> list[float]:
         """Получить текущие углы суставов."""
         angles = []
         for joint_idx in range(6):
@@ -505,7 +491,7 @@ class PositionRegisterPanel(ttk.Frame):
             json.dump(data, f, indent=2, ensure_ascii=False)
 
     def load_registers(self, filename: str):
-        with open(filename, "r", encoding="utf-8") as f:
+        with open(filename, encoding="utf-8") as f:
             data = json.load(f)
         self.registers = {int(k): v for k, v in data.items()}
         self._refresh_table()
@@ -527,7 +513,7 @@ class TeachPendantPanel(ttk.Frame):
         self.kinematics = kinematics
         self.log = log_callback
 
-        self.teach_points: List[dict] = []
+        self.teach_points: list[dict] = []
         self.is_playing = False
         self._stop_flag = False
 
@@ -632,9 +618,7 @@ class TeachPendantPanel(ttk.Frame):
         table_frame.pack(fill="both", expand=True)
 
         columns = ("idx", "j1", "j2", "j3", "j4", "j5", "j6", "x", "y", "z")
-        self.tree = ttk.Treeview(
-            table_frame, columns=columns, show="headings", height=12
-        )
+        self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", height=12)
 
         for col in columns:
             title = col.upper() if col != "idx" else "#"
@@ -642,9 +626,7 @@ class TeachPendantPanel(ttk.Frame):
             self.tree.heading(col, text=title)
             self.tree.column(col, width=width, anchor="center")
 
-        scrollbar = ttk.Scrollbar(
-            table_frame, orient="vertical", command=self.tree.yview
-        )
+        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
         self.tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
@@ -691,9 +673,7 @@ class TeachPendantPanel(ttk.Frame):
         state = self._get_current_state()
         self.teach_points.append(state)
         self._refresh_table()
-        self.log(
-            f"Taught point #{len(self.teach_points)}: {state['angles']}", "success"
-        )
+        self.log(f"Taught point #{len(self.teach_points)}: {state['angles']}", "success")
 
     def _play_all(self):
         if not self.teach_points:
@@ -701,9 +681,7 @@ class TeachPendantPanel(ttk.Frame):
             return
         self._stop_flag = False
         self.is_playing = True
-        threading.Thread(
-            target=self._play_thread, args=(self.loop_var.get(),), daemon=True
-        ).start()
+        threading.Thread(target=self._play_thread, args=(self.loop_var.get(),), daemon=True).start()
 
     def _play_once(self):
         if not self.teach_points:
@@ -800,7 +778,7 @@ class AlarmHistoryPanel(ttk.Frame):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.alarms: List[dict] = []
+        self.alarms: list[dict] = []
         self._create_widgets()
 
     def _create_widgets(self):
@@ -848,9 +826,7 @@ class AlarmHistoryPanel(ttk.Frame):
         if len(self.alarms) > 500:
             self.alarms = self.alarms[:500]
 
-        tag = (
-            "error" if level == "ERROR" else "warning" if level == "WARNING" else "info"
-        )
+        tag = "error" if level == "ERROR" else "warning" if level == "WARNING" else "info"
         self.tree.insert("", 0, values=(timestamp, level, message), tags=(tag,))
         self.tree.tag_configure("error", foreground=FANUC_RED)
         self.tree.tag_configure("warning", foreground=FANUC_ORANGE)
@@ -901,23 +877,23 @@ class RobotControlGUI(tk.Tk):
 
         # Компоненты
         self.controller = MotorController()
-        self.monitor: Optional[MotorMonitor] = None
+        self.monitor: MotorMonitor | None = None
         self.logger = AppLogger("robot_gui")
         self.config_manager = ConfigManager()
-        self.program_executor: Optional[ProgramExecutor] = None
+        self.program_executor: ProgramExecutor | None = None
         self.kinematics = RobotKinematics6DOF()
 
         # GUI панели
-        self.motor_mapping_panel: Optional[MotorMappingPanel] = None
-        self.manual_panel: Optional[ManualControlPanel] = None
-        self.bottom_monitor: Optional[BottomMonitorPanel] = None
-        self.kinematics_panel: Optional[Kinematics3DPanel] = None
-        self.program_canvas: Optional[ProgramCanvas] = None
-        self.block_palette: Optional[BlockPalette] = None
-        self.position_register_panel: Optional[PositionRegisterPanel] = None
-        self.teach_panel: Optional[TeachPendantPanel] = None
-        self.alarm_panel: Optional[AlarmHistoryPanel] = None
-        self.fanuc_status_bar: Optional[FANUCStatusBar] = None
+        self.motor_mapping_panel: MotorMappingPanel | None = None
+        self.manual_panel: ManualControlPanel | None = None
+        self.bottom_monitor: BottomMonitorPanel | None = None
+        self.kinematics_panel: Kinematics3DPanel | None = None
+        self.program_canvas: ProgramCanvas | None = None
+        self.block_palette: BlockPalette | None = None
+        self.position_register_panel: PositionRegisterPanel | None = None
+        self.teach_panel: TeachPendantPanel | None = None
+        self.alarm_panel: AlarmHistoryPanel | None = None
+        self.fanuc_status_bar: FANUCStatusBar | None = None
 
         # Состояние
         self._monitor_update_pending = False
@@ -948,9 +924,7 @@ class RobotControlGUI(tk.Tk):
         style = ttk.Style()
         style.theme_use("clam")
 
-        style.configure(
-            "TLabel", background=FANUC_BG, foreground=FANUC_TEXT, font=("Arial", 10)
-        )
+        style.configure("TLabel", background=FANUC_BG, foreground=FANUC_TEXT, font=("Arial", 10))
         style.configure(
             "Header.TLabel",
             font=("Arial", 14, "bold"),
@@ -993,17 +967,11 @@ class RobotControlGUI(tk.Tk):
         # File
         file_menu = tk.Menu(menubar, tearoff=0, bg=FANUC_PANEL, fg=FANUC_TEXT)
         menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(
-            label="Save Config", command=self._save_config, accelerator="Ctrl+S"
-        )
+        file_menu.add_command(label="Save Config", command=self._save_config, accelerator="Ctrl+S")
         file_menu.add_command(label="Load Config", command=self._load_config)
         file_menu.add_separator()
-        file_menu.add_command(
-            label="Export Registers...", command=self._export_registers
-        )
-        file_menu.add_command(
-            label="Import Registers...", command=self._import_registers
-        )
+        file_menu.add_command(label="Export Registers...", command=self._export_registers)
+        file_menu.add_command(label="Import Registers...", command=self._import_registers)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self._on_closing)
 
@@ -1016,9 +984,7 @@ class RobotControlGUI(tk.Tk):
         robot_menu.add_command(label="All Home (0)", command=self._go_all_home)
         robot_menu.add_command(label="All Center (2048)", command=self._go_all_center)
         robot_menu.add_separator()
-        robot_menu.add_command(
-            label="E-STOP", command=self._emergency_stop, accelerator="Escape"
-        )
+        robot_menu.add_command(label="E-STOP", command=self._emergency_stop, accelerator="Escape")
 
         # Program
         prog_menu = tk.Menu(menubar, tearoff=0, bg=FANUC_PANEL, fg=FANUC_TEXT)
@@ -1100,9 +1066,7 @@ class RobotControlGUI(tk.Tk):
         # Вкладка: 3D Kinematics
         self.kinematics_tab = ttk.Frame(self.notebook)
         self.notebook.add(self.kinematics_tab, text="3D View")
-        self.kinematics_panel = Kinematics3DPanel(
-            self.kinematics_tab, self.controller, self._log
-        )
+        self.kinematics_panel = Kinematics3DPanel(self.kinematics_tab, self.controller, self._log)
         self.kinematics_panel.pack(fill="both", expand=True)
 
         # Вкладка: Position Registers
@@ -1129,9 +1093,7 @@ class RobotControlGUI(tk.Tk):
         # Вкладка: Motor Mapping
         self.mapping_tab = ttk.Frame(self.notebook)
         self.notebook.add(self.mapping_tab, text="Setup")
-        self.motor_mapping_panel = MotorMappingPanel(
-            self.mapping_tab, self.controller, self._log
-        )
+        self.motor_mapping_panel = MotorMappingPanel(self.mapping_tab, self.controller, self._log)
         self.motor_mapping_panel.pack(fill="both", expand=True)
 
         # Вкладка: Coordinates
@@ -1527,9 +1489,7 @@ class RobotControlGUI(tk.Tk):
         angular_frame = ttk.LabelFrame(coord_frame, text="ORIENTATION (deg)")
         angular_frame.pack(fill="x", padx=10, pady=10)
 
-        self._create_coordinate_row(
-            angular_frame, "Rx:", self.tool_rx_var, FANUC_ORANGE
-        )
+        self._create_coordinate_row(angular_frame, "Rx:", self.tool_rx_var, FANUC_ORANGE)
         self._create_coordinate_row(angular_frame, "Ry:", self.tool_ry_var, "#E040FB")
         self._create_coordinate_row(angular_frame, "Rz:", self.tool_rz_var, "#FFD600")
 
@@ -1564,9 +1524,9 @@ class RobotControlGUI(tk.Tk):
         row = ttk.Frame(parent)
         row.pack(fill="x", padx=10, pady=5)
 
-        ttk.Label(
-            row, text=label, font=("Consolas", 13, "bold"), foreground=color, width=5
-        ).pack(side="left", padx=10)
+        ttk.Label(row, text=label, font=("Consolas", 13, "bold"), foreground=color, width=5).pack(
+            side="left", padx=10
+        )
 
         ttk.Label(
             row,
@@ -1695,9 +1655,7 @@ class RobotControlGUI(tk.Tk):
     def _draw_connection_indicator(self, state: str):
         self.connection_indicator.delete("all")
         color = FANUC_GREEN if state == "connected" else FANUC_GRAY
-        self.connection_indicator.create_oval(
-            3, 3, 21, 21, fill=color, outline="white", width=1
-        )
+        self.connection_indicator.create_oval(3, 3, 21, 21, fill=color, outline="white", width=1)
 
     def _draw_axis_indicator(self, canvas, axis, state):
         canvas.delete("all")
@@ -1708,9 +1666,7 @@ class RobotControlGUI(tk.Tk):
         }
         color = colors.get(state, FANUC_GRAY)
         canvas.create_oval(3, 3, 25, 25, fill=color, outline="white", width=1)
-        canvas.create_text(
-            14, 14, text=f"J{axis + 1}", fill="white", font=("Consolas", 7, "bold")
-        )
+        canvas.create_text(14, 14, text=f"J{axis + 1}", fill="white", font=("Consolas", 7, "bold"))
 
     def _update_axis_indicators(self, motor_data_dict):
         for j in range(6):
@@ -1865,9 +1821,7 @@ class RobotControlGUI(tk.Tk):
 
         self._log(f"Running program ({len(program)} blocks)", "success")
         self.fanuc_status_bar.set_prog_status("RUN")
-        threading.Thread(
-            target=self._execute_program, args=(program,), daemon=True
-        ).start()
+        threading.Thread(target=self._execute_program, args=(program,), daemon=True).start()
 
     def _execute_program(self, program):
         for block in program:
@@ -1884,14 +1838,10 @@ class RobotControlGUI(tk.Tk):
             elif block_type == "wait_time":
                 time.sleep(params.get("seconds", 1.0))
             elif block_type == "torque_on":
-                motor_id = self.controller.get_motor_id_for_joint(
-                    params.get("joint", 0)
-                )
+                motor_id = self.controller.get_motor_id_for_joint(params.get("joint", 0))
                 self.controller.toggle_torque(motor_id, True)
             elif block_type == "torque_off":
-                motor_id = self.controller.get_motor_id_for_joint(
-                    params.get("joint", 0)
-                )
+                motor_id = self.controller.get_motor_id_for_joint(params.get("joint", 0))
                 self.controller.toggle_torque(motor_id, False)
 
         self.cycle_count += 1
@@ -1931,7 +1881,7 @@ class RobotControlGUI(tk.Tk):
 
     def _load_program(self):
         try:
-            with open("robot_program.json", "r") as f:
+            with open("robot_program.json") as f:
                 program = json.load(f)
             self._log(f"Program loaded ({len(program)} blocks)", "success")
         except FileNotFoundError:
@@ -1983,15 +1933,9 @@ class RobotControlGUI(tk.Tk):
                 self.dash_coord_labels.get("X", tk.Label()).config(text=x_str)
                 self.dash_coord_labels.get("Y", tk.Label()).config(text=y_str)
                 self.dash_coord_labels.get("Z", tk.Label()).config(text=z_str)
-                self.dash_coord_labels.get("Rx", tk.Label()).config(
-                    text=f"{angles[4]:.2f}"
-                )
-                self.dash_coord_labels.get("Ry", tk.Label()).config(
-                    text=f"{angles[3]:.2f}"
-                )
-                self.dash_coord_labels.get("Rz", tk.Label()).config(
-                    text=f"{angles[0]:.2f}"
-                )
+                self.dash_coord_labels.get("Rx", tk.Label()).config(text=f"{angles[4]:.2f}")
+                self.dash_coord_labels.get("Ry", tk.Label()).config(text=f"{angles[3]:.2f}")
+                self.dash_coord_labels.get("Rz", tk.Label()).config(text=f"{angles[0]:.2f}")
 
     def _update_dashboard_joints(self):
         """Обновление углов суставов на Dashboard."""
@@ -2024,9 +1968,7 @@ class RobotControlGUI(tk.Tk):
         self.bind("<Escape>", lambda e: self._emergency_stop())
 
         for i in range(6):
-            self.bind(
-                f"<Control-Key-{i + 1}>", lambda e, idx=i: self._select_joint(idx)
-            )
+            self.bind(f"<Control-Key-{i + 1}>", lambda e, idx=i: self._select_joint(idx))
 
         self.bind("<Left>", lambda e: self._jog_selected(-1))
         self.bind("<Right>", lambda e: self._jog_selected(1))
@@ -2048,9 +1990,7 @@ class RobotControlGUI(tk.Tk):
             self.manual_panel.jog(direction)
 
     def _adjust_speed(self, delta):
-        new_val = max(
-            SPEED_OVERRIDE_MIN, min(SPEED_OVERRIDE_MAX, self.speed_override + delta)
-        )
+        new_val = max(SPEED_OVERRIDE_MIN, min(SPEED_OVERRIDE_MAX, self.speed_override + delta))
         self.speed_override_var.set(new_val)
         self._on_speed_override_change(new_val)
 

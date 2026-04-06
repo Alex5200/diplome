@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Motor Factory Module
@@ -7,8 +6,8 @@ Motor Factory Module
 Фабрика для создания и конфигурации моторов ST3215.
 """
 
-from typing import Optional, Dict, List, Any
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 from ..config.constants import DEFAULT_MOTOR_MAPPING, MAX_POSITION
 
@@ -47,7 +46,7 @@ class MotorFactory:
 
     def __init__(self):
         """Инициализация фабрики."""
-        self._configs: Dict[int, MotorConfig] = {}
+        self._configs: dict[int, MotorConfig] = {}
 
     def create_config(
         self,
@@ -82,15 +81,13 @@ class MotorFactory:
             raise ValueError(f"motor_id должен быть >= 0, получен {motor_id}")
 
         if min_position < 0:
-            raise ValueError(f"min_position должен быть >= 0")
+            raise ValueError("min_position должен быть >= 0")
 
         if max_position > MAX_POSITION:
             raise ValueError(f"max_position должен быть <= {MAX_POSITION}")
 
         if min_position > max_position:
-            raise ValueError(
-                f"min_position ({min_position}) > max_position ({max_position})"
-            )
+            raise ValueError(f"min_position ({min_position}) > max_position ({max_position})")
 
         if not (0 <= initial_position <= MAX_POSITION):
             raise ValueError(f"initial_position должен быть в диапазоне 0-{MAX_POSITION}")
@@ -108,11 +105,11 @@ class MotorFactory:
         self._configs[motor_id] = config
         return config
 
-    def get_config(self, motor_id: int) -> Optional[MotorConfig]:
+    def get_config(self, motor_id: int) -> MotorConfig | None:
         """Получение конфигурации мотора."""
         return self._configs.get(motor_id)
 
-    def get_all_configs(self) -> Dict[int, MotorConfig]:
+    def get_all_configs(self) -> dict[int, MotorConfig]:
         """Получение всех конфигураций."""
         return self._configs.copy()
 
@@ -182,7 +179,7 @@ class MotorFactory:
         position = int(min_pos + normalized * (max_pos - min_pos))
         return max(min_pos, min(max_pos, position))
 
-    def create_from_mapping(self, mapping: Dict[str, Any]) -> Dict[int, MotorConfig]:
+    def create_from_mapping(self, mapping: dict[str, Any]) -> dict[int, MotorConfig]:
         """
         Создание конфигураций из соответствия моторов.
 
@@ -217,7 +214,7 @@ class MotorFactory:
 
 
 # Глобальный экземпляр фабрики
-_motor_factory: Optional[MotorFactory] = None
+_motor_factory: MotorFactory | None = None
 
 
 def get_motor_factory() -> MotorFactory:

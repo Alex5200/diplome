@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Models Package
@@ -10,26 +9,26 @@ Models Package
     - kinematics: Кинематические модели
 """
 
+from app.models.kinematics import (
+    InverseKinematics6DOF,
+    RobotKinematics6DOF,
+)
 from app.models.motor_data import (
-    MotorData,
     JointState,
-    RobotState,
+    MotorData,
     MotorStatus,
     ProgramBlock,
     RobotProgram,
-)
-from app.models.kinematics import (
-    RobotKinematics6DOF,
-    InverseKinematics6DOF,
+    RobotState,
 )
 
 __all__ = [
-    "MotorData",
+    "InverseKinematics6DOF",
     "JointState",
-    "RobotState",
+    "MotorData",
     "MotorStatus",
     "ProgramBlock",
-    "RobotProgram",
     "RobotKinematics6DOF",
-    "InverseKinematics6DOF",
+    "RobotProgram",
+    "RobotState",
 ]

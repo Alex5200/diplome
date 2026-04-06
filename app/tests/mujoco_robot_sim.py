@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 MuJoCo Robot Simulation with ST3215 Control
@@ -18,13 +17,12 @@ MuJoCo Robot Simulation with ST3215 Control
     python -m app.tests.mujoco_robot_sim
 """
 
-import sys
 import math
-import time
+import sys
 import threading
-import numpy as np
 from pathlib import Path
-from typing import Optional, List, Tuple, Dict
+
+import numpy as np
 
 # Добавляем корень проекта
 parent_dir = Path(__file__).parent.parent.parent
@@ -38,13 +36,12 @@ except ImportError:
     print("❌ MuJoCo не установлен! Запустите: pip install mujoco")
     sys.exit(1)
 
-from app.models.kinematics import RobotKinematics6DOF, InverseKinematics6DOF
 from app.config.constants import (
-    MAX_POSITION,
-    DEFAULT_SPEED,
     DEFAULT_ACC,
     DEFAULT_MOTOR_MAPPING,
+    MAX_POSITION,
 )
+from app.models.kinematics import InverseKinematics6DOF, RobotKinematics6DOF
 
 # Опциональный импорт ST3215
 try:
@@ -129,7 +126,7 @@ def generate_robot_mjcf(
 
     cameras_xml = ""
     if with_cameras:
-        cameras_xml = f"""
+        cameras_xml = """
     <!-- Камеры -->
     <camera name="top_down" pos="0 0 0.6" quat="0 0 0 1"
             fovy="60" mode="fixed"/>
@@ -192,7 +189,7 @@ def generate_robot_mjcf(
 """
 
     # Целевой маркер (полупрозрачный, не влияет на физику)
-    target_marker_xml = f"""
+    target_marker_xml = """
     <body name="target_marker" pos="0.15 0 0.15" mocap="true">
       <geom name="target_geom" type="sphere" size="0.01"
             rgba="1 0 1 0.5" contype="0" conaffinity="0"/>
@@ -365,7 +362,7 @@ class MuJoCoRobotController:
         (-90, 90),
     ]
 
-    def __init__(self, xml_string: Optional[str] = None):
+    def __init__(self, xml_string: str | None = None):
         """Инициализация симуляции."""
         if xml_string is None:
             xml_string = generate_robot_mjcf()
@@ -407,7 +404,7 @@ class MuJoCoRobotController:
         self.gripper_open = True
 
         # ST3215 (опционально)
-        self.st3215: Optional[ST3215] = None
+        self.st3215: ST3215 | None = None
         self.sync_with_real = False
 
         # Инициализация
@@ -420,7 +417,7 @@ class MuJoCoRobotController:
     # Управление суставами
     # ============================
 
-    def set_joint_angles(self, angles_deg: List[float], immediate: bool = False):
+    def set_joint_angles(self, angles_deg: list[float], immediate: bool = False):
         """
         Установка целевых углов суставов.
 
@@ -450,7 +447,7 @@ class MuJoCoRobotController:
         if self.sync_with_real and self.st3215:
             self._sync_to_real(angles_deg)
 
-    def get_joint_angles(self) -> List[float]:
+    def get_joint_angles(self) -> list[float]:
         """Чтение текущих углов суставов из симуляции (градусы)."""
         angles = []
         for i in range(6):
@@ -459,13 +456,13 @@ class MuJoCoRobotController:
             angles.append(math.degrees(self.data.qpos[qpos_adr]))
         return angles
 
-    def get_ee_position(self) -> Tuple[float, float, float]:
+    def get_ee_position(self) -> tuple[float, float, float]:
         """Позиция end-effector из симуляции (метры)."""
         site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE, "end_effector")
         pos = self.data.site_xpos[site_id]
         return (pos[0], pos[1], pos[2])
 
-    def get_ee_position_mm(self) -> Tuple[float, float, float]:
+    def get_ee_position_mm(self) -> tuple[float, float, float]:
         """Позиция end-effector в миллиметрах (относительно базы)."""
         pos = self.get_ee_position()
         # Вычитаем позицию базы (стол + монтаж)
@@ -478,7 +475,7 @@ class MuJoCoRobotController:
 
     def move_to_point(
         self, x_mm: float, y_mm: float, z_mm: float, tolerance: float = 2.0
-    ) -> Optional[List[float]]:
+    ) -> list[float] | None:
         """
         Решение IK и отправка углов в симуляцию.
 
@@ -573,7 +570,7 @@ class MuJoCoRobotController:
         renderer.close()
         return img
 
-    def get_observation(self, camera_name: str = "eye_in_hand") -> Dict:
+    def get_observation(self, camera_name: str = "eye_in_hand") -> dict:
         """
         Полное наблюдение для RL-агента.
 
@@ -661,7 +658,7 @@ class MuJoCoRobotController:
         self.st3215 = None
         self.sync_with_real = False
 
-    def _sync_to_real(self, angles_deg: List[float]):
+    def _sync_to_real(self, angles_deg: list[float]):
         """Отправка углов из симуляции на реальный робот."""
         if not self.st3215:
             return
@@ -674,7 +671,7 @@ class MuJoCoRobotController:
             except Exception as e:
                 print(f"⚠️ Мотор {motor_id}: {e}")
 
-    def read_real_angles(self) -> Optional[List[float]]:
+    def read_real_angles(self) -> list[float] | None:
         """Чтение углов с реального робота и обновление симуляции."""
         if not self.st3215:
             return None
@@ -710,8 +707,8 @@ class MuJoCoRobotController:
 
     def execute_waypoints(
         self,
-        points_mm: List[Tuple[float, float, float]],
-        grip_actions: Optional[List[Optional[bool]]] = None,
+        points_mm: list[tuple[float, float, float]],
+        grip_actions: list[bool | None] | None = None,
         settle_time: float = 1.0,
         viewer=None,
     ):
@@ -736,7 +733,7 @@ class MuJoCoRobotController:
             # IK
             angles = self.move_to_point(x, y, z)
             if angles is None:
-                print(f"  ⏭️ Пропуск (IK не решена)")
+                print("  ⏭️ Пропуск (IK не решена)")
                 continue
 
             # Ожидание достижения
@@ -950,7 +947,7 @@ class RobotEnv:
         self.target_object = "red_cube"
         self.target_place = np.array([0.12, -0.08, 0.065])  # Позиция для размещения
 
-    def reset(self) -> Dict:
+    def reset(self) -> dict:
         """Сброс среды."""
         self.ctrl.reset()
         self.ctrl.open_gripper()
@@ -959,7 +956,7 @@ class RobotEnv:
         self.ctrl.step(100)
         return self.ctrl.get_observation()
 
-    def step(self, action: np.ndarray) -> Tuple[Dict, float, bool, Dict]:
+    def step(self, action: np.ndarray) -> tuple[dict, float, bool, dict]:
         """
         Шаг среды.
 

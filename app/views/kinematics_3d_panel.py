@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Kinematics 3D Panel — полная визуализация с IK, слайдерами, пресетами и маршрутами.
@@ -16,51 +15,36 @@ Kinematics 3D Panel — полная визуализация с IK, слайд�
 import math
 import threading
 import time
-from typing import Callable, Dict, List, Optional, Tuple
-
 import tkinter as tk
-from tkinter import ttk, messagebox
+from collections.abc import Callable
+from tkinter import messagebox, ttk
 
-import numpy as np
 import matplotlib
+import numpy as np
 
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from mpl_toolkits.mplot3d import proj3d  # noqa: F401
+from mpl_toolkits.mplot3d import proj3d
 
-from app.controllers.motor_controller import MotorController
-from app.models.kinematics import RobotKinematics6DOF, InverseKinematics6DOF
 from app.config.constants import (
-    MAX_POSITION,
-    MIN_POSITION,
-    KINEMA_COLORS,
-    LIGHT_BG,
-    LIGHT_PANEL,
-    LIGHT_BORDER,
-    LIGHT_TEXT,
-    LIGHT_TEXT2,
-    LIGHT_GREEN,
-    LIGHT_ORANGE,
-    LIGHT_RED,
-    LIGHT_BLUE,
-    LIGHT_ACCENT,
-    LIGHT_HOVER,
-    LIGHT_SELECT,
-    DEFAULT_MOTOR_MAPPING,
     FANUC_BG,
-    FANUC_PANEL,
-    FANUC_GREEN,
     FANUC_BLUE,
+    FANUC_GRAY,
+    FANUC_GREEN,
+    FANUC_ORANGE,
+    FANUC_PANEL,
+    FANUC_RED,
     FANUC_TEXT,
     FANUC_TEXT2,
-    FANUC_GRAY,
-    FANUC_ORANGE,
-    FANUC_RED,
+    KINEMA_COLORS,
+    MAX_POSITION,
 )
+from app.controllers.motor_controller import MotorController
+from app.models.kinematics import InverseKinematics6DOF, RobotKinematics6DOF
 
 # ── Безопасные диапазоны углов (°) ────────────────────────────────────────
-SAFE_ANGLE_LIMITS: List[Tuple[float, float]] = [
+SAFE_ANGLE_LIMITS: list[tuple[float, float]] = [
     (-180, 180),  # J1 база      — полные 360°
     (-180, 180),  # J2 плечо 1   — полные 360°
     (-180, 180),  # J3 плечо 2   — полные 360°
@@ -110,14 +94,14 @@ class Kinematics3DPanel(ttk.Frame):
         self._ik = InverseKinematics6DOF(self._kin)
 
         # Состояние суставов
-        self.joint_angles: List[float] = [0.0] * 6
-        self.slider_vars: List[tk.DoubleVar] = []
-        self.position_vars: List[tk.StringVar] = []
+        self.joint_angles: list[float] = [0.0] * 6
+        self.slider_vars: list[tk.DoubleVar] = []
+        self.position_vars: list[tk.StringVar] = []
 
         # Целевая точка и маршруты
-        self.target_point: Optional[Tuple[float, float, float]] = None
-        self.waypoints: List[Tuple[float, float, float]] = []
-        self.preset_points: List[Tuple[float, float, float, str]] = [
+        self.target_point: tuple[float, float, float] | None = None
+        self.waypoints: list[tuple[float, float, float]] = []
+        self.preset_points: list[tuple[float, float, float, str]] = [
             (100, 0, 150, "Центр передняя"),
             (150, 0, 100, "Дальняя низ"),
             (80, 50, 120, "Средняя левая"),
@@ -131,12 +115,12 @@ class Kinematics3DPanel(ttk.Frame):
         self._live_mode: bool = True
 
         # Траектория EE от текущей позиции до IK-цели
-        self.ik_path: Optional[List[Tuple[float, float, float]]] = None
+        self.ik_path: list[tuple[float, float, float]] | None = None
 
         # matplotlib
-        self.figure: Optional[plt.Figure] = None
+        self.figure: plt.Figure | None = None
         self.ax = None
-        self.canvas: Optional[FigureCanvasTkAgg] = None
+        self.canvas: FigureCanvasTkAgg | None = None
 
         self._build_ui()
         self._refresh_preset_list()
@@ -345,9 +329,7 @@ class Kinematics3DPanel(ttk.Frame):
         self.info_text.tag_configure("ok", foreground=FANUC_GREEN)
         self.info_text.tag_configure("err", foreground=FANUC_RED)
         self.info_text.tag_configure("warn", foreground=FANUC_ORANGE)
-        self.info_text.tag_configure(
-            "head", foreground=FANUC_GREEN, font=("SF Mono", 9, "bold")
-        )
+        self.info_text.tag_configure("head", foreground=FANUC_GREEN, font=("SF Mono", 9, "bold"))
 
     # ── Target panel ──────────────────────────────────────────────────────
 
@@ -457,9 +439,7 @@ class Kinematics3DPanel(ttk.Frame):
             highlightthickness=0,
         )
         self.preset_listbox.pack(side="left", fill="both", expand=True)
-        sb = ttk.Scrollbar(
-            listbox_frame, orient="vertical", command=self.preset_listbox.yview
-        )
+        sb = ttk.Scrollbar(listbox_frame, orient="vertical", command=self.preset_listbox.yview)
         sb.pack(side="right", fill="y")
         self.preset_listbox.configure(yscrollcommand=sb.set)
         self.preset_listbox.bind("<<ListboxSelect>>", self._on_preset_select)
@@ -518,9 +498,7 @@ class Kinematics3DPanel(ttk.Frame):
             highlightthickness=0,
         )
         self.wp_listbox.pack(side="left", fill="both", expand=True)
-        sb = ttk.Scrollbar(
-            listbox_frame, orient="vertical", command=self.wp_listbox.yview
-        )
+        sb = ttk.Scrollbar(listbox_frame, orient="vertical", command=self.wp_listbox.yview)
         sb.pack(side="right", fill="y")
         self.wp_listbox.configure(yscrollcommand=sb.set)
         self.wp_listbox.bind("<Double-1>", self._on_wp_double_click)
@@ -550,9 +528,9 @@ class Kinematics3DPanel(ttk.Frame):
             command=self._run_waypoints,
             style="Accent.TButton",
         ).pack(side="left", padx=4)
-        ttk.Button(
-            btn_row, text="Go", command=self._go_to_selected_wp, style="Dark.TButton"
-        ).pack(side="left", padx=1)
+        ttk.Button(btn_row, text="Go", command=self._go_to_selected_wp, style="Dark.TButton").pack(
+            side="left", padx=1
+        )
 
     # ── Action bar ───────────────────────────────────────────────────────
 
@@ -560,21 +538,21 @@ class Kinematics3DPanel(ttk.Frame):
         bar = ttk.Frame(self, style="Dark.TFrame")
         bar.pack(fill="x", padx=8, pady=(0, 6))
 
-        ttk.Button(
-            bar, text="Refresh", command=self._update_viz, style="Dark.TButton"
-        ).pack(side="left", padx=4)
-        ttk.Button(
-            bar, text="Reset", command=self._reset_angles, style="Dark.TButton"
-        ).pack(side="left", padx=4)
+        ttk.Button(bar, text="Refresh", command=self._update_viz, style="Dark.TButton").pack(
+            side="left", padx=4
+        )
+        ttk.Button(bar, text="Reset", command=self._reset_angles, style="Dark.TButton").pack(
+            side="left", padx=4
+        )
         ttk.Button(
             bar,
             text="Apply All",
             command=self._apply_all,
             style="Accent.TButton",
         ).pack(side="left", padx=4)
-        ttk.Button(
-            bar, text="STOP", command=self._emergency_stop, style="Danger.TButton"
-        ).pack(side="right", padx=4)
+        ttk.Button(bar, text="STOP", command=self._emergency_stop, style="Danger.TButton").pack(
+            side="right", padx=4
+        )
 
     # ──────────────────────────────────────────────────────────────────────
     # Slider / entry handlers
@@ -645,7 +623,7 @@ class Kinematics3DPanel(ttk.Frame):
     # IK & target
     # ──────────────────────────────────────────────────────────────────────
 
-    def _solve_ik(self) -> Optional[List[float]]:
+    def _solve_ik(self) -> list[float] | None:
         x = self.target_x_var.get()
         y = self.target_y_var.get()
         z = self.target_z_var.get()
@@ -683,9 +661,7 @@ class Kinematics3DPanel(ttk.Frame):
 
         result_pos = self._kin.get_end_effector_position(angles)
         error = math.sqrt(
-            (result_pos[0] - x) ** 2
-            + (result_pos[1] - y) ** 2
-            + (result_pos[2] - z) ** 2
+            (result_pos[0] - x) ** 2 + (result_pos[1] - y) ** 2 + (result_pos[2] - z) ** 2
         )
 
         start_angles = list(self.joint_angles)
@@ -765,9 +741,7 @@ class Kinematics3DPanel(ttk.Frame):
             fine = grid_step / 10
             for gx in np.arange(cx - grid_step, cx + grid_step + fine, fine):
                 for gy in np.arange(cy - grid_step, cy + grid_step + fine, fine):
-                    x2, y2, _ = proj3d.proj_transform(
-                        gx, gy, target_z, self.ax.get_proj()
-                    )
+                    x2, y2, _ = proj3d.proj_transform(gx, gy, target_z, self.ax.get_proj())
                     try:
                         coords = self.ax.transData.transform((x2, y2))
                         sx, sy = coords[0], coords[1]
@@ -797,9 +771,7 @@ class Kinematics3DPanel(ttk.Frame):
     def _refresh_preset_list(self) -> None:
         self.preset_listbox.delete(0, tk.END)
         for i, (x, y, z, name) in enumerate(self.preset_points):
-            self.preset_listbox.insert(
-                tk.END, f"#{i + 1} {name}: ({x:.0f},{y:.0f},{z:.0f})"
-            )
+            self.preset_listbox.insert(tk.END, f"#{i + 1} {name}: ({x:.0f},{y:.0f},{z:.0f})")
 
     def _on_preset_select(self, _event) -> None:
         sel = self.preset_listbox.curselection()
@@ -912,13 +884,11 @@ class Kinematics3DPanel(ttk.Frame):
             messagebox.showwarning("Route empty", "Add points to route!")
             return
         lines = "\n".join(
-            f"  #{i + 1}: ({x:.0f},{y:.0f},{z:.0f})"
-            for i, (x, y, z) in enumerate(self.waypoints)
+            f"  #{i + 1}: ({x:.0f},{y:.0f},{z:.0f})" for i, (x, y, z) in enumerate(self.waypoints)
         )
         if not messagebox.askyesno(
             "Run Route",
-            f"Move to {len(self.waypoints)} points?\n\n{lines}\n\n"
-            "WARNING: Ensure path is clear!",
+            f"Move to {len(self.waypoints)} points?\n\n{lines}\n\nWARNING: Ensure path is clear!",
         ):
             return
         self._wp_running = True
@@ -932,18 +902,14 @@ class Kinematics3DPanel(ttk.Frame):
                 break
             self.after(
                 0,
-                lambda ix=i, lx=x, ly=y, lz=z: self._waypoint_step_ui(
-                    ix, lx, ly, lz, total
-                ),
+                lambda ix=i, lx=x, ly=y, lz=z: self._waypoint_step_ui(ix, lx, ly, lz, total),
             )
 
             result = self._ik.solve(x, y, z, max_iterations=300, tolerance=1.0)
             if result is None:
                 self.after(
                     0,
-                    lambda ix=i: self._info_append(
-                        f"! IK failed for point #{ix + 1}\n", "err"
-                    ),
+                    lambda ix=i: self._info_append(f"! IK failed for point #{ix + 1}\n", "err"),
                 )
                 continue
 
@@ -990,7 +956,7 @@ class Kinematics3DPanel(ttk.Frame):
         self.wp_listbox.selection_set(idx)
         self.wp_listbox.see(idx)
 
-    def _update_sliders_from_angles(self, angles: List[float]) -> None:
+    def _update_sliders_from_angles(self, angles: list[float]) -> None:
         for i in range(6):
             self.slider_vars[i].set(round(angles[i], 1))
             self.joint_angles[i] = angles[i]
@@ -1051,10 +1017,10 @@ class Kinematics3DPanel(ttk.Frame):
 
     def _compute_ik_path(
         self,
-        start: List[float],
-        end: List[float],
+        start: list[float],
+        end: list[float],
         steps: int = 40,
-    ) -> List[Tuple[float, float, float]]:
+    ) -> list[tuple[float, float, float]]:
         """Linear interpolation in joint space -> list of EE positions."""
         path = []
         for k in range(steps + 1):
@@ -1119,9 +1085,7 @@ class Kinematics3DPanel(ttk.Frame):
 
         # End effector
         ee = self._kin.get_end_effector_position(self.joint_angles)
-        self.ax.scatter(
-            [ee[0]], [ee[1]], [ee[2]], color=EE_COL, s=120, marker="*", zorder=7
-        )
+        self.ax.scatter([ee[0]], [ee[1]], [ee[2]], color=EE_COL, s=120, marker="*", zorder=7)
         self.ax.text(
             ee[0],
             ee[1],
@@ -1135,15 +1099,12 @@ class Kinematics3DPanel(ttk.Frame):
         if self.target_point:
             tx, ty, tz = self.target_point
             tgt_color = FANUC_GREEN if self.ik_target_reachable else TGT_COL
-            self.ax.scatter(
-                [tx], [ty], [tz], color=tgt_color, s=160, marker="X", zorder=7
-            )
+            self.ax.scatter([tx], [ty], [tz], color=tgt_color, s=160, marker="X", zorder=7)
             self.ax.text(
                 tx,
                 ty,
                 tz + 10,
-                f"{'OK' if self.ik_target_reachable else '?'} "
-                f"({tx:.0f},{ty:.0f},{tz:.0f})",
+                f"{'OK' if self.ik_target_reachable else '?'} ({tx:.0f},{ty:.0f},{tz:.0f})",
                 color=tgt_color,
                 fontsize=8,
                 fontweight="bold",

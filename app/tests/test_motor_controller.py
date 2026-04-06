@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Mock Tests for Motor Controller Module
 Tests for motor_controller.py and motor_monitor.py
 """
 
-import unittest
-from unittest.mock import MagicMock, patch, PropertyMock
-import threading
-import time
 import sys
+import threading
+import unittest
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 # Добавляем родительскую директорию в path
 parent_dir = Path(__file__).parent.parent.parent
@@ -25,13 +23,14 @@ class TestMotorController(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures"""
         # Mock the ST3215 class before importing MotorController
-        self.st3215_patcher = patch('app.controllers.motor_controller.ST3215')
+        self.st3215_patcher = patch("app.controllers.motor_controller.ST3215")
         self.mock_st3215_class = self.st3215_patcher.start()
         self.mock_motor_instance = MagicMock()
         self.mock_st3215_class.return_value = self.mock_motor_instance
 
         from app.controllers.motor_controller import MotorController
-        self.controller = MotorController(device='COM3')
+
+        self.controller = MotorController(device="COM3")
 
     def tearDown(self):
         """Clean up"""
@@ -39,7 +38,7 @@ class TestMotorController(unittest.TestCase):
 
     def test_init_default_values(self):
         """Test controller initialization with default values"""
-        self.assertEqual(self.controller.device, 'COM3')
+        self.assertEqual(self.controller.device, "COM3")
         self.assertFalse(self.controller.connected)
         self.assertEqual(self.controller.found_servos, [])
         self.assertIsNone(self.controller.current_id)
@@ -54,7 +53,7 @@ class TestMotorController(unittest.TestCase):
         self.assertTrue(result)
         self.assertTrue(self.controller.connected)
         self.assertIsNotNone(self.controller.motor)
-        self.mock_st3215_class.assert_called_once_with(device='COM3')
+        self.mock_st3215_class.assert_called_once_with(device="COM3")
 
     def test_connect_failure(self):
         """Test connection failure handling"""
@@ -119,7 +118,7 @@ class TestMotorController(unittest.TestCase):
     def test_get_joint_name_default(self):
         """Test getting joint name with default mapping"""
         # Default mapping uses names from DEFAULT_MOTOR_MAPPING
-        names = ['База', 'Плечо 1', 'Плечо 2', 'Локоть', 'Кисть 1', 'Кисть 2']
+        names = ["База", "Плечо 1", "Плечо 2", "Локоть", "Кисть 1", "Кисть 2"]
 
         for i, expected_name in enumerate(names):
             name = self.controller.get_joint_name(i)
@@ -274,13 +273,13 @@ class TestMotorController(unittest.TestCase):
 
         result = self.controller.read_motor_data(1)
 
-        self.assertEqual(result['position'], 2048)
-        self.assertEqual(result['temperature'], 45.5)
-        self.assertEqual(result['voltage'], 12.0)
-        self.assertEqual(result['current'], 0.5)
-        self.assertEqual(result['load'], 30.0)
-        self.assertEqual(result['mode'], 0)
-        self.assertFalse(result['moving'])
+        self.assertEqual(result["position"], 2048)
+        self.assertEqual(result["temperature"], 45.5)
+        self.assertEqual(result["voltage"], 12.0)
+        self.assertEqual(result["current"], 0.5)
+        self.assertEqual(result["load"], 30.0)
+        self.assertEqual(result["mode"], 0)
+        self.assertFalse(result["moving"])
 
     def test_read_motor_data_not_connected(self):
         """Test reading motor data when not connected"""
@@ -295,7 +294,7 @@ class TestMotorController(unittest.TestCase):
 
         result = self.controller.read_motor_data(1)
 
-        self.assertEqual(result['position'], None)
+        self.assertEqual(result["position"], None)
 
     def test_set_manual_speed(self):
         """Test setting manual speed"""
@@ -315,14 +314,14 @@ class TestMotorController(unittest.TestCase):
         """Test updating motor mapping"""
         self.controller.update_motor_mapping(0, 10, "New Base")
 
-        self.assertEqual(self.controller.motor_mapping['joint_0']['motor_id'], 10)
-        self.assertEqual(self.controller.motor_mapping['joint_0']['name'], "New Base")
+        self.assertEqual(self.controller.motor_mapping["joint_0"]["motor_id"], 10)
+        self.assertEqual(self.controller.motor_mapping["joint_0"]["name"], "New Base")
 
     def test_update_motor_mapping_default_name(self):
         """Test updating motor mapping with default name"""
         self.controller.update_motor_mapping(0, 10)
 
-        self.assertEqual(self.controller.motor_mapping['joint_0']['name'], '🏗️ База')
+        self.assertEqual(self.controller.motor_mapping["joint_0"]["name"], "🏗️ База")
 
     def test_get_motor_mapping(self):
         """Test getting motor mapping"""
@@ -335,28 +334,28 @@ class TestMotorController(unittest.TestCase):
         """Test updating motor configuration"""
         self.controller.update_motor_config(1, 100, 4000, "Configured Motor")
 
-        self.assertEqual(self.controller.motor_config['motor_1']['min_pos'], 100)
-        self.assertEqual(self.controller.motor_config['motor_1']['max_pos'], 4000)
-        self.assertEqual(self.controller.motor_config['motor_1']['name'], "Configured Motor")
+        self.assertEqual(self.controller.motor_config["motor_1"]["min_pos"], 100)
+        self.assertEqual(self.controller.motor_config["motor_1"]["max_pos"], 4000)
+        self.assertEqual(self.controller.motor_config["motor_1"]["name"], "Configured Motor")
 
     def test_get_motor_config(self):
         """Test getting motor configuration"""
         config = self.controller.get_motor_config(1)
 
-        self.assertIn('min_pos', config)
-        self.assertIn('max_pos', config)
-        self.assertIn('name', config)
+        self.assertIn("min_pos", config)
+        self.assertIn("max_pos", config)
+        self.assertIn("name", config)
 
     def test_get_motor_config_not_found(self):
         """Test getting non-existent motor configuration"""
         config = self.controller.get_motor_config(999)
 
-        self.assertEqual(config['min_pos'], 0)
-        self.assertEqual(config['max_pos'], 4095)
-        self.assertEqual(config['name'], 'Мотор 999')
+        self.assertEqual(config["min_pos"], 0)
+        self.assertEqual(config["max_pos"], 4095)
+        self.assertEqual(config["name"], "Мотор 999")
 
-    @patch('app.controllers.motor_controller.open')
-    @patch('app.controllers.motor_controller.json.dump')
+    @patch("app.controllers.motor_controller.open")
+    @patch("app.controllers.motor_controller.json.dump")
     def test_save_config(self, mock_json_dump, mock_open):
         """Test saving configuration to file"""
         result = self.controller.save_config("test_config.json")
@@ -365,7 +364,7 @@ class TestMotorController(unittest.TestCase):
         mock_open.assert_called_once()
         mock_json_dump.assert_called_once()
 
-    @patch('app.controllers.motor_controller.open')
+    @patch("app.controllers.motor_controller.open")
     def test_save_config_error(self, mock_open):
         """Test save configuration error handling"""
         mock_open.side_effect = Exception("File write error")
@@ -374,23 +373,23 @@ class TestMotorController(unittest.TestCase):
 
         self.assertFalse(result)
 
-    @patch('app.controllers.motor_controller.open')
-    @patch('app.controllers.motor_controller.json.load')
+    @patch("app.controllers.motor_controller.open")
+    @patch("app.controllers.motor_controller.json.load")
     def test_load_config(self, mock_json_load, mock_open):
         """Test loading configuration from file"""
         mock_json_load.return_value = {
-            'motor_config': {'motor_1': {'min_pos': 100, 'max_pos': 4000}},
-            'motor_mapping': {'joint_0': {'motor_id': 10}},
-            'port': 'COM5'
+            "motor_config": {"motor_1": {"min_pos": 100, "max_pos": 4000}},
+            "motor_mapping": {"joint_0": {"motor_id": 10}},
+            "port": "COM5",
         }
 
         result = self.controller.load_config("test_config.json")
 
         self.assertTrue(result)
-        self.assertEqual(self.controller.device, 'COM5')
-        self.assertIn('motor_1', self.controller.motor_config)
+        self.assertEqual(self.controller.device, "COM5")
+        self.assertIn("motor_1", self.controller.motor_config)
 
-    @patch('app.controllers.motor_controller.open')
+    @patch("app.controllers.motor_controller.open")
     def test_load_config_error(self, mock_open):
         """Test load configuration error handling"""
         mock_open.side_effect = Exception("File read error")
@@ -406,12 +405,13 @@ class TestMotorMonitor(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures"""
         # Mock dependencies
-        self.controller_patcher = patch('app.controllers.motor_monitor.MotorController')
+        self.controller_patcher = patch("app.controllers.motor_monitor.MotorController")
         self.mock_controller = self.controller_patcher.start()
         self.mock_controller_instance = MagicMock()
         self.mock_controller.return_value = self.mock_controller_instance
 
         from app.controllers.motor_monitor import MotorMonitor
+
         self.monitor = MotorMonitor(self.mock_controller_instance)
 
     def tearDown(self):
@@ -462,6 +462,7 @@ class TestMotorMonitor(unittest.TestCase):
     def test_get_data(self):
         """Test getting data for specific motor"""
         from app.models.motor_data import MotorData
+
         test_data = MotorData(motor_id=1, position=2048, temperature=45.0)
         self.monitor.motor_data[1] = test_data
 
@@ -480,6 +481,7 @@ class TestMotorMonitor(unittest.TestCase):
     def test_get_all_data(self):
         """Test getting all motor data"""
         from app.models.motor_data import MotorData
+
         self.monitor.motor_data[1] = MotorData(motor_id=1, position=100)
         self.monitor.motor_data[2] = MotorData(motor_id=2, position=200)
 
@@ -488,21 +490,21 @@ class TestMotorMonitor(unittest.TestCase):
         self.assertEqual(len(result), 2)
         self.assertIsNot(result, self.monitor.motor_data)  # Returns copy
 
-    @patch('app.controllers.motor_monitor.time.time')
-    @patch('app.controllers.motor_monitor.time.sleep')
+    @patch("app.controllers.motor_monitor.time.time")
+    @patch("app.controllers.motor_monitor.time.sleep")
     def test_monitor_loop(self, mock_sleep, mock_time):
         """Test the monitoring loop"""
         mock_time.side_effect = [0.0, 0.1, 0.2, 1.0]  # Simulate time passing
 
         self.mock_controller_instance.connected = True
         self.mock_controller_instance.read_motor_data.return_value = {
-            'position': 2048,
-            'temperature': 45.0,
-            'voltage': 12.0,
-            'current': 0.5,
-            'load': 30.0,
-            'mode': 0,
-            'moving': False
+            "position": 2048,
+            "temperature": 45.0,
+            "voltage": 12.0,
+            "current": 0.5,
+            "load": 30.0,
+            "mode": 0,
+            "moving": False,
         }
 
         self.monitor.start([1])
@@ -514,6 +516,7 @@ class TestMotorMonitor(unittest.TestCase):
     def test_update_motor_data_not_connected(self):
         """Test updating motor data when not connected"""
         from app.models.motor_data import MotorData
+
         motor_data = MotorData(motor_id=1)
 
         self.mock_controller_instance.connected = False
@@ -525,17 +528,18 @@ class TestMotorMonitor(unittest.TestCase):
     def test_update_motor_data_success(self):
         """Test successful motor data update"""
         from app.models.motor_data import MotorData
+
         motor_data = MotorData(motor_id=1)
 
         self.mock_controller_instance.connected = True
         self.mock_controller_instance.read_motor_data.return_value = {
-            'position': 2048,
-            'temperature': 45.0,
-            'voltage': 12.0,
-            'current': 0.5,
-            'load': 30.0,
-            'mode': 0,
-            'moving': False
+            "position": 2048,
+            "temperature": 45.0,
+            "voltage": 12.0,
+            "current": 0.5,
+            "load": 30.0,
+            "mode": 0,
+            "moving": False,
         }
         self.mock_controller_instance.get_torque_state.return_value = True
 
@@ -554,17 +558,18 @@ class TestMotorMonitor(unittest.TestCase):
     def test_update_motor_data_with_errors(self):
         """Test motor data update with read errors"""
         from app.models.motor_data import MotorData
+
         motor_data = MotorData(motor_id=1, error_count=0)
 
         self.mock_controller_instance.connected = True
         self.mock_controller_instance.read_motor_data.return_value = {
-            'position': None,  # Simulate read failure
-            'temperature': None,
-            'voltage': None,
-            'current': None,
-            'load': None,
-            'mode': None,
-            'moving': None
+            "position": None,  # Simulate read failure
+            "temperature": None,
+            "voltage": None,
+            "current": None,
+            "load": None,
+            "mode": None,
+            "moving": None,
         }
 
         self.monitor._update_motor_data(1, motor_data)
@@ -574,6 +579,7 @@ class TestMotorMonitor(unittest.TestCase):
     def test_update_motor_data_exception(self):
         """Test motor data update exception handling"""
         from app.models.motor_data import MotorData
+
         motor_data = MotorData(motor_id=1, error_count=0)
 
         self.mock_controller_instance.connected = True
@@ -590,6 +596,7 @@ class TestMotorDataModel(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures"""
         from app.models.motor_data import MotorData
+
         self.MotorData = MotorData
 
     def test_motor_data_default_values(self):
@@ -618,7 +625,7 @@ class TestMotorDataModel(unittest.TestCase):
             load=30.0,
             mode=0,
             moving=False,
-            torque_enabled=True
+            torque_enabled=True,
         )
 
         self.assertEqual(data.position, 2048)
@@ -661,10 +668,10 @@ class TestMotorDataModel(unittest.TestCase):
         result = data.to_dict()
 
         self.assertIsInstance(result, dict)
-        self.assertEqual(result['motor_id'], 1)
-        self.assertEqual(result['position'], 2048)
-        self.assertEqual(result['temperature'], 45.0)
+        self.assertEqual(result["motor_id"], 1)
+        self.assertEqual(result["position"], 2048)
+        self.assertEqual(result["temperature"], 45.0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

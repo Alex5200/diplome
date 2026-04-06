@@ -1,27 +1,25 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Motor Controller Module
 Handles communication with ST3215 motors
 """
 
-import threading
-from typing import Optional, Dict, List
-from datetime import datetime
 import json
+import threading
+from datetime import datetime
 
 from st3215 import ST3215
+
 from ..config.constants import (
-    MIN_POSITION,
-    MAX_POSITION,
-    DEFAULT_SPEED,
+    CONFIG_FILE,
     DEFAULT_ACC,
     DEFAULT_MOTOR_CONFIG,
     DEFAULT_MOTOR_MAPPING,
-    CONFIG_FILE,
+    DEFAULT_SPEED,
+    MAX_POSITION,
+    MIN_POSITION,
 )
-from ..models.motor_data import MotorData
 
 
 class MotorController:
@@ -29,10 +27,10 @@ class MotorController:
         self.device = device
         self.motor = None
         self.connected = False
-        self.found_servos: List[int] = []
-        self.current_id: Optional[int] = None
-        self.torque_states: Dict[int, bool] = {}
-        self.joint_positions: Dict[int, float] = {i: 0.0 for i in range(1, 7)}
+        self.found_servos: list[int] = []
+        self.current_id: int | None = None
+        self.torque_states: dict[int, bool] = {}
+        self.joint_positions: dict[int, float] = {i: 0.0 for i in range(1, 7)}
         self.cartesian_position = [0.0, 0.0, 0.0]
         self.motor_config = DEFAULT_MOTOR_CONFIG.copy()
         self.motor_mapping = DEFAULT_MOTOR_MAPPING.copy()
@@ -121,7 +119,7 @@ class MotorController:
                 print(f"⚠️ Не удалось включить момент для мотора {motor_id}: {e}")
         return self.move_to_position(motor_id, position, speed, acc)
 
-    def move_all_joints(self, positions: List[int], speed=DEFAULT_SPEED):
+    def move_all_joints(self, positions: list[int], speed=DEFAULT_SPEED):
         for i, pos in enumerate(positions):
             self.move_joint(i, pos, speed=speed)
         return True
@@ -155,7 +153,7 @@ class MotorController:
             except Exception as e:
                 print(f"Ошибка остановки мотора {sid}: {e}")
 
-    def get_joint_positions(self) -> Dict[int, float]:
+    def get_joint_positions(self) -> dict[int, float]:
         return self.joint_positions.copy()
 
     def read_motor_data(self, sts_id: int) -> dict:
@@ -240,7 +238,7 @@ class MotorController:
 
     def load_config(self, filename: str = CONFIG_FILE):
         try:
-            with open(filename, "r", encoding="utf-8") as f:
+            with open(filename, encoding="utf-8") as f:
                 config = json.load(f)
             if "motor_config" in config:
                 self.motor_config = config["motor_config"]

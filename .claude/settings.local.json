@@ -27,7 +27,11 @@
       "Bash(for f:*)",
       "Bash(do echo:*)",
       "Read(//Users/alexandr/Documents/GitHub/diplome2026/**)",
-      "Bash(wc -l ch*.js)"
+      "Bash(wc -l ch*.js)",
+      "Bash(python3 -m ruff check app/ --statistics)",
+      "Bash(pip3 install:*)",
+      "Bash(python3 -m ruff format app/)",
+      "Bash(python3 -m ruff check app/ --fix)"
     ]
   }
 }

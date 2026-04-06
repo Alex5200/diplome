@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Block Programming Module — Расширенная версия с богатым набором блоков
@@ -23,25 +22,23 @@ Block Programming Module — Расширенная версия с богаты
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox
-from typing import List, Dict, Optional, Callable, Any
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from tkinter import messagebox, ttk
 
 from app.config.constants import (
     BLOCK_COLORS,
+    DEFAULT_ACC,
+    DEFAULT_SPEED,
     FANUC_BG,
-    FANUC_PANEL,
+    FANUC_GRAY,
     FANUC_GREEN,
+    FANUC_PANEL,
+    FANUC_RED,
     FANUC_TEXT,
     FANUC_TEXT2,
-    FANUC_RED,
-    FANUC_GRAY,
-    FANUC_ORANGE,
-    FANUC_BLUE,
     MAX_POSITION,
     MIN_POSITION,
-    DEFAULT_SPEED,
-    DEFAULT_ACC,
 )
 
 
@@ -64,21 +61,13 @@ class ProgramBlock:
         block_type = self.params.get("type", "unknown")
 
         descriptions = {
-            "move_joint": lambda p: (
-                f"J{p.get('joint', 0) + 1} → {p.get('position', 2048)}"
-            ),
-            "move_xyz": lambda p: (
-                f"XYZ({p.get('x', 0)}, {p.get('y', 0)}, {p.get('z', 0)})"
-            ),
-            "linear_move": lambda p: (
-                f"Line → ({p.get('x', 0)}, {p.get('y', 0)}, {p.get('z', 0)})"
-            ),
+            "move_joint": lambda p: f"J{p.get('joint', 0) + 1} → {p.get('position', 2048)}",
+            "move_xyz": lambda p: f"XYZ({p.get('x', 0)}, {p.get('y', 0)}, {p.get('z', 0)})",
+            "linear_move": lambda p: f"Line → ({p.get('x', 0)}, {p.get('y', 0)}, {p.get('z', 0)})",
             "rotate": lambda p: (
                 f"Rotate Rx:{p.get('rx', 0)} Ry:{p.get('ry', 0)} Rz:{p.get('rz', 0)}"
             ),
-            "arc_move": lambda p: (
-                f"Arc → ({p.get('x', 0)}, {p.get('y', 0)}, {p.get('z', 0)})"
-            ),
+            "arc_move": lambda p: f"Arc → ({p.get('x', 0)}, {p.get('y', 0)}, {p.get('z', 0)})",
             "home": lambda p: (
                 f"Home {'All' if p.get('joint') == 'all' else f'J{int(p.get("joint", 0)) + 1}'}"
             ),
@@ -365,9 +354,7 @@ class BlockConfigDialog(tk.Toplevel):
                 self.input_vars[key] = var
 
                 min_val, max_val = range_or_choices or (0, 100)
-                spin = ttk.Spinbox(
-                    row, from_=min_val, to=max_val, textvariable=var, width=25
-                )
+                spin = ttk.Spinbox(row, from_=min_val, to=max_val, textvariable=var, width=25)
                 spin.pack(side="left", padx=5)
 
     def _load_params(self):
@@ -428,9 +415,7 @@ class BlockPalette(ttk.Frame):
         scroll_canvas = tk.Canvas(self, bg=FANUC_BG, highlightthickness=0)
         scroll_canvas.pack(fill="both", expand=True, padx=5, pady=5)
 
-        scrollbar = ttk.Scrollbar(
-            scroll_canvas, orient="vertical", command=scroll_canvas.yview
-        )
+        scrollbar = ttk.Scrollbar(scroll_canvas, orient="vertical", command=scroll_canvas.yview)
         scrollbar.pack(side="right", fill="y")
 
         scroll_canvas.configure(yscrollcommand=scrollbar.set)
@@ -628,11 +613,11 @@ class ProgramCanvas(tk.Canvas):
 
     def __init__(self, parent: tk.Misc):
         super().__init__(parent, bg=FANUC_BG, highlightthickness=0, relief="flat")
-        self.blocks: List[ProgramBlock] = []
-        self.block_widgets: Dict[int, tk.Frame] = {}
+        self.blocks: list[ProgramBlock] = []
+        self.block_widgets: dict[int, tk.Frame] = {}
         self.y_offset = 10
         self.block_id_counter = 0
-        self.selected_block_id: Optional[int] = None
+        self.selected_block_id: int | None = None
 
         self.bind("<Configure>", self._on_resize)
         self.bind("<Button-1>", self._on_canvas_click)
@@ -673,9 +658,7 @@ class ProgramCanvas(tk.Canvas):
                 self._recreate_block_widget(block)
                 self._update_blocks_display()
 
-            BlockConfigDialog(
-                self, block.params.get("type"), block.params, on_configured
-            )
+            BlockConfigDialog(self, block.params.get("type"), block.params, on_configured)
 
     def clear_all(self) -> None:
         """Очистка всех блоков."""
@@ -827,7 +810,7 @@ class ProgramCanvas(tk.Canvas):
         """Обработка изменения размера."""
         self.configure(scrollregion=self.bbox("all"))
 
-    def get_program(self) -> List[dict]:
+    def get_program(self) -> list[dict]:
         """Получение программы для выполнения."""
         return [b.__dict__ for b in self.blocks]
 

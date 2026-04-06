@@ -49,9 +49,7 @@ class DrawSquare(BaseProgram):
         ]
         side_names = ["top", "left", "bottom", "right"]
 
-        self._log(
-            f"Drawing {self.side}mm square at Z={self.z}mm, center=({self.cx},{self.cy})"
-        )
+        self._log(f"Drawing {self.side}mm square at Z={self.z}mm, center=({self.cx},{self.cy})")
 
         # Move to start corner
         sx, sy = corners[0]
@@ -89,9 +87,7 @@ class DrawSquare(BaseProgram):
 def main():
     parser = argparse.ArgumentParser(description="Draw square trajectory")
     parser.add_argument("--port", default="COM3")
-    parser.add_argument(
-        "--side", type=float, default=80.0, help="Square side length (mm)"
-    )
+    parser.add_argument("--side", type=float, default=80.0, help="Square side length (mm)")
     parser.add_argument("--z", type=float, default=80.0, help="Z height (mm)")
     parser.add_argument("--cx", type=float, default=180.0, help="Center X (mm)")
     parser.add_argument("--cy", type=float, default=0.0, help="Center Y (mm)")

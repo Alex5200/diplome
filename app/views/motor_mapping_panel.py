@@ -1,27 +1,25 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Motor Mapping Panel — Minimalist B&W
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox
-from typing import Callable, Dict
+from collections.abc import Callable
+from tkinter import messagebox, ttk
 
-from app.controllers.motor_controller import MotorController
 from app.config.constants import (
-    JOINT_NAMES,
     DEFAULT_MOTOR_MAPPING,
     FANUC_BG,
-    FANUC_PANEL,
+    FANUC_BLUE,
+    FANUC_GRAY,
     FANUC_GREEN,
     FANUC_ORANGE,
-    FANUC_RED,
-    FANUC_BLUE,
+    FANUC_PANEL,
     FANUC_TEXT,
-    FANUC_GRAY,
+    JOINT_NAMES,
 )
+from app.controllers.motor_controller import MotorController
 
 
 class MotorMappingPanel(ttk.Frame):
@@ -37,9 +35,9 @@ class MotorMappingPanel(ttk.Frame):
         self.controller = controller
         self.log = log_callback
 
-        self.mapping_vars: Dict[int, tk.IntVar] = {}
-        self.name_vars: Dict[int, tk.StringVar] = {}
-        self.inverted_vars: Dict[int, tk.BooleanVar] = {}
+        self.mapping_vars: dict[int, tk.IntVar] = {}
+        self.name_vars: dict[int, tk.StringVar] = {}
+        self.inverted_vars: dict[int, tk.BooleanVar] = {}
 
         self._create_widgets()
         self._load_current_mapping()

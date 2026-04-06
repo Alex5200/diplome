@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Motor Monitor Module
@@ -8,7 +7,7 @@ Handles asynchronous monitoring of motor data
 
 import threading
 import time
-from typing import Optional, Dict, List, Callable
+from collections.abc import Callable
 
 from ..config.constants import MONITOR_INTERVAL
 from ..models.motor_data import MotorData
@@ -19,16 +18,16 @@ class MotorMonitor:
     def __init__(
         self,
         motor_controller: MotorController,
-        update_callback: Optional[Callable] = None,
+        update_callback: Callable | None = None,
     ):
         self.motor_controller = motor_controller
         self.update_callback = update_callback
         self.running = False
-        self.thread: Optional[threading.Thread] = None
-        self.motor_data: Dict[int, MotorData] = {}
+        self.thread: threading.Thread | None = None
+        self.motor_data: dict[int, MotorData] = {}
         self.lock = threading.Lock()
 
-    def start(self, motor_ids: List[int]):
+    def start(self, motor_ids: list[int]):
         if self.running:
             return
         with self.lock:
@@ -88,10 +87,10 @@ class MotorMonitor:
             data.error_count += 1
             print(f"⚠️ Ошибка обновления мотора {motor_id}: {e}")
 
-    def get_data(self, motor_id: int) -> Optional[MotorData]:
+    def get_data(self, motor_id: int) -> MotorData | None:
         with self.lock:
             return self.motor_data.get(motor_id)
 
-    def get_all_data(self) -> Dict[int, MotorData]:
+    def get_all_data(self) -> dict[int, MotorData]:
         with self.lock:
             return self.motor_data.copy()

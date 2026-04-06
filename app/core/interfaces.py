@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Interfaces Module - Абстрактные базовые классы
@@ -9,8 +8,10 @@ Interfaces Module - Абстрактные базовые классы
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, List, Any, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
+from typing import dict_type as dict_type_type
 
 
 @dataclass
@@ -58,7 +59,7 @@ class IMotorController(ABC):
         pass
 
     @abstractmethod
-    def scan_servos(self) -> List[int]:
+    def scan_servos(self) -> list[int]:
         """
         Сканирование подключенных сервомоторов.
 
@@ -68,9 +69,7 @@ class IMotorController(ABC):
         pass
 
     @abstractmethod
-    def move_to_position(
-        self, motor_id: int, position: int, speed: int, acc: int
-    ) -> bool:
+    def move_to_position(self, motor_id: int, position: int, speed: int, acc: int) -> bool:
         """
         Движение мотора к позиции.
 
@@ -102,7 +101,7 @@ class IMotorController(ABC):
         pass
 
     @abstractmethod
-    def move_all_joints(self, positions: List[int], speed: int) -> bool:
+    def move_all_joints(self, positions: list[int], speed: int) -> bool:
         """
         Одновременное движение всех суставов.
 
@@ -135,7 +134,7 @@ class IMotorController(ABC):
         pass
 
     @abstractmethod
-    def read_motor_data(self, motor_id: int) -> Dict[str, Any]:
+    def read_motor_data(self, motor_id: int) -> dict_type_type[str, Any]:
         """
         Чтение данных мотора.
 
@@ -169,7 +168,7 @@ class IMotorMonitor(ABC):
     """
 
     @abstractmethod
-    def start(self, motor_ids: List[int]) -> None:
+    def start(self, motor_ids: list[int]) -> None:
         """
         Запуск мониторинга.
 
@@ -189,7 +188,7 @@ class IMotorMonitor(ABC):
         pass
 
     @abstractmethod
-    def get_data(self, motor_id: int) -> Optional[MotorInfo]:
+    def get_data(self, motor_id: int) -> MotorInfo | None:
         """
         Получение данных конкретного мотора.
 
@@ -202,7 +201,7 @@ class IMotorMonitor(ABC):
         pass
 
     @abstractmethod
-    def get_all_data(self) -> Dict[int, MotorInfo]:
+    def get_all_data(self) -> dict_type[int, MotorInfo]:
         """
         Получение данных всех моторов.
 
@@ -212,7 +211,7 @@ class IMotorMonitor(ABC):
         pass
 
     @abstractmethod
-    def set_callback(self, callback: Callable[[Dict[int, MotorInfo]], None]) -> None:
+    def set_callback(self, callback: Callable[[dict_type[int, MotorInfo]], None]) -> None:
         """
         Установка callback для обновлений данных.
 
@@ -255,7 +254,7 @@ class IService(ABC):
         pass
 
     @abstractmethod
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict_type[str, Any]:
         """
         Получение статуса сервиса.
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Application Logger Module
@@ -10,17 +9,17 @@ Application Logger Module
 import logging
 import sys
 from datetime import datetime
-from typing import Optional
 from enum import Enum
 
 
 class LogLevel(Enum):
     """Уровни логирования."""
-    INFO = 'info'
-    WARNING = 'warning'
-    ERROR = 'error'
-    SUCCESS = 'success'
-    DEBUG = 'debug'
+
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    SUCCESS = "success"
+    DEBUG = "debug"
 
 
 class AppLogger:
@@ -43,15 +42,20 @@ class AppLogger:
 
     # Цвета для консольного вывода
     COLORS = {
-        'INFO': '\033[94m',      # Синий
-        'WARNING': '\033[93m',   # Желтый
-        'ERROR': '\033[91m',     # Красный
-        'SUCCESS': '\033[92m',   # Зеленый
-        'DEBUG': '\033[90m',     # Серый
-        'RESET': '\033[0m'       # Сброс
+        "INFO": "\033[94m",  # Синий
+        "WARNING": "\033[93m",  # Желтый
+        "ERROR": "\033[91m",  # Красный
+        "SUCCESS": "\033[92m",  # Зеленый
+        "DEBUG": "\033[90m",  # Серый
+        "RESET": "\033[0m",  # Сброс
     }
 
-    def __init__(self, name: str = 'robot_app', log_file: Optional[str] = None, level: LogLevel = LogLevel.INFO):
+    def __init__(
+        self,
+        name: str = "robot_app",
+        log_file: str | None = None,
+        level: LogLevel = LogLevel.INFO,
+    ):
         """
         Инициализация логгера.
 
@@ -63,7 +67,7 @@ class AppLogger:
         self.name = name
         self.level = level
         self.log_file = log_file
-        self._file_handler: Optional[logging.FileHandler] = None
+        self._file_handler: logging.FileHandler | None = None
         self._setup_logger()
 
     def _setup_logger(self):
@@ -77,17 +81,20 @@ class AppLogger:
         # Консольный обработчик
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(logging.DEBUG)
-        console_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                                              datefmt='%H:%M:%S')
+        console_formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%H:%M:%S"
+        )
         console_handler.setFormatter(console_formatter)
         self.logger.addHandler(console_handler)
 
         # Файловый обработчик (если указан файл)
         if self.log_file:
             try:
-                self._file_handler = logging.FileHandler(self.log_file, encoding='utf-8')
+                self._file_handler = logging.FileHandler(self.log_file, encoding="utf-8")
                 self._file_handler.setLevel(logging.DEBUG)
-                file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+                file_formatter = logging.Formatter(
+                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+                )
                 self._file_handler.setFormatter(file_formatter)
                 self.logger.addHandler(self._file_handler)
             except Exception as e:
@@ -102,23 +109,23 @@ class AppLogger:
             message: Сообщение
         """
         level_map = {
-            'INFO': logging.INFO,
-            'WARNING': logging.WARNING,
-            'ERROR': logging.ERROR,
-            'SUCCESS': logging.INFO,  # SUCCESS мапим на INFO
-            'DEBUG': logging.DEBUG,
+            "INFO": logging.INFO,
+            "WARNING": logging.WARNING,
+            "ERROR": logging.ERROR,
+            "SUCCESS": logging.INFO,  # SUCCESS мапим на INFO
+            "DEBUG": logging.DEBUG,
         }
 
         log_level = level_map.get(level, logging.INFO)
 
         if self.logger.isEnabledFor(log_level):
             # Для консольного вывода с цветом
-            timestamp = datetime.now().strftime('%H:%M:%S')
-            color = self.COLORS.get(level, self.COLORS['RESET'])
-            reset = self.COLORS['RESET']
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            color = self.COLORS.get(level, self.COLORS["RESET"])
+            reset = self.COLORS["RESET"]
 
             # Проверяем, является ли вывод терминалом
-            if hasattr(sys.stdout, 'isatty') and sys.stdout.isatty():
+            if hasattr(sys.stdout, "isatty") and sys.stdout.isatty():
                 print(f"{color}[{timestamp}] {level}: {message}{reset}")
             else:
                 print(f"[{timestamp}] {level}: {message}")
@@ -128,24 +135,24 @@ class AppLogger:
 
     def info(self, message: str):
         """Логирование информационного сообщения."""
-        self._log('INFO', message)
+        self._log("INFO", message)
 
     def warning(self, message: str):
         """Логирование предупреждения."""
-        self._log('WARNING', message)
+        self._log("WARNING", message)
 
     def error(self, message: str):
         """Логирование ошибки."""
-        self._log('ERROR', message)
+        self._log("ERROR", message)
 
     def success(self, message: str):
         """Логирование успешного действия."""
-        self._log('SUCCESS', message)
+        self._log("SUCCESS", message)
 
     def debug(self, message: str):
         """Логирование отладочной информации."""
         if self.level == LogLevel.DEBUG:
-            self._log('DEBUG', message)
+            self._log("DEBUG", message)
 
     def set_level(self, level: LogLevel):
         """

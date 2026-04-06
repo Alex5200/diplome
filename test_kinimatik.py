@@ -200,12 +200,7 @@ class OMYF3MKinematics:
             # Angular velocity component
             dR = (R1 - R0) / delta
             # Convert to angular velocity using skew-symmetric matrix
-            omega = (
-                np.array(
-                    [dR[2, 1] - dR[1, 2], dR[0, 2] - dR[2, 0], dR[1, 0] - dR[0, 1]]
-                )
-                / 2
-            )
+            omega = np.array([dR[2, 1] - dR[1, 2], dR[0, 2] - dR[2, 0], dR[1, 0] - dR[0, 1]]) / 2
             J[3:6, i] = omega
 
         return J
@@ -262,15 +257,11 @@ class OMYF3MKinematics:
                 orient_error = axis * angle
 
             # Combined error
-            error = np.concatenate(
-                [pos_error * 1000, orient_error]
-            )  # Weight position more
+            error = np.concatenate([pos_error * 1000, orient_error])  # Weight position more
             return error
 
         # Solve using least squares
-        result = least_squares(
-            ik_objective, q0, method="lm", max_nfev=max_iter, ftol=tol
-        )
+        result = least_squares(ik_objective, q0, method="lm", max_nfev=max_iter, ftol=tol)
 
         success = result.success and result.cost < 1e-6
 

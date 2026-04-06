@@ -1,28 +1,25 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Manual Control Panel — Minimalist B&W
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox
-from typing import Callable, Optional, Dict
+from collections.abc import Callable
+from tkinter import ttk
 
-from app.controllers.motor_controller import MotorController
 from app.config.constants import (
-    MIN_POSITION,
-    MAX_POSITION,
     DEFAULT_SPEED,
+    FANUC_BG,
+    FANUC_BLUE,
+    FANUC_GRAY,
     FANUC_GREEN,
     FANUC_ORANGE,
-    FANUC_RED,
-    FANUC_BLUE,
-    FANUC_BG,
     FANUC_PANEL,
     FANUC_TEXT,
-    FANUC_GRAY,
+    MAX_POSITION,
 )
+from app.controllers.motor_controller import MotorController
 
 
 class ManualControlPanel(ttk.Frame):
@@ -33,7 +30,7 @@ class ManualControlPanel(ttk.Frame):
         parent,
         controller: MotorController,
         log_callback: Callable,
-        update_callback: Optional[Callable] = None,
+        update_callback: Callable | None = None,
     ):
         super().__init__(parent, style="TFrame")
         self.controller = controller
@@ -48,11 +45,11 @@ class ManualControlPanel(ttk.Frame):
         self.pos_var = tk.IntVar(value=0)
         self.step_var = tk.IntVar(value=100)
 
-        self.joint_buttons: Dict[int, tk.Button] = {}
-        self.joint_pos_labels: Dict[int, tk.Label] = {}
-        self.joint_angle_labels: Dict[int, tk.Label] = {}
-        self.speed_label: Optional[ttk.Label] = None
-        self.status_label: Optional[tk.Label] = None
+        self.joint_buttons: dict[int, tk.Button] = {}
+        self.joint_pos_labels: dict[int, tk.Label] = {}
+        self.joint_angle_labels: dict[int, tk.Label] = {}
+        self.speed_label: ttk.Label | None = None
+        self.status_label: tk.Label | None = None
 
         self._create_widgets()
         self._update_all_positions()
@@ -189,7 +186,7 @@ class ManualControlPanel(ttk.Frame):
             fg=FANUC_ORANGE,
         ).pack(side="left", padx=6)
 
-        self.step_btns: Dict[int, tk.Button] = {}
+        self.step_btns: dict[int, tk.Button] = {}
         for step in [10, 50, 100, 250, 500, 1000]:
             b = tk.Button(
                 stp_f,
@@ -406,7 +403,7 @@ class ManualControlPanel(ttk.Frame):
             if i in self.joint_angle_labels:
                 self.joint_angle_labels[i].config(text=f"{ang:.1f}°")
 
-    def update_from_monitor(self, data: Dict[int, any]):
+    def update_from_monitor(self, data: dict[int, any]):
         for j in range(6):
             mid = self.controller.get_motor_id_for_joint(j)
             if mid in data:

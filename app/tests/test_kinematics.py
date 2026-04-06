@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Tests for Robot Kinematics Model
 """
 
-import unittest
 import math
 import sys
+import unittest
 from pathlib import Path
 
 # Добавляем родительскую директорию в path
@@ -15,7 +14,7 @@ parent_dir = Path(__file__).parent.parent.parent
 if str(parent_dir) not in sys.path:
     sys.path.insert(0, str(parent_dir))
 
-from app.models.kinematics import RobotKinematics6DOF, InverseKinematics6DOF
+from app.models.kinematics import InverseKinematics6DOF, RobotKinematics6DOF
 
 
 class TestRobotKinematics6DOF(unittest.TestCase):
@@ -27,12 +26,12 @@ class TestRobotKinematics6DOF(unittest.TestCase):
 
     def test_link_lengths(self):
         """Test that link lengths match specification"""
-        self.assertEqual(self.kin.L0, 19.0)   # База
+        self.assertEqual(self.kin.L0, 19.0)  # База
         self.assertEqual(self.kin.L1, 134.0)  # Плечо 1
-        self.assertEqual(self.kin.L2, 95.0)   # Плечо 2
-        self.assertEqual(self.kin.L3, 34.0)   # Локоть
-        self.assertEqual(self.kin.L4, 35.0)   # Запястье 1
-        self.assertEqual(self.kin.L5, 0.0)    # Запястье 2
+        self.assertEqual(self.kin.L2, 95.0)  # Плечо 2
+        self.assertEqual(self.kin.L3, 34.0)  # Локоть
+        self.assertEqual(self.kin.L4, 35.0)  # Запястье 1
+        self.assertEqual(self.kin.L5, 0.0)  # Запястье 2
 
     def test_total_reach(self):
         """Test maximum reach calculation"""
@@ -99,7 +98,7 @@ class TestRobotKinematics6DOF(unittest.TestCase):
         self.assertEqual(len(vectors), 6)
 
         # Sum of vector lengths should equal total reach
-        total_length = sum(math.sqrt(v[0]**2 + v[1]**2 + v[2]**2) for v in vectors)
+        total_length = sum(math.sqrt(v[0] ** 2 + v[1] ** 2 + v[2] ** 2) for v in vectors)
         self.assertAlmostEqual(total_length, self.kin.get_total_reach(), places=1)
 
     def test_workspace_bounds(self):
@@ -218,28 +217,26 @@ class TestInverseKinematics6DOF(unittest.TestCase):
 
         # Try to solve inverse kinematics
         solution = self.ik.solve(
-            target_pos[0], target_pos[1], target_pos[2],
+            target_pos[0],
+            target_pos[1],
+            target_pos[2],
             max_iterations=100,
-            tolerance=1.0
+            tolerance=1.0,
         )
 
         # Solution may not be exact same angles but should reach same position
         if solution:
             reached_pos = self.kin.get_end_effector_position(solution)
             error = math.sqrt(
-                (target_pos[0] - reached_pos[0])**2 +
-                (target_pos[1] - reached_pos[1])**2 +
-                (target_pos[2] - reached_pos[2])**2
+                (target_pos[0] - reached_pos[0]) ** 2
+                + (target_pos[1] - reached_pos[1]) ** 2
+                + (target_pos[2] - reached_pos[2]) ** 2
             )
             self.assertLess(error, 5.0)  # Within 5mm
 
     def test_solve_origin(self):
         """Test solving for position near origin"""
-        solution = self.ik.solve(
-            200, 0, 100,
-            max_iterations=100,
-            tolerance=1.0
-        )
+        solution = self.ik.solve(200, 0, 100, max_iterations=100, tolerance=1.0)
 
         if solution:
             pos = self.kin.get_end_effector_position(solution)
@@ -303,5 +300,5 @@ class TestKinematicsEdgeCases(unittest.TestCase):
             self.assertLessEqual(abs(pos[2]), max_reach)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
