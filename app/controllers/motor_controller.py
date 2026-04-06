@@ -13,14 +13,19 @@ import json
 
 from st3215 import ST3215
 from ..config.constants import (
-    MIN_POSITION, MAX_POSITION, DEFAULT_SPEED, DEFAULT_ACC,
-    DEFAULT_MOTOR_CONFIG, DEFAULT_MOTOR_MAPPING, CONFIG_FILE
+    MIN_POSITION,
+    MAX_POSITION,
+    DEFAULT_SPEED,
+    DEFAULT_ACC,
+    DEFAULT_MOTOR_CONFIG,
+    DEFAULT_MOTOR_MAPPING,
+    CONFIG_FILE,
 )
 from ..models.motor_data import MotorData
 
 
 class MotorController:
-    def __init__(self, device='COM3'):
+    def __init__(self, device="COM3"):
         self.device = device
         self.motor = None
         self.connected = False
@@ -46,7 +51,7 @@ class MotorController:
     def disconnect(self):
         if self.motor:
             try:
-                if hasattr(self.motor, 'portHandler'):
+                if hasattr(self.motor, "portHandler"):
                     self.motor.portHandler.closePort()
             except Exception as e:
                 print(f"⚠️ Ошибка закрытия порта: {e}")
@@ -64,17 +69,20 @@ class MotorController:
             return []
 
     def get_motor_id_for_joint(self, joint_index: int) -> int:
-        key = f'joint_{joint_index}'
+        key = f"joint_{joint_index}"
         if key in self.motor_mapping:
-            return self.motor_mapping[key]['motor_id']
+            return self.motor_mapping[key]["motor_id"]
         return joint_index + 1
 
     def get_joint_name(self, joint_index: int) -> str:
-        key = f'joint_{joint_index}'
+        key = f"joint_{joint_index}"
         if key in self.motor_mapping:
-            return self.motor_mapping[key]['name']
+            return self.motor_mapping[key]["name"]
         from ..config.constants import JOINT_NAMES
-        return JOINT_NAMES[joint_index] if joint_index < len(JOINT_NAMES) else f'Сустав {joint_index}'
+
+        return (
+            JOINT_NAMES[joint_index] if joint_index < len(JOINT_NAMES) else f"Сустав {joint_index}"
+        )
 
     def move_to_position(self, sts_id: int, position: int, speed=None, acc=DEFAULT_ACC):
         if not self.connected or not self.motor:
@@ -154,23 +162,23 @@ class MotorController:
         if not self.connected or not self.motor:
             return {}
         data = {
-            'position': None,
-            'temperature': None,
-            'voltage': None,
-            'current': None,
-            'load': None,
-            'mode': None,
-            'moving': None,
+            "position": None,
+            "temperature": None,
+            "voltage": None,
+            "current": None,
+            "load": None,
+            "mode": None,
+            "moving": None,
         }
         try:
             with self._read_lock:
-                data['position'] = self.motor.ReadPosition(sts_id)
-                data['temperature'] = self.motor.ReadTemperature(sts_id)
-                data['voltage'] = self.motor.ReadVoltage(sts_id)
-                data['current'] = self.motor.ReadCurrent(sts_id)
-                data['load'] = self.motor.ReadLoad(sts_id)
-                data['mode'] = self.motor.ReadMode(sts_id)
-                data['moving'] = self.motor.IsMoving(sts_id)
+                data["position"] = self.motor.ReadPosition(sts_id)
+                data["temperature"] = self.motor.ReadTemperature(sts_id)
+                data["voltage"] = self.motor.ReadVoltage(sts_id)
+                data["current"] = self.motor.ReadCurrent(sts_id)
+                data["load"] = self.motor.ReadLoad(sts_id)
+                data["mode"] = self.motor.ReadMode(sts_id)
+                data["moving"] = self.motor.IsMoving(sts_id)
         except Exception as e:
             print(f"⚠️ Ошибка чтения мотора {sts_id}: {e}")
         return data
@@ -181,38 +189,49 @@ class MotorController:
     def get_manual_speed(self) -> int:
         return self._manual_speed
 
-    def update_motor_mapping(self, joint_index: int, motor_id: int, name: str = "", inverted: bool = False):
-        key = f'joint_{joint_index}'
+    def update_motor_mapping(
+        self, joint_index: int, motor_id: int, name: str = "", inverted: bool = False
+    ):
+        key = f"joint_{joint_index}"
         from ..config.constants import JOINT_NAMES
-        default_name = JOINT_NAMES[joint_index] if joint_index < len(JOINT_NAMES) else f'Сустав {joint_index}'
+
+        default_name = (
+            JOINT_NAMES[joint_index] if joint_index < len(JOINT_NAMES) else f"Сустав {joint_index}"
+        )
         self.motor_mapping[key] = {
-            'motor_id': motor_id,
-            'name': name or default_name,
-            'min_pos': 0,
-            'max_pos': MAX_POSITION,
-            'inverted': inverted,
+            "motor_id": motor_id,
+            "name": name or default_name,
+            "min_pos": 0,
+            "max_pos": MAX_POSITION,
+            "inverted": inverted,
         }
 
     def get_motor_mapping(self) -> dict:
         return self.motor_mapping.copy()
 
     def update_motor_config(self, motor_id: int, min_pos: int, max_pos: int, name: str = ""):
-        key = f'motor_{motor_id}'
-        self.motor_config[key] = {'min_pos': min_pos, 'max_pos': max_pos, 'name': name or f'Мотор {motor_id}'}
+        key = f"motor_{motor_id}"
+        self.motor_config[key] = {
+            "min_pos": min_pos,
+            "max_pos": max_pos,
+            "name": name or f"Мотор {motor_id}",
+        }
 
     def get_motor_config(self, motor_id: int) -> dict:
-        key = f'motor_{motor_id}'
-        return self.motor_config.get(key, {'min_pos': 0, 'max_pos': MAX_POSITION, 'name': f'Мотор {motor_id}'})
+        key = f"motor_{motor_id}"
+        return self.motor_config.get(
+            key, {"min_pos": 0, "max_pos": MAX_POSITION, "name": f"Мотор {motor_id}"}
+        )
 
     def save_config(self, filename: str = CONFIG_FILE):
         try:
             config = {
-                'port': self.device,
-                'motor_config': self.motor_config,
-                'motor_mapping': self.motor_mapping,
-                'timestamp': datetime.now().isoformat()
+                "port": self.device,
+                "motor_config": self.motor_config,
+                "motor_mapping": self.motor_mapping,
+                "timestamp": datetime.now().isoformat(),
             }
-            with open(filename, 'w', encoding='utf-8') as f:
+            with open(filename, "w", encoding="utf-8") as f:
                 json.dump(config, f, indent=2, ensure_ascii=False)
             return True
         except Exception as e:
@@ -221,14 +240,14 @@ class MotorController:
 
     def load_config(self, filename: str = CONFIG_FILE):
         try:
-            with open(filename, 'r', encoding='utf-8') as f:
+            with open(filename, "r", encoding="utf-8") as f:
                 config = json.load(f)
-            if 'motor_config' in config:
-                self.motor_config = config['motor_config']
-            if 'motor_mapping' in config:
-                self.motor_mapping = config['motor_mapping']
-            if 'port' in config:
-                self.device = config['port']
+            if "motor_config" in config:
+                self.motor_config = config["motor_config"]
+            if "motor_mapping" in config:
+                self.motor_mapping = config["motor_mapping"]
+            if "port" in config:
+                self.device = config["port"]
             return True
         except Exception as e:
             print(f"Ошибка загрузки конфигурации: {e}")
