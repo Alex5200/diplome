@@ -24,6 +24,7 @@ from dataclasses import dataclass
 @dataclass
 class LinkParams:
     """Параметры звена манипулятора."""
+
     length: float  # Длина звена (мм)
     offset: float = 0.0  # Смещение по оси Z
     twist: float = 0.0  # Угол закручивания (радианы)
@@ -32,6 +33,7 @@ class LinkParams:
 @dataclass
 class JointState:
     """Состояние сустава."""
+
     angle_deg: float  # Угол в градусах
     angle_rad: float  # Угол в радианах
     position: int  # Позиция мотора (0-4095)
@@ -45,24 +47,24 @@ class RobotKinematics6DOF:
     """
 
     # Длины звеньев в мм (от пользователя)
-    L0 = 19.0    # База
-    L1 = 104.0   # Плечо 1
-    L2 = 95.0    # Плечо 2
-    L3 = 34.0    # Локоть/Запястье 1
-    L4 = 35.0    # Запястье 2
-    L5 = 0.0     # Инструмент (может быть настроен)
+    L0 = 19.0  # База
+    L1 = 104.0  # Плечо 1
+    L2 = 95.0  # Плечо 2
+    L3 = 34.0  # Локоть/Запястье 1
+    L4 = 35.0  # Запястье 2
+    L5 = 0.0  # Инструмент (может быть настроен)
 
     def __init__(self):
         """Инициализация кинематической модели."""
         # DH параметры для 6-осевого робота
         # [d (смещение), a (длина), alpha (закручивание)]
         self.dh_params = [
-            (self.L0, 0.0, math.pi/2),    # Joint 1: база вращается вокруг Z
-            (0.0, self.L1, 0.0),          # Joint 2: плечо 1
-            (0.0, self.L2, 0.0),          # Joint 3: плечо 2
-            (0.0, self.L3, math.pi/2),    # Joint 4: локоть/запястье 1
-            (0.0, self.L4, -math.pi/2),   # Joint 5: запястье 2
-            (self.L5, 0.0, 0.0),          # Joint 6: инструмент
+            (self.L0, 0.0, math.pi / 2),  # Joint 1: база вращается вокруг Z
+            (0.0, self.L1, 0.0),  # Joint 2: плечо 1
+            (0.0, self.L2, 0.0),  # Joint 3: плечо 2
+            (0.0, self.L3, math.pi / 2),  # Joint 4: локоть/запястье 1
+            (0.0, self.L4, -math.pi / 2),  # Joint 5: запястье 2
+            (self.L5, 0.0, 0.0),  # Joint 6: инструмент
         ]
 
         # Текущие углы суставов (в градусах)
@@ -91,7 +93,11 @@ class RobotKinematics6DOF:
             raise ValueError(f"Индекс сустава должен быть 0-5, получен {joint_idx}")
         self.joint_angles[joint_idx] = angle_deg
 
-    def forward_kinematics(self, angles_deg: Optional[List[float]] = None) -> Tuple[List[Tuple[float, float, float]], List[Tuple[float, float, float, float]]]:
+    def forward_kinematics(
+        self, angles_deg: Optional[List[float]] = None
+    ) -> Tuple[
+        List[Tuple[float, float, float]], List[Tuple[float, float, float, float]]
+    ]:
         """
         Расчет прямой кинематики.
 
@@ -124,7 +130,7 @@ class RobotKinematics6DOF:
                 theta[i],
                 self.dh_params[i][0],  # d
                 self.dh_params[i][1],  # a
-                self.dh_params[i][2]   # alpha
+                self.dh_params[i][2],  # alpha
             )
 
             # Накопленная трансформация
@@ -142,7 +148,9 @@ class RobotKinematics6DOF:
 
         return positions, orientations
 
-    def _dh_matrix(self, theta: float, d: float, a: float, alpha: float) -> List[List[float]]:
+    def _dh_matrix(
+        self, theta: float, d: float, a: float, alpha: float
+    ) -> List[List[float]]:
         """
         Создание DH матрицы трансформации.
 
@@ -161,22 +169,19 @@ class RobotKinematics6DOF:
         sa = math.sin(alpha)
 
         return [
-            [ct, -st * ca,  st * sa,  a * ct],
-            [st,  ct * ca, -ct * sa,  a * st],
-            [0,   sa,       ca,       d],
-            [0,   0,        0,        1]
+            [ct, -st * ca, st * sa, a * ct],
+            [st, ct * ca, -ct * sa, a * st],
+            [0, sa, ca, d],
+            [0, 0, 0, 1],
         ]
 
     def _identity_matrix(self) -> List[List[float]]:
         """Единичная матрица 4x4."""
-        return [
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1]
-        ]
+        return [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
 
-    def _matrix_multiply(self, A: List[List[float]], B: List[List[float]]) -> List[List[float]]:
+    def _matrix_multiply(
+        self, A: List[List[float]], B: List[List[float]]
+    ) -> List[List[float]]:
         """Умножение матриц 4x4."""
         result = [[0.0] * 4 for _ in range(4)]
         for i in range(4):
@@ -201,11 +206,11 @@ class RobotKinematics6DOF:
         pitch = math.atan2(-r31, math.sqrt(r11**2 + r21**2))
 
         # Проверка на Gimbal lock
-        if abs(pitch - math.pi/2) < 1e-6:
+        if abs(pitch - math.pi / 2) < 1e-6:
             # Gimbal lock вверх
             roll = 0.0
             yaw = math.atan2(r12, r22)
-        elif abs(pitch + math.pi/2) < 1e-6:
+        elif abs(pitch + math.pi / 2) < 1e-6:
             # Gimbal lock вниз
             roll = 0.0
             yaw = math.atan2(-r12, -r22)
@@ -215,7 +220,9 @@ class RobotKinematics6DOF:
 
         return roll, pitch, yaw
 
-    def get_end_effector_position(self, angles_deg: Optional[List[float]] = None) -> Tuple[float, float, float]:
+    def get_end_effector_position(
+        self, angles_deg: Optional[List[float]] = None
+    ) -> Tuple[float, float, float]:
         """
         Получение позиции конечного эффектора (инструмента).
 
@@ -228,7 +235,9 @@ class RobotKinematics6DOF:
         positions, _ = self.forward_kinematics(angles_deg)
         return positions[-1] if positions else (0.0, 0.0, 0.0)
 
-    def get_end_effector_orientation(self, angles_deg: Optional[List[float]] = None) -> Tuple[float, float, float]:
+    def get_end_effector_orientation(
+        self, angles_deg: Optional[List[float]] = None
+    ) -> Tuple[float, float, float]:
         """
         Получение ориентации конечного эффектора.
 
@@ -241,7 +250,9 @@ class RobotKinematics6DOF:
         _, orientations = self.forward_kinematics(angles_deg)
         return orientations[-1] if orientations else (0.0, 0.0, 0.0)
 
-    def get_all_joint_positions(self, angles_deg: Optional[List[float]] = None) -> List[Tuple[float, float, float]]:
+    def get_all_joint_positions(
+        self, angles_deg: Optional[List[float]] = None
+    ) -> List[Tuple[float, float, float]]:
         """
         Получение позиций всех суставов.
 
@@ -255,7 +266,9 @@ class RobotKinematics6DOF:
         # Добавляем базу (0, 0, 0) в начало
         return [(0.0, 0.0, 0.0)] + positions
 
-    def get_link_vectors(self, angles_deg: Optional[List[float]] = None) -> List[Tuple[float, float, float]]:
+    def get_link_vectors(
+        self, angles_deg: Optional[List[float]] = None
+    ) -> List[Tuple[float, float, float]]:
         """
         Получение векторов каждого звена.
 
@@ -269,9 +282,9 @@ class RobotKinematics6DOF:
         vectors = []
 
         for i in range(1, len(positions)):
-            dx = positions[i][0] - positions[i-1][0]
-            dy = positions[i][1] - positions[i-1][1]
-            dz = positions[i][2] - positions[i-1][2]
+            dx = positions[i][0] - positions[i - 1][0]
+            dy = positions[i][1] - positions[i - 1][1]
+            dz = positions[i][2] - positions[i - 1][2]
             vectors.append((dx, dy, dz))
 
         return vectors
@@ -350,10 +363,14 @@ class InverseKinematics6DOF:
 
     def solve(
         self,
-        x: float, y: float, z: float,
-        roll: float = 0.0, pitch: float = 0.0, yaw: float = 0.0,
+        x: float,
+        y: float,
+        z: float,
+        roll: float = 0.0,
+        pitch: float = 0.0,
+        yaw: float = 0.0,
         max_iterations: int = 300,
-        tolerance: float = 1.0
+        tolerance: float = 1.0,
     ) -> Optional[List[float]]:
         """
         Решение обратной кинематики с множественными начальными приближениями.
@@ -382,13 +399,15 @@ class InverseKinematics6DOF:
         initial_guesses = self._generate_initial_guesses(x, y, z)
 
         best_angles = None
-        best_score = float('inf')
+        best_score = float("inf")
 
         for guess in initial_guesses:
             angles = self._numerical_solve(x, y, z, guess, max_iterations, tolerance)
             if angles:
                 pos = self.kinematics.get_end_effector_position(angles)
-                error = math.sqrt((pos[0]-x)**2 + (pos[1]-y)**2 + (pos[2]-z)**2)
+                error = math.sqrt(
+                    (pos[0] - x) ** 2 + (pos[1] - y) ** 2 + (pos[2] - z) ** 2
+                )
 
                 # Штраф за подход снизу (elbow-down):
                 # Elbow-up: J2 > 0, J3 < 0 → робот нависает сверху (предпочтительно)
@@ -406,7 +425,11 @@ class InverseKinematics6DOF:
                     if score < best_score:
                         best_score = score
                         best_angles = angles
-                elif best_angles is None or error < (best_score - elbow_penalty if best_score != float('inf') else float('inf')):
+                elif best_angles is None or error < (
+                    best_score - elbow_penalty
+                    if best_score != float("inf")
+                    else float("inf")
+                ):
                     # Если ещё нет хорошего решения, берём хоть что-то
                     if error + elbow_penalty < best_score:
                         best_score = error + elbow_penalty
@@ -414,7 +437,9 @@ class InverseKinematics6DOF:
 
         return best_angles
 
-    def _generate_initial_guesses(self, x: float, y: float, z: float) -> List[List[float]]:
+    def _generate_initial_guesses(
+        self, x: float, y: float, z: float
+    ) -> List[List[float]]:
         """
         Генерация начальных приближений для IK.
 
@@ -438,16 +463,16 @@ class InverseKinematics6DOF:
         # --- Приоритетные конфигурации: подход СВЕРХУ (elbow-up) ---
         # J2>0 поднимает плечо, J3<0 опускает предплечье — робот нависает
         top_down_configs = [
-            (60, -90),    # сильно поднят, предплечье вертикально вниз
-            (45, -60),    # классический подход сверху
-            (30, -45),    # умеренный подход сверху
-            (50, -80),    # высокий подход
-            (70, -110),   # почти вертикальный
-            (40, -50),    # средний
-            (20, -30),    # слабый подъём
-            (80, -120),   # максимальный подъём
-            (35, -70),    # вариация
-            (55, -95),    # вариация
+            (60, -90),  # сильно поднят, предплечье вертикально вниз
+            (45, -60),  # классический подход сверху
+            (30, -45),  # умеренный подход сверху
+            (50, -80),  # высокий подход
+            (70, -110),  # почти вертикальный
+            (40, -50),  # средний
+            (20, -30),  # слабый подъём
+            (80, -120),  # максимальный подъём
+            (35, -70),  # вариация
+            (55, -95),  # вариация
         ]
 
         for j2, j3 in top_down_configs:
@@ -467,10 +492,12 @@ class InverseKinematics6DOF:
             # Elbow-up (подход сверху): J3 отрицательный
             j3_up = -math.degrees(math.acos(cos_j3))
             alpha = math.degrees(math.atan2(h, r_horiz))
-            beta = math.degrees(math.atan2(
-                L2 * math.sin(math.radians(-j3_up)),
-                L1 + L2 * math.cos(math.radians(-j3_up))
-            ))
+            beta = math.degrees(
+                math.atan2(
+                    L2 * math.sin(math.radians(-j3_up)),
+                    L1 + L2 * math.cos(math.radians(-j3_up)),
+                )
+            )
             j2_up = alpha + beta
 
             j4_up = -(j2_up + j3_up)
@@ -478,10 +505,12 @@ class InverseKinematics6DOF:
 
             # Elbow-down (запасной): J3 положительный
             j3_dn = math.degrees(math.acos(cos_j3))
-            beta_dn = math.degrees(math.atan2(
-                L2 * math.sin(math.radians(j3_dn)),
-                L1 + L2 * math.cos(math.radians(j3_dn))
-            ))
+            beta_dn = math.degrees(
+                math.atan2(
+                    L2 * math.sin(math.radians(j3_dn)),
+                    L1 + L2 * math.cos(math.radians(j3_dn)),
+                )
+            )
             j2_dn = alpha - beta_dn
             j4_dn = -(j2_dn + j3_dn)
             guesses.append([j1_base, j2_dn, j3_dn, j4_dn, 0, 0])
@@ -493,10 +522,13 @@ class InverseKinematics6DOF:
         return guesses
 
     def _numerical_solve(
-        self, x: float, y: float, z: float,
+        self,
+        x: float,
+        y: float,
+        z: float,
         initial_angles: List[float],
         max_iterations: int,
-        tolerance: float
+        tolerance: float,
     ) -> Optional[List[float]]:
         """
         Численное решение методом Damped Least Squares (Levenberg-Marquardt).
@@ -509,7 +541,9 @@ class InverseKinematics6DOF:
 
         for iteration in range(max_iterations):
             current_pos = self.kinematics.get_end_effector_position(angles)
-            error = np.array([x - current_pos[0], y - current_pos[1], z - current_pos[2]])
+            error = np.array(
+                [x - current_pos[0], y - current_pos[1], z - current_pos[2]]
+            )
             error_norm = np.linalg.norm(error)
 
             if error_norm < tolerance:
@@ -523,7 +557,7 @@ class InverseKinematics6DOF:
 
             # Damped Least Squares: delta = J^T (J J^T + λ²I)^{-1} error
             JJT = J @ J.T
-            damped = JJT + (damping ** 2) * np.eye(3)
+            damped = JJT + (damping**2) * np.eye(3)
             try:
                 delta_theta = J.T @ np.linalg.solve(damped, error)
             except np.linalg.LinAlgError:
@@ -543,7 +577,7 @@ class InverseKinematics6DOF:
         # Проверка финальной ошибки
         final_pos = self.kinematics.get_end_effector_position(angles)
         final_error = math.sqrt(
-            (final_pos[0] - x)**2 + (final_pos[1] - y)**2 + (final_pos[2] - z)**2
+            (final_pos[0] - x) ** 2 + (final_pos[1] - y) ** 2 + (final_pos[2] - z) ** 2
         )
 
         if final_error < tolerance * 3:
@@ -565,7 +599,9 @@ class InverseKinematics6DOF:
             angles_minus[j] -= delta
 
             pos_plus = np.array(self.kinematics.get_end_effector_position(angles_plus))
-            pos_minus = np.array(self.kinematics.get_end_effector_position(angles_minus))
+            pos_minus = np.array(
+                self.kinematics.get_end_effector_position(angles_minus)
+            )
 
             J[:, j] = (pos_plus - pos_minus) / (2 * delta)
 
@@ -598,10 +634,12 @@ def test_kinematics():
     print(f"\nПозиции суставов:")
     print(f"  База:     (0.0, 0.0, 0.0)")
     for i, (pos, orient) in enumerate(zip(positions, orientations)):
-        print(f"  J{i+1}:     ({pos[0]:6.1f}, {pos[1]:6.1f}, {pos[2]:6.1f}) мм")
+        print(f"  J{i + 1}:     ({pos[0]:6.1f}, {pos[1]:6.1f}, {pos[2]:6.1f}) мм")
 
     end_pos = kin.get_end_effector_position()
-    print(f"\nПозиция инструмента: ({end_pos[0]:.1f}, {end_pos[1]:.1f}, {end_pos[2]:.1f}) мм")
+    print(
+        f"\nПозиция инструмента: ({end_pos[0]:.1f}, {end_pos[1]:.1f}, {end_pos[2]:.1f}) мм"
+    )
 
     # Тест 2: Различные углы
     print("\n" + "-" * 40)
@@ -615,11 +653,19 @@ def test_kinematics():
     print(f"\nПозиции суставов:")
     print(f"  База:     (0.0, 0.0, 0.0)")
     for i, (pos, orient) in enumerate(zip(positions, orientations)):
-        roll, pitch, yaw = math.degrees(orient[0]), math.degrees(orient[1]), math.degrees(orient[2])
-        print(f"  J{i+1}:     ({pos[0]:6.1f}, {pos[1]:6.1f}, {pos[2]:6.1f}) мм  [R={roll:5.1f}°, P={pitch:5.1f}°, Y={yaw:5.1f}°]")
+        roll, pitch, yaw = (
+            math.degrees(orient[0]),
+            math.degrees(orient[1]),
+            math.degrees(orient[2]),
+        )
+        print(
+            f"  J{i + 1}:     ({pos[0]:6.1f}, {pos[1]:6.1f}, {pos[2]:6.1f}) мм  [R={roll:5.1f}°, P={pitch:5.1f}°, Y={yaw:5.1f}°]"
+        )
 
     end_pos = kin.get_end_effector_position(test_angles)
-    print(f"\nПозиция инструмента: ({end_pos[0]:.1f}, {end_pos[1]:.1f}, {end_pos[2]:.1f}) мм")
+    print(
+        f"\nПозиция инструмента: ({end_pos[0]:.1f}, {end_pos[1]:.1f}, {end_pos[2]:.1f}) мм"
+    )
 
     # Тест 3: Конвертация позиций
     print("\n" + "-" * 40)
@@ -636,5 +682,5 @@ def test_kinematics():
     print("=" * 60)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_kinematics()
