@@ -40,12 +40,16 @@ except ImportError:
 
 from app.models.kinematics import RobotKinematics6DOF, InverseKinematics6DOF
 from app.config.constants import (
-    MAX_POSITION, DEFAULT_SPEED, DEFAULT_ACC, DEFAULT_MOTOR_MAPPING
+    MAX_POSITION,
+    DEFAULT_SPEED,
+    DEFAULT_ACC,
+    DEFAULT_MOTOR_MAPPING,
 )
 
 # Опциональный импорт ST3215
 try:
     from st3215 import ST3215
+
     ST3215_AVAILABLE = True
 except ImportError:
     ST3215_AVAILABLE = False
@@ -54,6 +58,7 @@ except ImportError:
 # ============================================================
 # Генерация MJCF модели робота
 # ============================================================
+
 
 def generate_robot_mjcf(
     with_gripper: bool = True,
@@ -75,12 +80,12 @@ def generate_robot_mjcf(
     Все размеры в метрах (MuJoCo стандарт).
     """
     # Конвертация мм → м
-    L0 = 0.019   # База
-    L1 = 0.134   # Плечо 1
-    L2 = 0.095   # Плечо 2
-    L3 = 0.034   # Локоть
-    L4 = 0.035   # Кисть 1
-    L5 = 0.000   # Инструмент
+    L0 = 0.019  # База
+    L1 = 0.134  # Плечо 1
+    L2 = 0.095  # Плечо 2
+    L3 = 0.034  # Локоть
+    L4 = 0.035  # Кисть 1
+    L5 = 0.000  # Инструмент
 
     # Радиусы звеньев для визуализации (пропорциональны)
     r_base = 0.025
@@ -333,6 +338,7 @@ def generate_robot_mjcf(
 # Контроллер робота в MuJoCo
 # ============================================================
 
+
 class MuJoCoRobotController:
     """
     Управление роботом в MuJoCo симуляции.
@@ -382,9 +388,11 @@ class MuJoCoRobotController:
         self._has_gripper = False
         try:
             self._finger_left_id = mujoco.mj_name2id(
-                self.model, mujoco.mjtObj.mjOBJ_ACTUATOR, "act_finger_left")
+                self.model, mujoco.mjtObj.mjOBJ_ACTUATOR, "act_finger_left"
+            )
             self._finger_right_id = mujoco.mj_name2id(
-                self.model, mujoco.mjtObj.mjOBJ_ACTUATOR, "act_finger_right")
+                self.model, mujoco.mjtObj.mjOBJ_ACTUATOR, "act_finger_right"
+            )
             self._has_gripper = True
         except Exception:
             pass
@@ -432,7 +440,8 @@ class MuJoCoRobotController:
 
             if immediate:
                 jnt_id = mujoco.mj_name2id(
-                    self.model, mujoco.mjtObj.mjOBJ_JOINT, f"joint_{i}")
+                    self.model, mujoco.mjtObj.mjOBJ_JOINT, f"joint_{i}"
+                )
                 qpos_adr = self.model.jnt_qposadr[jnt_id]
                 self.data.qpos[qpos_adr] = angle_rad
 
@@ -448,7 +457,8 @@ class MuJoCoRobotController:
         angles = []
         for i in range(6):
             jnt_id = mujoco.mj_name2id(
-                self.model, mujoco.mjtObj.mjOBJ_JOINT, f"joint_{i}")
+                self.model, mujoco.mjtObj.mjOBJ_JOINT, f"joint_{i}"
+            )
             qpos_adr = self.model.jnt_qposadr[jnt_id]
             angles.append(math.degrees(self.data.qpos[qpos_adr]))
         return angles
@@ -456,7 +466,8 @@ class MuJoCoRobotController:
     def get_ee_position(self) -> Tuple[float, float, float]:
         """Позиция end-effector из симуляции (метры)."""
         site_id = mujoco.mj_name2id(
-            self.model, mujoco.mjtObj.mjOBJ_SITE, "end_effector")
+            self.model, mujoco.mjtObj.mjOBJ_SITE, "end_effector"
+        )
         pos = self.data.site_xpos[site_id]
         return (pos[0], pos[1], pos[2])
 
@@ -472,8 +483,7 @@ class MuJoCoRobotController:
     # ============================
 
     def move_to_point(
-        self, x_mm: float, y_mm: float, z_mm: float,
-        tolerance: float = 2.0
+        self, x_mm: float, y_mm: float, z_mm: float, tolerance: float = 2.0
     ) -> Optional[List[float]]:
         """
         Решение IK и отправка углов в симуляцию.
@@ -485,8 +495,9 @@ class MuJoCoRobotController:
         Returns:
             Углы в градусах или None
         """
-        angles = self.ik_solver.solve(x_mm, y_mm, z_mm,
-                                       max_iterations=300, tolerance=tolerance)
+        angles = self.ik_solver.solve(
+            x_mm, y_mm, z_mm, max_iterations=300, tolerance=tolerance
+        )
         if angles is None:
             print(f"❌ IK не решена для ({x_mm:.0f}, {y_mm:.0f}, {z_mm:.0f}) мм")
             return None
@@ -503,7 +514,8 @@ class MuJoCoRobotController:
         """Перемещение визуального маркера цели в MuJoCo."""
         try:
             body_id = mujoco.mj_name2id(
-                self.model, mujoco.mjtObj.mjOBJ_BODY, "target_marker")
+                self.model, mujoco.mjtObj.mjOBJ_BODY, "target_marker"
+            )
             # mocap тела имеют отдельный массив
             mocap_id = self.model.body_mocapid[body_id]
             if mocap_id >= 0:
@@ -511,7 +523,7 @@ class MuJoCoRobotController:
                 self.data.mocap_pos[mocap_id] = [
                     x_mm / 1000.0,
                     y_mm / 1000.0,
-                    z_mm / 1000.0 + base_z
+                    z_mm / 1000.0 + base_z,
                 ]
         except Exception:
             pass
@@ -541,9 +553,11 @@ class MuJoCoRobotController:
     # ============================
 
     def render_camera(
-        self, camera_name: str = "top_down",
-        width: int = 640, height: int = 480,
-        depth: bool = False
+        self,
+        camera_name: str = "top_down",
+        width: int = 640,
+        height: int = 480,
+        depth: bool = False,
     ) -> np.ndarray:
         """
         Рендеринг изображения с указанной камеры.
@@ -592,20 +606,19 @@ class MuJoCoRobotController:
         obj_positions = {}
         for name in ["red_cube", "green_cube", "blue_cylinder", "yellow_cube"]:
             try:
-                body_id = mujoco.mj_name2id(
-                    self.model, mujoco.mjtObj.mjOBJ_BODY, name)
+                body_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, name)
                 pos = self.data.xpos[body_id].copy()
                 obj_positions[name] = pos
             except Exception:
                 pass
 
         return {
-            'rgb': rgb,
-            'depth': depth,
-            'joint_angles': angles,
-            'ee_pos': ee,
-            'gripper_open': self.gripper_open,
-            'object_positions': obj_positions
+            "rgb": rgb,
+            "depth": depth,
+            "joint_angles": angles,
+            "ee_pos": ee,
+            "gripper_open": self.gripper_open,
+            "object_positions": obj_positions,
         }
 
     # ============================
@@ -651,7 +664,7 @@ class MuJoCoRobotController:
         """Отключение реального робота."""
         if self.st3215:
             try:
-                if hasattr(self.st3215, 'portHandler'):
+                if hasattr(self.st3215, "portHandler"):
                     self.st3215.portHandler.closePort()
             except Exception:
                 pass
@@ -689,15 +702,15 @@ class MuJoCoRobotController:
         return angles
 
     def _get_motor_id(self, joint_index: int) -> int:
-        key = f'joint_{joint_index}'
+        key = f"joint_{joint_index}"
         if key in DEFAULT_MOTOR_MAPPING:
-            return DEFAULT_MOTOR_MAPPING[key]['motor_id']
+            return DEFAULT_MOTOR_MAPPING[key]["motor_id"]
         return joint_index + 1
 
     def _apply_inversion(self, position: int, joint_index: int) -> int:
-        key = f'joint_{joint_index}'
+        key = f"joint_{joint_index}"
         if key in DEFAULT_MOTOR_MAPPING:
-            if DEFAULT_MOTOR_MAPPING[key].get('inverted', False):
+            if DEFAULT_MOTOR_MAPPING[key].get("inverted", False):
                 return MAX_POSITION - position
         return position
 
@@ -710,7 +723,7 @@ class MuJoCoRobotController:
         points_mm: List[Tuple[float, float, float]],
         grip_actions: Optional[List[Optional[bool]]] = None,
         settle_time: float = 1.0,
-        viewer=None
+        viewer=None,
     ):
         """
         Последовательное движение по маршрутным точкам.
@@ -725,7 +738,7 @@ class MuJoCoRobotController:
             grip_actions = [None] * len(points_mm)
 
         for i, (x, y, z) in enumerate(points_mm):
-            print(f"📍 Точка {i+1}/{len(points_mm)}: ({x:.0f}, {y:.0f}, {z:.0f}) мм")
+            print(f"📍 Точка {i + 1}/{len(points_mm)}: ({x:.0f}, {y:.0f}, {z:.0f}) мм")
 
             # Маркер
             self.set_target_marker(x, y, z)
@@ -766,6 +779,7 @@ class MuJoCoRobotController:
 # Интерактивный запуск
 # ============================================================
 
+
 def run_interactive():
     """Запуск MuJoCo с интерактивным управлением через viewer."""
     print("\n" + "=" * 70)
@@ -785,7 +799,9 @@ def run_interactive():
     print("  grip open / grip close                  — управление гриппером")
     print("  obs                                     — получить наблюдение (RL)")
     print("  sync <COM_PORT>                         — синхронизация с ST3215")
-    print("  read                                    — прочитать углы с реального робота")
+    print(
+        "  read                                    — прочитать углы с реального робота"
+    )
     print("  reset                                   — сброс симуляции")
     print("  demo                                    — демонстрация pick & place")
     print("  q                                       — выход")
@@ -813,30 +829,30 @@ def run_interactive():
             command = parts[0].lower()
 
             try:
-                if command == 'q' or command == 'quit' or command == 'exit':
+                if command == "q" or command == "quit" or command == "exit":
                     running = False
 
-                elif command == 'angles' and len(parts) == 7:
+                elif command == "angles" and len(parts) == 7:
                     angles = [float(p) for p in parts[1:]]
                     ctrl.set_joint_angles(angles)
                     print(f"  ✅ Углы: {[f'{a:.1f}' for a in angles]}")
 
-                elif command == 'goto' and len(parts) == 4:
+                elif command == "goto" and len(parts) == 4:
                     x, y, z = float(parts[1]), float(parts[2]), float(parts[3])
                     ctrl.set_target_marker(x, y, z)
                     result = ctrl.move_to_point(x, y, z)
                     if result:
                         print(f"  ✅ IK: {[f'{a:.1f}' for a in result]}")
 
-                elif command == 'grip':
-                    if len(parts) > 1 and parts[1] == 'close':
+                elif command == "grip":
+                    if len(parts) > 1 and parts[1] == "close":
                         ctrl.close_gripper()
                         print("  ✊ Закрыт")
                     else:
                         ctrl.open_gripper()
                         print("  🖐️ Открыт")
 
-                elif command == 'obs':
+                elif command == "obs":
                     obs = ctrl.get_observation()
                     print(f"  RGB: {obs['rgb'].shape}")
                     print(f"  Depth: {obs['depth'].shape}")
@@ -844,24 +860,24 @@ def run_interactive():
                     print(f"  EE: {obs['ee_pos']}")
                     print(f"  Objects: {list(obs['object_positions'].keys())}")
 
-                elif command == 'sync' and len(parts) > 1:
+                elif command == "sync" and len(parts) > 1:
                     ctrl.connect_real_robot(parts[1])
 
-                elif command == 'read':
+                elif command == "read":
                     angles = ctrl.read_real_angles()
                     if angles:
                         print(f"  📖 Углы: {[f'{a:.1f}' for a in angles]}")
 
-                elif command == 'reset':
+                elif command == "reset":
                     ctrl.reset()
                     ctrl.open_gripper()
                     print("  🔄 Сброшено")
 
-                elif command == 'demo':
+                elif command == "demo":
                     print("  ▶️ Запуск демонстрации pick & place...")
                     run_pick_place_demo(ctrl, viewer)
 
-                elif command == 'ee':
+                elif command == "ee":
                     pos = ctrl.get_ee_position_mm()
                     print(f"  📍 EE: ({pos[0]:.1f}, {pos[1]:.1f}, {pos[2]:.1f}) мм")
 
@@ -896,25 +912,25 @@ def run_pick_place_demo(ctrl: MuJoCoRobotController, viewer=None):
 
     waypoints = [
         # (x_mm, y_mm, z_mm)
-        (150, 0, 200),      # Подъём над столом
-        (150, 50, 100),     # Над красным кубиком
-        (150, 50, 60),      # Опуститься к кубику
+        (150, 0, 200),  # Подъём над столом
+        (150, 50, 100),  # Над красным кубиком
+        (150, 50, 60),  # Опуститься к кубику
     ]
     grip_actions = [
-        True,   # Открыть
-        True,   # Держать открытым
+        True,  # Открыть
+        True,  # Держать открытым
         False,  # Закрыть (схватить)
     ]
 
     waypoints_2 = [
-        (150, 50, 150),     # Поднять
-        (150, -80, 150),    # Переместить
-        (150, -80, 60),     # Опустить
+        (150, 50, 150),  # Поднять
+        (150, -80, 150),  # Переместить
+        (150, -80, 60),  # Опустить
     ]
     grip_actions_2 = [
-        None,   # Не менять
-        None,   # Не менять
-        True,   # Открыть (отпустить)
+        None,  # Не менять
+        None,  # Не менять
+        True,  # Открыть (отпустить)
     ]
 
     print("\n📦 Фаза 1: Захват")
@@ -929,6 +945,7 @@ def run_pick_place_demo(ctrl: MuJoCoRobotController, viewer=None):
 # ============================================================
 # Headless режим для RL-обучения
 # ============================================================
+
 
 class RobotEnv:
     """
@@ -982,8 +999,8 @@ class RobotEnv:
         obs = self.ctrl.get_observation()
 
         # Награда
-        ee_pos = obs['ee_pos']
-        obj_pos = obs['object_positions'].get(self.target_object, np.zeros(3))
+        ee_pos = obs["ee_pos"]
+        obj_pos = obs["object_positions"].get(self.target_object, np.zeros(3))
         dist_to_obj = np.linalg.norm(ee_pos - obj_pos)
         reward = -dist_to_obj
 
@@ -992,7 +1009,7 @@ class RobotEnv:
             reward += 1.0
 
         done = False
-        info = {'distance': dist_to_obj}
+        info = {"distance": dist_to_obj}
 
         return obs, reward, done, info
 
@@ -1001,9 +1018,10 @@ class RobotEnv:
 # Точка входа
 # ============================================================
 
+
 def main():
     """Запуск симуляции."""
-    if len(sys.argv) > 1 and sys.argv[1] == '--headless':
+    if len(sys.argv) > 1 and sys.argv[1] == "--headless":
         print("🤖 Headless режим (для RL)")
         env = RobotEnv()
         obs = env.reset()
@@ -1015,5 +1033,5 @@ def main():
         run_interactive()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
