@@ -24,12 +24,12 @@ from app.models.kinematics import (
 )
 
 __all__ = [
-    'MotorData',
-    'JointState',
-    'RobotState',
-    'MotorStatus',
-    'ProgramBlock',
-    'RobotProgram',
-    'RobotKinematics6DOF',
-    'InverseKinematics6DOF',
+    "MotorData",
+    "JointState",
+    "RobotState",
+    "MotorStatus",
+    "ProgramBlock",
+    "RobotProgram",
+    "RobotKinematics6DOF",
+    "InverseKinematics6DOF",
 ]

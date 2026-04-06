@@ -15,7 +15,7 @@ from .kinematics_service import KinematicsService
 from .program_service import ProgramService
 
 __all__ = [
-    'RobotService',
-    'KinematicsService',
-    'ProgramService',
+    "RobotService",
+    "KinematicsService",
+    "ProgramService",
 ]
