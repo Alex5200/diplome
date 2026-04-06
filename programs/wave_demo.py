@@ -7,6 +7,7 @@ rotating joint 1 (base) back and forth. Useful as a demo/attract sequence.
 Usage:
     python programs/wave_demo.py --port COM3 --cycles 3
 """
+
 from __future__ import annotations
 
 import math
@@ -54,12 +55,12 @@ class WaveDemo(BaseProgram):
                 elbow_pos = int((elbow_angle + 180.0) / 360.0 * 4095)
 
                 positions = [
-                    base_pos,      # J1 base
+                    base_pos,  # J1 base
                     shoulder_pos,  # J2 shoulder
-                    elbow_pos,     # J3 elbow
-                    2048,          # J4 center
-                    2048,          # J5 center
-                    2048,          # J6 center
+                    elbow_pos,  # J3 elbow
+                    2048,  # J4 center
+                    2048,  # J5 center
+                    2048,  # J6 center
                 ]
                 self._move_all(positions)
                 time.sleep(0.06)

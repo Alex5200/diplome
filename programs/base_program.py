@@ -10,6 +10,7 @@ Every program defines:
 Programs communicate with the robot exclusively through MotorController
 and KinematicsService from the shared layer.
 """
+
 from __future__ import annotations
 
 import threading
@@ -69,7 +70,9 @@ class BaseProgram(ABC):
         if self.on_step:
             self.on_step(msg)
 
-    def _move_joint(self, joint: int, position: int, speed: Optional[int] = None) -> bool:
+    def _move_joint(
+        self, joint: int, position: int, speed: Optional[int] = None
+    ) -> bool:
         return self.controller.move_joint(joint, position, speed or self.speed)
 
     def _move_all(self, positions: list[int], speed: Optional[int] = None) -> bool:
