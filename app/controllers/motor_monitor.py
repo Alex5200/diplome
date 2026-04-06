@@ -16,7 +16,11 @@ from .motor_controller import MotorController
 
 
 class MotorMonitor:
-    def __init__(self, motor_controller: MotorController, update_callback: Optional[Callable] = None):
+    def __init__(
+        self,
+        motor_controller: MotorController,
+        update_callback: Optional[Callable] = None,
+    ):
         self.motor_controller = motor_controller
         self.update_callback = update_callback
         self.running = False
@@ -65,13 +69,13 @@ class MotorMonitor:
             return
         try:
             motor_data = self.motor_controller.read_motor_data(motor_id)
-            data.position = motor_data.get('position')
-            data.temperature = motor_data.get('temperature')
-            data.voltage = motor_data.get('voltage')
-            data.current = motor_data.get('current')
-            data.load = motor_data.get('load')
-            data.mode = motor_data.get('mode')
-            data.moving = motor_data.get('moving')
+            data.position = motor_data.get("position")
+            data.temperature = motor_data.get("temperature")
+            data.voltage = motor_data.get("voltage")
+            data.current = motor_data.get("current")
+            data.load = motor_data.get("load")
+            data.mode = motor_data.get("mode")
+            data.moving = motor_data.get("moving")
             data.last_update = time.time()
             data.torque_enabled = self.motor_controller.get_torque_state(motor_id)
             if data.position is not None:
