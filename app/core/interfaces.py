@@ -16,6 +16,7 @@ from dataclasses import dataclass
 @dataclass
 class MotorInfo:
     """Информация о моторе."""
+
     motor_id: int
     position: int
     temperature: float
@@ -67,8 +68,9 @@ class IMotorController(ABC):
         pass
 
     @abstractmethod
-    def move_to_position(self, motor_id: int, position: int,
-                         speed: int, acc: int) -> bool:
+    def move_to_position(
+        self, motor_id: int, position: int, speed: int, acc: int
+    ) -> bool:
         """
         Движение мотора к позиции.
 
@@ -84,8 +86,7 @@ class IMotorController(ABC):
         pass
 
     @abstractmethod
-    def move_joint(self, joint_index: int, position: int,
-                   speed: int, acc: int) -> bool:
+    def move_joint(self, joint_index: int, position: int, speed: int, acc: int) -> bool:
         """
         Движение сустава робота.
 

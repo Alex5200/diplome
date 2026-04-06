@@ -12,12 +12,13 @@ from typing import Any, Dict, Type, Optional, Callable, TypeVar, Generic
 from dataclasses import dataclass, field
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
 class ServiceDescriptor:
     """Описание сервиса в контейнере."""
+
     cls: Type
     factory: Optional[Callable[[], Any]] = None
     instance: Optional[Any] = None
@@ -62,7 +63,7 @@ class Container:
         instance: Any = None,
         dependencies: list = None,
         is_singleton: bool = True,
-    ) -> 'Container':
+    ) -> "Container":
         """
         Регистрация сервиса.
 
@@ -81,9 +82,7 @@ class Container:
             ValueError: Если не указан ни cls, ни factory, ни instance
         """
         if cls is None and factory is None and instance is None:
-            raise ValueError(
-                "Must provide either cls, factory, or instance"
-            )
+            raise ValueError("Must provide either cls, factory, or instance")
 
         self._services[name] = ServiceDescriptor(
             cls=cls,
@@ -95,7 +94,7 @@ class Container:
 
         return self
 
-    def register_alias(self, alias: str, target: str) -> 'Container':
+    def register_alias(self, alias: str, target: str) -> "Container":
         """
         Регистрация алиаса для сервиса.
 
