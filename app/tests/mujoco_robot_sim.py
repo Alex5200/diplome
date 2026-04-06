@@ -439,9 +439,7 @@ class MuJoCoRobotController:
             self.data.ctrl[act_id] = angle_rad
 
             if immediate:
-                jnt_id = mujoco.mj_name2id(
-                    self.model, mujoco.mjtObj.mjOBJ_JOINT, f"joint_{i}"
-                )
+                jnt_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, f"joint_{i}")
                 qpos_adr = self.model.jnt_qposadr[jnt_id]
                 self.data.qpos[qpos_adr] = angle_rad
 
@@ -456,18 +454,14 @@ class MuJoCoRobotController:
         """Чтение текущих углов суставов из симуляции (градусы)."""
         angles = []
         for i in range(6):
-            jnt_id = mujoco.mj_name2id(
-                self.model, mujoco.mjtObj.mjOBJ_JOINT, f"joint_{i}"
-            )
+            jnt_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, f"joint_{i}")
             qpos_adr = self.model.jnt_qposadr[jnt_id]
             angles.append(math.degrees(self.data.qpos[qpos_adr]))
         return angles
 
     def get_ee_position(self) -> Tuple[float, float, float]:
         """Позиция end-effector из симуляции (метры)."""
-        site_id = mujoco.mj_name2id(
-            self.model, mujoco.mjtObj.mjOBJ_SITE, "end_effector"
-        )
+        site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE, "end_effector")
         pos = self.data.site_xpos[site_id]
         return (pos[0], pos[1], pos[2])
 
@@ -495,9 +489,7 @@ class MuJoCoRobotController:
         Returns:
             Углы в градусах или None
         """
-        angles = self.ik_solver.solve(
-            x_mm, y_mm, z_mm, max_iterations=300, tolerance=tolerance
-        )
+        angles = self.ik_solver.solve(x_mm, y_mm, z_mm, max_iterations=300, tolerance=tolerance)
         if angles is None:
             print(f"❌ IK не решена для ({x_mm:.0f}, {y_mm:.0f}, {z_mm:.0f}) мм")
             return None
@@ -513,9 +505,7 @@ class MuJoCoRobotController:
     def set_target_marker(self, x_mm: float, y_mm: float, z_mm: float):
         """Перемещение визуального маркера цели в MuJoCo."""
         try:
-            body_id = mujoco.mj_name2id(
-                self.model, mujoco.mjtObj.mjOBJ_BODY, "target_marker"
-            )
+            body_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "target_marker")
             # mocap тела имеют отдельный массив
             mocap_id = self.model.body_mocapid[body_id]
             if mocap_id >= 0:
@@ -799,9 +789,7 @@ def run_interactive():
     print("  grip open / grip close                  — управление гриппером")
     print("  obs                                     — получить наблюдение (RL)")
     print("  sync <COM_PORT>                         — синхронизация с ST3215")
-    print(
-        "  read                                    — прочитать углы с реального робота"
-    )
+    print("  read                                    — прочитать углы с реального робота")
     print("  reset                                   — сброс симуляции")
     print("  demo                                    — демонстрация pick & place")
     print("  q                                       — выход")
