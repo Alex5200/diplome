@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Core Module - Базовые абстракции и инфраструктура
@@ -11,24 +10,24 @@ Core Module - Базовые абстракции и инфраструктур�
 - DI контейнер для управления зависимостями
 """
 
-from .events import Event, EventBus, event_bus
-from .interfaces import IMotorController, IMotorMonitor, IService
 from .base_service import BaseService
 from .container import Container, get_container, reset_container
+from .events import Event, EventBus, event_bus
+from .interfaces import IMotorController, IMotorMonitor, IService
 
 __all__ = [
     # Events
-    'Event',
-    'EventBus',
-    'event_bus',
+    "Event",
+    "EventBus",
+    "event_bus",
     # Interfaces
-    'IMotorController',
-    'IMotorMonitor',
-    'IService',
+    "IMotorController",
+    "IMotorMonitor",
+    "IService",
     # Base classes
-    'BaseService',
+    "BaseService",
     # DI Container
-    'Container',
-    'get_container',
-    'reset_container',
+    "Container",
+    "get_container",
+    "reset_container",
 ]

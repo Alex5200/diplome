@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Dependency Injection Container
@@ -8,19 +7,20 @@ Dependency Injection Container
 Поддерживает ленивую инициализацию, одиночные экземпляры и иерархию.
 """
 
-from typing import Any, Dict, Type, Optional, Callable, TypeVar, Generic
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Any, TypeVar
 
-
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 @dataclass
 class ServiceDescriptor:
     """Описание сервиса в контейнере."""
-    cls: Type
-    factory: Optional[Callable[[], Any]] = None
-    instance: Optional[Any] = None
+
+    cls: type
+    factory: Callable[[], Any] | None = None
+    instance: Any | None = None
     dependencies: list = field(default_factory=list)
     is_singleton: bool = True
     is_initialized: bool = False
@@ -50,19 +50,19 @@ class Container:
 
     def __init__(self):
         """Инициализация контейнера."""
-        self._services: Dict[str, ServiceDescriptor] = {}
-        self._aliases: Dict[str, str] = {}
+        self._services: dict[str, ServiceDescriptor] = {}
+        self._aliases: dict[str, str] = {}
         self._initialized = False
 
     def register(
         self,
         name: str,
-        cls: Type = None,
+        cls: type = None,
         factory: Callable = None,
         instance: Any = None,
         dependencies: list = None,
         is_singleton: bool = True,
-    ) -> 'Container':
+    ) -> "Container":
         """
         Регистрация сервиса.
 
@@ -81,9 +81,7 @@ class Container:
             ValueError: Если не указан ни cls, ни factory, ни instance
         """
         if cls is None and factory is None and instance is None:
-            raise ValueError(
-                "Must provide either cls, factory, or instance"
-            )
+            raise ValueError("Must provide either cls, factory, or instance")
 
         self._services[name] = ServiceDescriptor(
             cls=cls,
@@ -95,7 +93,7 @@ class Container:
 
         return self
 
-    def register_alias(self, alias: str, target: str) -> 'Container':
+    def register_alias(self, alias: str, target: str) -> "Container":
         """
         Регистрация алиаса для сервиса.
 
@@ -212,7 +210,7 @@ class Container:
         self._services.clear()
         self._aliases.clear()
 
-    def get_all(self) -> Dict[str, Any]:
+    def get_all(self) -> dict[str, Any]:
         """
         Получение всех сервисов.
 
@@ -237,7 +235,7 @@ class Container:
 
 
 # Глобальный контейнер приложения
-_app_container: Optional[Container] = None
+_app_container: Container | None = None
 
 
 def get_container() -> Container:

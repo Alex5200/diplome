@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Controllers Package
@@ -13,6 +12,6 @@ from app.controllers.motor_controller import MotorController
 from app.controllers.motor_monitor import MotorMonitor
 
 __all__ = [
-    'MotorController',
-    'MotorMonitor',
+    "MotorController",
+    "MotorMonitor",
 ]

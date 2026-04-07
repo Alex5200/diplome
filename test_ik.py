@@ -15,7 +15,7 @@ test_points = [
     (150, 0, 100, None),  # Сложная точка
 ]
 
-print('Тест IK:')
+print("Тест IK:")
 for x, y, z, expected_angles in test_points:
     angles = ik.solve(x, y, z, max_iterations=300, tolerance=0.5)
     if angles:
@@ -23,8 +23,8 @@ for x, y, z, expected_angles in test_points:
         dx = pos[0] - x
         dy = pos[1] - y
         dz = pos[2] - z
-        error = math.sqrt(dx*dx + dy*dy + dz*dz)
-        print(f'({x:6.1f}, {y:6.1f}, {z:6.1f}): IK={[round(a,1) for a in angles]}')
-        print(f'  -> pos={pos}, error={error:.2f}')
+        error = math.sqrt(dx * dx + dy * dy + dz * dz)
+        print(f"({x:6.1f}, {y:6.1f}, {z:6.1f}): IK={[round(a, 1) for a in angles]}")
+        print(f"  -> pos={pos}, error={error:.2f}")
     else:
-        print(f'({x:6.1f}, {y:6.1f}, {z:6.1f}): IK=None')
+        print(f"({x:6.1f}, {y:6.1f}, {z:6.1f}): IK=None")

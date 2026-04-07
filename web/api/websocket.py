@@ -7,6 +7,7 @@ Clients connect to ws://<host>:8000/ws and receive JSON frames at ~5 Hz:
         "motors": { "<id>": { "position": int, "temperature": float, ... } }
     }
 """
+
 from __future__ import annotations
 
 import asyncio

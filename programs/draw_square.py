@@ -7,6 +7,7 @@ Useful for validating IK accuracy and servo repeatability.
 Usage:
     python programs/draw_square.py --port COM3 --side 80 --z 80 --reps 2
 """
+
 from __future__ import annotations
 
 import argparse
@@ -64,7 +65,9 @@ class DrawSquare(BaseProgram):
                     return False
                 x0, y0 = corners[side_idx]
                 x1, y1 = corners[(side_idx + 1) % 4]
-                self._log(f"  Side {side_names[side_idx]}: ({x0:.0f},{y0:.0f}) → ({x1:.0f},{y1:.0f})")
+                self._log(
+                    f"  Side {side_names[side_idx]}: ({x0:.0f},{y0:.0f}) → ({x1:.0f},{y1:.0f})"
+                )
                 for step in range(self.steps_per_side + 1):
                     if self._stopped():
                         return False
@@ -83,13 +86,13 @@ class DrawSquare(BaseProgram):
 
 def main():
     parser = argparse.ArgumentParser(description="Draw square trajectory")
-    parser.add_argument("--port",  default="COM3")
-    parser.add_argument("--side",  type=float, default=80.0,  help="Square side length (mm)")
-    parser.add_argument("--z",     type=float, default=80.0,  help="Z height (mm)")
-    parser.add_argument("--cx",    type=float, default=180.0, help="Center X (mm)")
-    parser.add_argument("--cy",    type=float, default=0.0,   help="Center Y (mm)")
-    parser.add_argument("--reps",  type=int,   default=2,     help="Repetitions")
-    parser.add_argument("--speed", type=int,   default=1800)
+    parser.add_argument("--port", default="COM3")
+    parser.add_argument("--side", type=float, default=80.0, help="Square side length (mm)")
+    parser.add_argument("--z", type=float, default=80.0, help="Z height (mm)")
+    parser.add_argument("--cx", type=float, default=180.0, help="Center X (mm)")
+    parser.add_argument("--cy", type=float, default=0.0, help="Center Y (mm)")
+    parser.add_argument("--reps", type=int, default=2, help="Repetitions")
+    parser.add_argument("--speed", type=int, default=1800)
     args = parser.parse_args()
 
     ctrl = MotorController()
@@ -99,8 +102,13 @@ def main():
     ctrl.scan_motors()
 
     prog = DrawSquare(
-        ctrl, side_mm=args.side, center_x=args.cx,
-        center_y=args.cy, z_mm=args.z, reps=args.reps, speed=args.speed,
+        ctrl,
+        side_mm=args.side,
+        center_x=args.cx,
+        center_y=args.cy,
+        z_mm=args.z,
+        reps=args.reps,
+        speed=args.speed,
     )
     prog.on_step = print
     prog.run()

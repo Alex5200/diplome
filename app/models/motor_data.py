@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Motor Data Models
@@ -7,10 +6,10 @@ Motor Data Models
 Модели данных для моторов и программы.
 """
 
-from dataclasses import dataclass, asdict, field
-from typing import Optional, List, Dict, Any
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 # Температурные пороги (дублируем, чтобы не было кругового импорта)
 TEMP_WARNING = 70
@@ -20,6 +19,7 @@ LOAD_WARNING = 80
 
 class MotorStatus(Enum):
     """Статус мотора."""
+
     OK = "ok"
     WARNING = "warning"
     ERROR = "error"
@@ -44,20 +44,21 @@ class MotorData:
         last_update: Время последнего обновления
         error_count: Счетчик ошибок
     """
+
     motor_id: int
-    position: Optional[int] = None
-    temperature: Optional[float] = None
-    voltage: Optional[float] = None
-    current: Optional[float] = None
-    load: Optional[float] = None
-    mode: Optional[int] = None
-    moving: Optional[bool] = None
+    position: int | None = None
+    temperature: float | None = None
+    voltage: float | None = None
+    current: float | None = None
+    load: float | None = None
+    mode: int | None = None
+    moving: bool | None = None
     torque_enabled: bool = False
     last_update: float = 0.0
     error_count: int = 0
 
     # Вычисляемые поля
-    _status: Optional[MotorStatus] = field(default=None, init=False)
+    _status: MotorStatus | None = field(default=None, init=False)
 
     def __post_init__(self):
         self._status = self._calculate_status()
@@ -102,15 +103,15 @@ class MotorData:
         """Проверка движения."""
         return self.moving is True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Конвертация в словарь."""
         data = asdict(self)
-        data['status'] = self.status.value
-        data['status_icon'] = self.status_icon
+        data["status"] = self.status.value
+        data["status_icon"] = self.status_icon
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'MotorData':
+    def from_dict(cls, data: dict[str, Any]) -> "MotorData":
         """Создание из словаря."""
         return cls(**{k: v for k, v in data.items() if k in cls.__dataclass_fields__})
 
@@ -127,6 +128,7 @@ class JointState:
         position: Позиция мотора (0-4095)
         motor_id: ID связанного мотора
     """
+
     index: int
     name: str
     angle_deg: float = 0.0
@@ -153,8 +155,9 @@ class RobotState:
 
     Агрегирует данные всех моторов и суставов.
     """
-    joints: List[JointState] = field(default_factory=list)
-    motors: Dict[int, MotorData] = field(default_factory=dict)
+
+    joints: list[JointState] = field(default_factory=list)
+    motors: dict[int, MotorData] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
     is_connected: bool = False
     is_moving: bool = False
@@ -162,44 +165,35 @@ class RobotState:
     @property
     def all_motors_ok(self) -> bool:
         """Все ли моторы в норме."""
-        return all(
-            motor.status == MotorStatus.OK
-            for motor in self.motors.values()
-        )
+        return all(motor.status == MotorStatus.OK for motor in self.motors.values())
 
     @property
     def any_motor_warning(self) -> bool:
         """Есть ли предупреждения."""
-        return any(
-            motor.status == MotorStatus.WARNING
-            for motor in self.motors.values()
-        )
+        return any(motor.status == MotorStatus.WARNING for motor in self.motors.values())
 
     @property
     def any_motor_error(self) -> bool:
         """Есть ли ошибки."""
-        return any(
-            motor.status == MotorStatus.ERROR
-            for motor in self.motors.values()
-        )
+        return any(motor.status == MotorStatus.ERROR for motor in self.motors.values())
 
-    def get_joint_angles(self) -> List[float]:
+    def get_joint_angles(self) -> list[float]:
         """Получение углов всех суставов."""
         return [joint.angle_deg for joint in self.joints]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Конвертация в словарь."""
         return {
-            'joints': [asdict(j) for j in self.joints],
-            'motors': {k: v.to_dict() for k, v in self.motors.items()},
-            'timestamp': self.timestamp.isoformat(),
-            'is_connected': self.is_connected,
-            'is_moving': self.is_moving,
-            'status': {
-                'all_ok': self.all_motors_ok,
-                'any_warning': self.any_motor_warning,
-                'any_error': self.any_motor_error,
-            }
+            "joints": [asdict(j) for j in self.joints],
+            "motors": {k: v.to_dict() for k, v in self.motors.items()},
+            "timestamp": self.timestamp.isoformat(),
+            "is_connected": self.is_connected,
+            "is_moving": self.is_moving,
+            "status": {
+                "all_ok": self.all_motors_ok,
+                "any_warning": self.any_motor_warning,
+                "any_error": self.any_motor_error,
+            },
         }
 
 
@@ -214,28 +208,29 @@ class ProgramBlock:
         params: Параметры блока
         order: Порядок выполнения
     """
+
     id: int
     block_type: str
-    params: Dict[str, Any]
+    params: dict[str, Any]
     order: int = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Конвертация в словарь."""
         return {
-            'id': self.id,
-            'type': self.block_type,
-            'params': self.params,
-            'order': self.order,
+            "id": self.id,
+            "type": self.block_type,
+            "params": self.params,
+            "order": self.order,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ProgramBlock':
+    def from_dict(cls, data: dict[str, Any]) -> "ProgramBlock":
         """Создание из словаря."""
         return cls(
-            id=data.get('id', 0),
-            block_type=data.get('type', ''),
-            params=data.get('params', {}),
-            order=data.get('order', 0),
+            id=data.get("id", 0),
+            block_type=data.get("type", ""),
+            params=data.get("params", {}),
+            order=data.get("order", 0),
         )
 
 
@@ -244,8 +239,9 @@ class RobotProgram:
     """
     Программа выполнения последовательности действий.
     """
+
     name: str = ""
-    blocks: List[ProgramBlock] = field(default_factory=list)
+    blocks: list[ProgramBlock] = field(default_factory=list)
     created: datetime = field(default_factory=datetime.now)
     modified: datetime = field(default_factory=datetime.now)
     version: str = "1.0"
@@ -269,24 +265,28 @@ class RobotProgram:
         self.blocks.clear()
         self.modified = datetime.now()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Конвертация в словарь."""
         return {
-            'name': self.name,
-            'blocks': [b.to_dict() for b in self.blocks],
-            'created': self.created.isoformat(),
-            'modified': self.modified.isoformat(),
-            'version': self.version,
+            "name": self.name,
+            "blocks": [b.to_dict() for b in self.blocks],
+            "created": self.created.isoformat(),
+            "modified": self.modified.isoformat(),
+            "version": self.version,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'RobotProgram':
+    def from_dict(cls, data: dict[str, Any]) -> "RobotProgram":
         """Создание из словаря."""
         program = cls(
-            name=data.get('name', ''),
-            created=datetime.fromisoformat(data['created']) if 'created' in data else datetime.now(),
-            modified=datetime.fromisoformat(data['modified']) if 'modified' in data else datetime.now(),
-            version=data.get('version', '1.0'),
+            name=data.get("name", ""),
+            created=datetime.fromisoformat(data["created"])
+            if "created" in data
+            else datetime.now(),
+            modified=datetime.fromisoformat(data["modified"])
+            if "modified" in data
+            else datetime.now(),
+            version=data.get("version", "1.0"),
         )
-        program.blocks = [ProgramBlock.from_dict(b) for b in data.get('blocks', [])]
+        program.blocks = [ProgramBlock.from_dict(b) for b in data.get("blocks", [])]
         return program

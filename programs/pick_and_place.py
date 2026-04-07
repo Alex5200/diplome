@@ -12,6 +12,7 @@ Coordinate system (mm):
     Y — left/right
     Z — up/down (Z=0 is base plane)
 """
+
 from __future__ import annotations
 
 import argparse
@@ -20,9 +21,9 @@ from programs.base_program import BaseProgram
 from app.controllers.motor_controller import MotorController
 
 # Gripper positions (J6)
-GRIPPER_OPEN   = 1200   # ~ -90° relative
-GRIPPER_CLOSED = 2800   # ~ +55° relative
-GRIPPER_SPEED  = 3000
+GRIPPER_OPEN = 1200  # ~ -90° relative
+GRIPPER_CLOSED = 2800  # ~ +55° relative
+GRIPPER_SPEED = 3000
 
 # Safe transit height above pick/place points
 TRANSIT_Z_OFFSET = 40.0  # mm
@@ -72,33 +73,47 @@ class PickAndPlace(BaseProgram):
     def _pick(self) -> bool:
         px, py, pz = self.pick_point
         # Approach from above
-        if not self._go_to_xyz(px, py, pz + TRANSIT_Z_OFFSET): return False
-        if not self._wait(0.4): return False
+        if not self._go_to_xyz(px, py, pz + TRANSIT_Z_OFFSET):
+            return False
+        if not self._wait(0.4):
+            return False
         # Descend to pick height
-        if not self._go_to_xyz(px, py, pz): return False
-        if not self._wait(0.3): return False
+        if not self._go_to_xyz(px, py, pz):
+            return False
+        if not self._wait(0.3):
+            return False
         # Grip
         self._close_gripper()
-        if not self._wait(0.5): return False
+        if not self._wait(0.5):
+            return False
         # Lift
-        if not self._go_to_xyz(px, py, pz + TRANSIT_Z_OFFSET): return False
-        if not self._wait(0.3): return False
+        if not self._go_to_xyz(px, py, pz + TRANSIT_Z_OFFSET):
+            return False
+        if not self._wait(0.3):
+            return False
         return True
 
     def _place(self) -> bool:
         lx, ly, lz = self.place_point
         # Move over place point
-        if not self._go_to_xyz(lx, ly, lz + TRANSIT_Z_OFFSET): return False
-        if not self._wait(0.4): return False
+        if not self._go_to_xyz(lx, ly, lz + TRANSIT_Z_OFFSET):
+            return False
+        if not self._wait(0.4):
+            return False
         # Descend
-        if not self._go_to_xyz(lx, ly, lz): return False
-        if not self._wait(0.3): return False
+        if not self._go_to_xyz(lx, ly, lz):
+            return False
+        if not self._wait(0.3):
+            return False
         # Release
         self._open_gripper()
-        if not self._wait(0.5): return False
+        if not self._wait(0.5):
+            return False
         # Lift
-        if not self._go_to_xyz(lx, ly, lz + TRANSIT_Z_OFFSET): return False
-        if not self._wait(0.3): return False
+        if not self._go_to_xyz(lx, ly, lz + TRANSIT_Z_OFFSET):
+            return False
+        if not self._wait(0.3):
+            return False
         return True
 
     def _open_gripper(self):

@@ -7,6 +7,7 @@ The spiral expands from the center outward at a fixed Z height.
 Usage:
     python programs/spiral_scan.py --port COM3 --radius 100 --turns 3 --z 80
 """
+
 from __future__ import annotations
 
 import argparse
@@ -76,13 +77,13 @@ class SpiralScan(BaseProgram):
 
 def main():
     parser = argparse.ArgumentParser(description="Spiral scan program")
-    parser.add_argument("--port",   default="COM3")
+    parser.add_argument("--port", default="COM3")
     parser.add_argument("--radius", type=float, default=100.0)
-    parser.add_argument("--turns",  type=int,   default=3)
-    parser.add_argument("--z",      type=float, default=80.0)
-    parser.add_argument("--cx",     type=float, default=180.0)
-    parser.add_argument("--cy",     type=float, default=0.0)
-    parser.add_argument("--speed",  type=int,   default=1500)
+    parser.add_argument("--turns", type=int, default=3)
+    parser.add_argument("--z", type=float, default=80.0)
+    parser.add_argument("--cx", type=float, default=180.0)
+    parser.add_argument("--cy", type=float, default=0.0)
+    parser.add_argument("--speed", type=int, default=1500)
     args = parser.parse_args()
 
     ctrl = MotorController()

@@ -15,6 +15,7 @@ Services:
 Usage:
     ros2 run robot_control robot_node --ros-args -p port:=COM3
 """
+
 from __future__ import annotations
 
 import json
@@ -99,6 +100,7 @@ class RobotNode(Node):
             pos_rad = 0.0
             if data:
                 import math
+
                 angle_deg = (data.position / 4095.0) * 360.0 - 180.0
                 pos_rad = math.radians(angle_deg)
             msg.position.append(pos_rad)
@@ -119,6 +121,7 @@ class RobotNode(Node):
         if not self._ctrl.is_connected:
             return
         import math
+
         motors = self._ctrl.get_connected_motors()
         for i, pos_rad in enumerate(msg.positions):
             if i >= len(motors):

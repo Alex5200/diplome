@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Event System Module
@@ -16,10 +15,11 @@ Event System Module
 """
 
 import threading
-from typing import Callable, Dict, List, Any, Optional
+import weakref
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-import weakref
+from typing import Any, Optional
 
 
 @dataclass
@@ -33,8 +33,9 @@ class Event:
         timestamp: Время создания события
         source: Источник события (имя компонента)
     """
+
     name: str
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
     source: str = ""
 
@@ -60,10 +61,10 @@ class EventBus:
         EventBus.emit('motor_connected', {'port': 'COM3'})
     """
 
-    _instance: Optional['EventBus'] = None
+    _instance: Optional["EventBus"] = None
     _lock = threading.Lock()
 
-    def __new__(cls) -> 'EventBus':
+    def __new__(cls) -> "EventBus":
         """Singleton pattern."""
         if cls._instance is None:
             with cls._lock:
@@ -76,19 +77,23 @@ class EventBus:
         if self._initialized:
             return
 
-        self._subscribers: Dict[str, List[weakref.WeakMethod]] = {}
+        self._subscribers: dict[str, list[weakref.WeakMethod]] = {}
         self._lock = threading.RLock()
-        self._event_history: List[Event] = []
+        self._event_history: list[Event] = []
         self._max_history = 100
         self._initialized = True
 
     @classmethod
-    def get_instance(cls) -> 'EventBus':
+    def get_instance(cls) -> "EventBus":
         """Получить экземпляр шины событий."""
         return cls()
 
-    def on(self, event_name: str, callback: Callable[[Dict[str, Any]], None],
-           priority: int = 0) -> None:
+    def on(
+        self,
+        event_name: str,
+        callback: Callable[[dict[str, Any]], None],
+        priority: int = 0,
+    ) -> None:
         """
         Подписка на событие.
 
@@ -102,17 +107,18 @@ class EventBus:
                 self._subscribers[event_name] = []
 
             # Сохраняем callback с приоритетом
-            self._subscribers[event_name].append({
-                'callback': weakref.WeakMethod(callback) if hasattr(callback, '__self__') else callback,
-                'priority': priority,
-                'is_method': hasattr(callback, '__self__')
-            })
+            self._subscribers[event_name].append(
+                {
+                    "callback": weakref.WeakMethod(callback)
+                    if hasattr(callback, "__self__")
+                    else callback,
+                    "priority": priority,
+                    "is_method": hasattr(callback, "__self__"),
+                }
+            )
 
             # Сортируем по приоритету
-            self._subscribers[event_name].sort(
-                key=lambda x: x['priority'],
-                reverse=True
-            )
+            self._subscribers[event_name].sort(key=lambda x: x["priority"], reverse=True)
 
     def off(self, event_name: str, callback: Callable = None) -> None:
         """
@@ -130,12 +136,10 @@ class EventBus:
                 del self._subscribers[event_name]
             else:
                 self._subscribers[event_name] = [
-                    sub for sub in self._subscribers[event_name]
-                    if sub['callback'] != callback
+                    sub for sub in self._subscribers[event_name] if sub["callback"] != callback
                 ]
 
-    def emit(self, event_name: str, data: Dict[str, Any] = None,
-             source: str = "") -> Event:
+    def emit(self, event_name: str, data: dict[str, Any] = None, source: str = "") -> Event:
         """
         Отправка события всем подписчикам.
 
@@ -147,12 +151,7 @@ class EventBus:
         Returns:
             Созданное событие
         """
-        event = Event(
-            name=event_name,
-            data=data or {},
-            source=source,
-            timestamp=datetime.now()
-        )
+        event = Event(name=event_name, data=data or {}, source=source, timestamp=datetime.now())
 
         # Сохраняем в историю
         self._add_to_history(event)
@@ -179,12 +178,12 @@ class EventBus:
 
         for sub in subscribers:
             try:
-                if sub['is_method']:
-                    callback = sub['callback']()
+                if sub["is_method"]:
+                    callback = sub["callback"]()
                     if callback is not None:
                         callback(event.data)
                 else:
-                    sub['callback'](event.data)
+                    sub["callback"](event.data)
             except ReferenceError:
                 pass  # Слабая ссылка уже мертва
             except Exception as e:
@@ -195,7 +194,7 @@ class EventBus:
         with self._lock:
             self._event_history.clear()
 
-    def get_history(self, event_name: str = None, limit: int = 50) -> List[Event]:
+    def get_history(self, event_name: str = None, limit: int = 50) -> list[Event]:
         """
         Получение истории событий.
 
@@ -219,8 +218,9 @@ class EventBus:
         with self._lock:
             for event_name in list(self._subscribers.keys()):
                 self._subscribers[event_name] = [
-                    sub for sub in self._subscribers[event_name]
-                    if not sub['is_method'] or sub['callback']() is not None
+                    sub
+                    for sub in self._subscribers[event_name]
+                    if not sub["is_method"] or sub["callback"]() is not None
                 ]
                 if not self._subscribers[event_name]:
                     del self._subscribers[event_name]

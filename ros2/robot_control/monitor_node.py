@@ -9,6 +9,7 @@ Published topics:
 Usage:
     ros2 run robot_control monitor_node --ros-args -p port:=COM3
 """
+
 from __future__ import annotations
 
 import json
@@ -49,7 +50,7 @@ class MonitorNode(Node):
         else:
             self.get_logger().warn(f"Could not connect to {port}")
 
-        self._pub_diag  = self.create_publisher(String, "/robot/diagnostics", 10)
+        self._pub_diag = self.create_publisher(String, "/robot/diagnostics", 10)
         self._pub_temps = self.create_publisher(String, "/robot/temperature", 10)
         self._pub_alarm = self.create_publisher(String, "/robot/alarms", 10)
 

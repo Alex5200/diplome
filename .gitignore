@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node (docs generator)
+docs/node_modules/
+docs/chapters/node_modules/
+node_modules/
+
+# Generated docs
+docs/chapters/diploma_ch2_ch3.docx
+docs/diploma_robotics.docx
+
+# Logs
+*.log
+
+# Robot config backups
+robot_config.json.bak*
+
+# Byte-compiled
+*.pyc
+*.pyo
+
+# Distribution
+*.whl
+*.tar.gz
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# OS
+Thumbs.db
+Desktop.ini

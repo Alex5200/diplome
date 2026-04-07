@@ -10,6 +10,7 @@ Every program defines:
 Programs communicate with the robot exclusively through MotorController
 and KinematicsService from the shared layer.
 """
+
 from __future__ import annotations
 
 import threading

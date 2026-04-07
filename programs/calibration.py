@@ -11,6 +11,7 @@ Results are printed and optionally saved to a JSON report.
 Usage:
     python programs/calibration.py --port COM3 --output calibration_report.json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,16 +23,16 @@ from typing import Optional
 from programs.base_program import BaseProgram
 from app.controllers.motor_controller import MotorController
 
-SWEEP_STEPS    = 10        # positions per direction
-SWEEP_SPEED    = 1200      # slow for safety
-SETTLE_TIME    = 0.4       # seconds to wait after move
-JOINT_LIMITS   = [         # (min_pos, max_pos) per joint
-    (400,  3695),          # J1 base
-    (700,  3400),          # J2 shoulder
-    (700,  3400),          # J3 elbow
-    (600,  3495),          # J4 wrist
-    (600,  3495),          # J5 wrist
-    (0,    4095),          # J6 gripper
+SWEEP_STEPS = 10  # positions per direction
+SWEEP_SPEED = 1200  # slow for safety
+SETTLE_TIME = 0.4  # seconds to wait after move
+JOINT_LIMITS = [  # (min_pos, max_pos) per joint
+    (400, 3695),  # J1 base
+    (700, 3400),  # J2 shoulder
+    (700, 3400),  # J3 elbow
+    (600, 3495),  # J4 wrist
+    (600, 3495),  # J5 wrist
+    (0, 4095),  # J6 gripper
 ]
 
 
@@ -71,8 +72,10 @@ class Calibration(BaseProgram):
                 break
             jr = self._calibrate_joint(i + 1, mid)
             self.report.append(jr)
-            self._log(f"J{i+1}: {'PASS' if jr.passed else 'FAIL'}  "
-                      f"err={jr.max_error}  ΔT={jr.temp_delta:.1f}°C")
+            self._log(
+                f"J{i + 1}: {'PASS' if jr.passed else 'FAIL'}  "
+                f"err={jr.max_error}  ΔT={jr.temp_delta:.1f}°C"
+            )
 
         # Return all joints to center
         self._go_home()
@@ -139,7 +142,7 @@ class Calibration(BaseProgram):
 
 def main():
     parser = argparse.ArgumentParser(description="Joint calibration")
-    parser.add_argument("--port",   default="COM3")
+    parser.add_argument("--port", default="COM3")
     parser.add_argument("--output", default=None, help="JSON report output path")
     args = parser.parse_args()
 

@@ -6,6 +6,7 @@ Usage:
     python desktop/main.py
     python -m desktop.main
 """
+
 import sys
 import os
 

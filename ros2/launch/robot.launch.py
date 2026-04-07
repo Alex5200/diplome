@@ -5,6 +5,7 @@ Usage:
     ros2 launch robot_control robot.launch.py port:=COM3
     ros2 launch robot_control robot.launch.py port:=/dev/ttyUSB0 baudrate:=1000000
 """
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
@@ -12,10 +13,10 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    port_arg     = DeclareLaunchArgument("port",     default_value="COM3")
+    port_arg = DeclareLaunchArgument("port", default_value="COM3")
     baudrate_arg = DeclareLaunchArgument("baudrate", default_value="1000000")
 
-    port     = LaunchConfiguration("port")
+    port = LaunchConfiguration("port")
     baudrate = LaunchConfiguration("baudrate")
 
     robot_node = Node(
@@ -41,10 +42,12 @@ def generate_launch_description():
         output="screen",
     )
 
-    return LaunchDescription([
-        port_arg,
-        baudrate_arg,
-        robot_node,
-        monitor_node,
-        ik_service_node,
-    ])
+    return LaunchDescription(
+        [
+            port_arg,
+            baudrate_arg,
+            robot_node,
+            monitor_node,
+            ik_service_node,
+        ]
+    )

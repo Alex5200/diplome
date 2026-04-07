@@ -4,32 +4,32 @@
     "motor_1": {
       "min_pos": 0,
       "max_pos": 4095,
-      "name": "База"
+      "name": "Мотор 1"
     },
     "motor_2": {
       "min_pos": 0,
       "max_pos": 4095,
-      "name": "Плечо 1"
+      "name": "Мотор 2"
     },
     "motor_3": {
       "min_pos": 0,
       "max_pos": 4095,
-      "name": "Плечо 2"
+      "name": "Мотор 3"
     },
     "motor_4": {
       "min_pos": 0,
       "max_pos": 4095,
-      "name": "Локоть"
+      "name": "Мотор 4"
     },
     "motor_5": {
       "min_pos": 0,
       "max_pos": 4095,
-      "name": "Кисть 1"
+      "name": "Мотор 5"
     },
     "motor_6": {
       "min_pos": 0,
       "max_pos": 4095,
-      "name": "Кисть 2"
+      "name": "Мотор 6"
     }
   },
   "motor_mapping": {
@@ -52,7 +52,7 @@
       "name": "Плечо 2",
       "min_pos": 0,
       "max_pos": 4095,
-      "inverted": false
+      "inverted": true
     },
     "joint_3": {
       "motor_id": 5,
@@ -76,5 +76,5 @@
       "inverted": false
     }
   },
-  "timestamp": "2026-04-05T21:16:40.590538"
+  "timestamp": "2026-04-07T00:58:52.282531"
 }

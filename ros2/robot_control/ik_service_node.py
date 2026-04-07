@@ -15,6 +15,7 @@ Usage:
     ros2 run robot_control ik_service_node
     ros2 service call /robot/ik std_msgs/String '{"data": "{\"x\":150,\"y\":0,\"z\":100}"}'
 """
+
 from __future__ import annotations
 
 import json
@@ -57,11 +58,17 @@ class IKServiceNode(Node):
             self._pub.publish(String(data=json.dumps({"success": False, "error": "unreachable"})))
         else:
             angles, error = result
-            self._pub.publish(String(data=json.dumps({
-                "success": True,
-                "angles_deg": [round(a, 4) for a in angles],
-                "error_mm": round(error, 4),
-            })))
+            self._pub.publish(
+                String(
+                    data=json.dumps(
+                        {
+                            "success": True,
+                            "angles_deg": [round(a, 4) for a in angles],
+                            "error_mm": round(error, 4),
+                        }
+                    )
+                )
+            )
 
 
 def main(args=None):
