@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  mujoco-sim:
+    build: .
+    container_name: mujoco_robot_sim
+    
+    # GUI support via X11
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - QT_X11_NO_MITSHM=1
+      - _X11_NO_MITSHM=1
+      - _MITSHM=0
+    
+    # X11 socket mount for GUI
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./src:/app/src:ro  # Dev: live reload source
+      - ./config:/app/config:ro
+      - ./data:/app/data  # Persistent data
+    
+    # Network (optional - for web APIs)
+    network_mode: host
+    
+    # Keep container running for interactive use
+    stdin_open: true
+    tty: true
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+    
+    # Command override via environment
+    command: ${MUJOCO_MODE:---headless}
+
+  # GUI mode service
+  mujoco-gui:
+    extends: mujoco-sim
+    container_name: mujoco_robot_sim_gui
+    command: []
+    profiles:
+      - gui
+
+  # Headless mode service
+  mujoco-headless:
+    extends: mujoco-sim
+    container_name: mujoco_robot_sim_headless
+    command: ["--headless"]
+    profiles:
+      - headless

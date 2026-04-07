@@ -6,8 +6,12 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "matplotlib>=3.10.8",
+    "mujoco>=3.6.0",
     "numpy>=2.4.3",
+    "opencv-python>=4.10.0",
+    "pillow>=11.0.0",
     "pyserial>=3.5",
+    "requests>=2.32.0",
     "rich>=14.3.3",
     "ruff>=0.15.8",
     "st3215>=0.4.0",
@@ -68,3 +72,8 @@ known-first-party = ["app", "shared", "desktop", "web", "ros2", "programs"]
 "app/tests/*" = ["F841", "B018"]       # unused variables OK in tests
 "app/views/*" = ["F841", "B023"]       # GUI callbacks, loop variables
 "main.py" = ["E402", "F401", "F841"]   # legacy monolith
+
+[tool.uv.workspace]
+members = [
+    "web",
+]

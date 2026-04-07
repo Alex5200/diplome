@@ -16,7 +16,6 @@ Kinematics Model for 6-DOF Robot Arm
 
 import math
 from dataclasses import dataclass
-from typing import list
 
 import numpy as np
 

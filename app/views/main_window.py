@@ -49,6 +49,7 @@ from app.views.bottom_monitor_panel import BottomMonitorPanel
 from app.views.kinematics_3d_panel import Kinematics3DPanel
 from app.views.manual_control_panel import ManualControlPanel
 from app.views.motor_mapping_panel import MotorMappingPanel
+from app.views.vision_tracker_panel import VisionTrackerPanel
 
 # ============================================================
 #  FANUC-Style Status Bar Widget
@@ -1106,6 +1107,17 @@ class RobotControlGUI(tk.Tk):
         self.notebook.add(self.alarm_tab, text="Alarms")
         self.alarm_panel = AlarmHistoryPanel(self.alarm_tab)
         self.alarm_panel.pack(fill="both", expand=True)
+
+        # Вкладка: AI Vision Tracker
+        self.vision_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.vision_tab, text="AI Vision")
+        self.vision_panel = VisionTrackerPanel(
+            self.vision_tab,
+            robot_service=self.controller,
+            kinematics_service=self.kinematics,
+            log_callback=self._log,
+        )
+        self.vision_panel.pack(fill="both", expand=True)
 
         self._refresh_ports()
 

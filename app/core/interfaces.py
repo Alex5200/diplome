@@ -11,7 +11,6 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
-from typing import dict_type as dict_type_type
 
 
 @dataclass
@@ -134,7 +133,7 @@ class IMotorController(ABC):
         pass
 
     @abstractmethod
-    def read_motor_data(self, motor_id: int) -> dict_type_type[str, Any]:
+    def read_motor_data(self, motor_id: int) -> dict[str, Any]:
         """
         Чтение данных мотора.
 
@@ -201,7 +200,7 @@ class IMotorMonitor(ABC):
         pass
 
     @abstractmethod
-    def get_all_data(self) -> dict_type[int, MotorInfo]:
+    def get_all_data(self) -> dict[int, MotorInfo]:
         """
         Получение данных всех моторов.
 
@@ -211,7 +210,7 @@ class IMotorMonitor(ABC):
         pass
 
     @abstractmethod
-    def set_callback(self, callback: Callable[[dict_type[int, MotorInfo]], None]) -> None:
+    def set_callback(self, callback: Callable[[dict[int, MotorInfo]], None]) -> None:
         """
         Установка callback для обновлений данных.
 
@@ -254,7 +253,7 @@ class IService(ABC):
         pass
 
     @abstractmethod
-    def get_status(self) -> dict_type[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """
         Получение статуса сервиса.
 
