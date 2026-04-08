@@ -18,6 +18,7 @@ from app.config.constants import (
     FANUC_PANEL,
     FANUC_TEXT,
     MAX_POSITION,
+    TEXT_COLOR,
 )
 from app.controllers.motor_controller import MotorController
 
@@ -84,9 +85,10 @@ class ManualControlPanel(ttk.Frame):
                 font=("SF Mono", 10, "bold"),
                 bg=FANUC_PANEL,
                 fg=FANUC_TEXT,
-                activebackground=FANUC_GREEN,
+                activebackground="#000000",
+                activeforeground="#ffffff",
                 bd=0,
-                relief="flat",
+                relief="sunken",
                 command=lambda idx=i: self.select_joint(idx),
             )
             btn.pack(side="left", padx=2)
@@ -146,7 +148,7 @@ class ManualControlPanel(ttk.Frame):
             height=2,
             font=("SF Pro", 18, "bold"),
             bg=FANUC_ORANGE,
-            fg=FANUC_BG,
+            fg=TEXT_COLOR,
             bd=0,
             relief="flat",
             command=lambda: self.jog(-1),
@@ -169,7 +171,7 @@ class ManualControlPanel(ttk.Frame):
             height=2,
             font=("SF Pro", 18, "bold"),
             bg=FANUC_GREEN,
-            fg=FANUC_BG,
+            fg=TEXT_COLOR,
             bd=0,
             relief="flat",
             command=lambda: self.jog(1),
@@ -183,7 +185,7 @@ class ManualControlPanel(ttk.Frame):
             text="STEP",
             font=("SF Mono", 9, "bold"),
             bg=FANUC_PANEL,
-            fg=FANUC_ORANGE,
+            fg=TEXT_COLOR,
         ).pack(side="left", padx=6)
 
         self.step_btns: dict[int, tk.Button] = {}
@@ -194,7 +196,7 @@ class ManualControlPanel(ttk.Frame):
                 width=4,
                 font=("SF Mono", 9),
                 bg=FANUC_PANEL if step != 100 else FANUC_BLUE,
-                fg=FANUC_TEXT if step != 100 else FANUC_BG,
+                fg=FANUC_TEXT,
                 bd=0,
                 relief="flat",
                 command=lambda s=step: self._set_step(s),
@@ -283,7 +285,7 @@ class ManualControlPanel(ttk.Frame):
             bg=FANUC_BG,
             fg=FANUC_GREEN,
         )
-        self.speed_label.pack()
+        self.speed_label.pack(fill="x")
 
         cmd_f = tk.LabelFrame(
             right,
