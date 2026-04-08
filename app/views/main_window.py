@@ -44,6 +44,7 @@ from app.models.kinematics import InverseKinematics6DOF, RobotKinematics6DOF
 from app.utils.config_manager import ConfigManager
 from app.utils.logger import AppLogger
 from app.utils.program_executor import ProgramExecutor
+from app.views.ai_control_panel import AIControlPanel
 from app.views.block_programming import BlockPalette, ProgramCanvas
 from app.views.bottom_monitor_panel import BottomMonitorPanel
 from app.views.kinematics_3d_panel import Kinematics3DPanel
@@ -1118,6 +1119,17 @@ class RobotControlGUI(tk.Tk):
             log_callback=self._log,
         )
         self.vision_panel.pack(fill="both", expand=True)
+
+        # Вкладка: AI Robot Control
+        self.ai_control_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.ai_control_tab, text="🤖 AI Control")
+        self.ai_control_panel = AIControlPanel(
+            self.ai_control_tab,
+            robot_service=self.controller,
+            kinematics_service=self.kinematics,
+            log_callback=self._log,
+        )
+        self.ai_control_panel.pack(fill="both", expand=True)
 
         self._refresh_ports()
 
