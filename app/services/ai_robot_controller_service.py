@@ -47,6 +47,7 @@ import numpy as np
 
 from ..core.base_service import BaseService
 from .ai_provider import AIProvider
+from .camera_service import CameraService, _select_backend
 
 logger = logging.getLogger(__name__)
 
@@ -284,6 +285,7 @@ class AIRobotControllerService(BaseService):
 
         # Camera
         self._cap: cv2.VideoCapture | None = None
+        self._cam_service = CameraService(fps=DEFAULT_FPS)
         self._current_frame: np.ndarray | None = None
         self._frame_lock = threading.Lock()
 
@@ -357,7 +359,11 @@ class AIRobotControllerService(BaseService):
         if not self.ai.is_available():
             logger.error("AI provider not available: %s", self.ai)
             return False
-        cap = cv2.VideoCapture(self._camera_id)
+        backend = _select_backend()
+        cap = cv2.VideoCapture(self._camera_id, backend)
+        if not cap.isOpened() and backend != cv2.CAP_ANY:
+            cap.release()
+            cap = cv2.VideoCapture(self._camera_id, cv2.CAP_ANY)
         ok = cap.isOpened()
         cap.release()
         if not ok:
@@ -404,10 +410,23 @@ class AIRobotControllerService(BaseService):
     # ─── Camera ───
 
     def _open_camera(self) -> None:
-        self._cap = cv2.VideoCapture(self._camera_id)
-        self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, DEFAULT_FRAME_W)
-        self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, DEFAULT_FRAME_H)
-        self._cap.set(cv2.CAP_PROP_FPS, DEFAULT_FPS)
+        """Открыть камеру через CameraService (кроссплатформенно)."""
+        self._cam_service.set_resolution(DEFAULT_FRAME_W, DEFAULT_FRAME_H)
+        self._cam_service.set_fps(DEFAULT_FPS)
+        # Для совместимости с существующим capture loop оставляем _cap
+        backend = _select_backend()
+        self._cap = cv2.VideoCapture(self._camera_id, backend)
+        if not self._cap.isOpened() and backend != cv2.CAP_ANY:
+            self._cap.release()
+            self._cap = cv2.VideoCapture(self._camera_id, cv2.CAP_ANY)
+        if self._cap.isOpened():
+            self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, DEFAULT_FRAME_W)
+            self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, DEFAULT_FRAME_H)
+            self._cap.set(cv2.CAP_PROP_FPS, DEFAULT_FPS)
+            self._cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+            logger.info("Camera %d opened (backend=%s)", self._camera_id, backend)
+        else:
+            logger.error("Cannot open camera %d", self._camera_id)
 
     def _close_camera(self) -> None:
         if self._cap:

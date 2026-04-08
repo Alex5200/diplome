@@ -11,8 +11,6 @@ Vision Tracker Panel — GUI для AI-визуального слежения �
 - Кнопки: START/STOP трекинг, SEND ONCE (одиночный запрос к VLM)
 """
 
-import subprocess
-import sys
 import threading
 import time
 import tkinter as tk
@@ -32,6 +30,7 @@ from app.config.constants import (
     FANUC_TEXT,
 )
 from app.services.ai_provider import AIProvider
+from app.services.camera_service import CameraService
 from app.services.vision_tracker_service import VisionTrackerService
 
 
@@ -70,10 +69,9 @@ class VisionTrackerPanel(ttk.Frame):
         self._is_tracking = False
         self._photo_image = None  # prevent GC
 
-        # Камера preview (через ffmpeg subprocess)
-        self._ffmpeg_proc: subprocess.Popen | None = None
+        # Камера preview (через CameraService / OpenCV)
+        self._camera = CameraService()
         self._camera_running = False
-        self._camera_thread: threading.Thread | None = None
         self._current_frame: np.ndarray | None = None
         self._frame_lock = threading.Lock()
 
@@ -98,114 +96,209 @@ class VisionTrackerPanel(ttk.Frame):
         r1 = tk.Frame(parent, bg=FANUC_PANEL)
         r1.pack(fill="x", pady=2)
 
-        tk.Label(r1, text="Provider:", font=("Arial", 10),
-                 bg=FANUC_PANEL, fg=FANUC_TEXT).pack(side="left")
+        tk.Label(r1, text="Provider:", font=("Arial", 10), bg=FANUC_PANEL, fg=FANUC_TEXT).pack(
+            side="left"
+        )
         self._provider_var = tk.StringVar(value="LM Studio (Local/Remote)")
-        ttk.Combobox(r1, textvariable=self._provider_var,
-                     values=list(self.PROVIDERS.keys()),
-                     state="readonly", width=24, font=("Consolas", 9)
-                     ).pack(side="left", padx=4)
+        ttk.Combobox(
+            r1,
+            textvariable=self._provider_var,
+            values=list(self.PROVIDERS.keys()),
+            state="readonly",
+            width=24,
+            font=("Consolas", 9),
+        ).pack(side="left", padx=4)
         self._provider_var.trace_add("write", lambda *_: self._on_provider_change())
 
-        tk.Button(r1, text="CHECK", font=("Arial", 8, "bold"),
-                  bg=FANUC_BLUE, fg="white", bd=0, padx=8, pady=2,
-                  command=self._check_connection).pack(side="left", padx=3)
-        tk.Button(r1, text="MODELS", font=("Arial", 8, "bold"),
-                  bg=FANUC_GRAY, fg="white", bd=0, padx=8, pady=2,
-                  command=self._list_models).pack(side="left", padx=3)
+        tk.Button(
+            r1,
+            text="CHECK",
+            font=("Arial", 8, "bold"),
+            bg=FANUC_BLUE,
+            fg="white",
+            bd=0,
+            padx=8,
+            pady=2,
+            command=self._check_connection,
+        ).pack(side="left", padx=3)
+        tk.Button(
+            r1,
+            text="MODELS",
+            font=("Arial", 8, "bold"),
+            bg=FANUC_GRAY,
+            fg="white",
+            bd=0,
+            padx=8,
+            pady=2,
+            command=self._list_models,
+        ).pack(side="left", padx=3)
 
-        self._conn_label = tk.Label(r1, text="", font=("Consolas", 9),
-                                    bg=FANUC_PANEL, fg=FANUC_GRAY)
+        self._conn_label = tk.Label(
+            r1, text="", font=("Consolas", 9), bg=FANUC_PANEL, fg=FANUC_GRAY
+        )
         self._conn_label.pack(side="right", padx=6)
 
         # ── Row 2: URL + Model + Key ──
         r2 = tk.Frame(parent, bg=FANUC_PANEL)
         r2.pack(fill="x", pady=2)
 
-        tk.Label(r2, text="URL:", font=("Arial", 9),
-                 bg=FANUC_PANEL, fg=FANUC_TEXT).pack(side="left")
+        tk.Label(r2, text="URL:", font=("Arial", 9), bg=FANUC_PANEL, fg=FANUC_TEXT).pack(
+            side="left"
+        )
         self._url_var = tk.StringVar(value=self.DEFAULT_URLS["lm_studio"])
-        ttk.Entry(r2, textvariable=self._url_var, width=30,
-                  font=("Consolas", 9)).pack(side="left", padx=3)
+        ttk.Entry(r2, textvariable=self._url_var, width=30, font=("Consolas", 9)).pack(
+            side="left", padx=3
+        )
 
-        tk.Label(r2, text="Model:", font=("Arial", 9),
-                 bg=FANUC_PANEL, fg=FANUC_TEXT).pack(side="left", padx=(8, 0))
+        tk.Label(r2, text="Model:", font=("Arial", 9), bg=FANUC_PANEL, fg=FANUC_TEXT).pack(
+            side="left", padx=(8, 0)
+        )
         self._model_var = tk.StringVar(value=self.DEFAULT_MODELS["lm_studio"])
-        self._model_combo = ttk.Combobox(r2, textvariable=self._model_var, width=22,
-                                         font=("Consolas", 9))
+        self._model_combo = ttk.Combobox(
+            r2, textvariable=self._model_var, width=22, font=("Consolas", 9)
+        )
         self._model_combo.pack(side="left", padx=3)
 
-        tk.Button(r2, text="↻", font=("Arial", 9),
-                  bg=FANUC_PANEL, fg=FANUC_TEXT, bd=0, padx=4, pady=0,
-                  command=self._fetch_models).pack(side="left", padx=1)
+        tk.Button(
+            r2,
+            text="↻",
+            font=("Arial", 9),
+            bg=FANUC_PANEL,
+            fg=FANUC_TEXT,
+            bd=0,
+            padx=4,
+            pady=0,
+            command=self._fetch_models,
+        ).pack(side="left", padx=1)
 
-        tk.Label(r2, text="Key:", font=("Arial", 9),
-                 bg=FANUC_PANEL, fg=FANUC_TEXT).pack(side="left", padx=(8, 0))
+        tk.Label(r2, text="Key:", font=("Arial", 9), bg=FANUC_PANEL, fg=FANUC_TEXT).pack(
+            side="left", padx=(8, 0)
+        )
         self._apikey_var = tk.StringVar(value="lm-studio")
-        ttk.Entry(r2, textvariable=self._apikey_var, width=14,
-                  font=("Consolas", 9), show="•").pack(side="left", padx=3)
+        ttk.Entry(r2, textvariable=self._apikey_var, width=14, font=("Consolas", 9), show="•").pack(
+            side="left", padx=3
+        )
 
         # ── Row 3: Target + Camera + Interval ──
         r3 = tk.Frame(parent, bg=FANUC_PANEL)
         r3.pack(fill="x", pady=2)
 
-        tk.Label(r3, text="Target:", font=("Arial", 10, "bold"),
-                 bg=FANUC_PANEL, fg=FANUC_RED).pack(side="left")
+        tk.Label(r3, text="Target:", font=("Arial", 10, "bold"), bg=FANUC_PANEL, fg=FANUC_RED).pack(
+            side="left"
+        )
         self._target_var = tk.StringVar(value="red ball")
-        ttk.Entry(r3, textvariable=self._target_var, width=24,
-                  font=("Consolas", 10)).pack(side="left", padx=4)
+        ttk.Entry(r3, textvariable=self._target_var, width=24, font=("Consolas", 10)).pack(
+            side="left", padx=4
+        )
 
-        tk.Label(r3, text="Cam:", font=("Arial", 9),
-                 bg=FANUC_PANEL, fg=FANUC_TEXT).pack(side="left", padx=(8, 0))
+        tk.Label(r3, text="Cam:", font=("Arial", 9), bg=FANUC_PANEL, fg=FANUC_TEXT).pack(
+            side="left", padx=(8, 0)
+        )
         self._camera_var = tk.StringVar(value="0")
-        self._camera_combo = ttk.Combobox(r3, textvariable=self._camera_var,
-                                          width=18, font=("Consolas", 9), state="readonly")
+        self._camera_combo = ttk.Combobox(
+            r3, textvariable=self._camera_var, width=18, font=("Consolas", 9), state="readonly"
+        )
         self._camera_combo.pack(side="left", padx=3)
 
-        tk.Button(r3, text="🔍", font=("Arial", 9),
-                  bg=FANUC_PANEL, fg=FANUC_TEXT, bd=0, padx=4, pady=0,
-                  command=self._scan_cameras).pack(side="left", padx=1)
+        tk.Button(
+            r3,
+            text="🔍",
+            font=("Arial", 9),
+            bg=FANUC_PANEL,
+            fg=FANUC_TEXT,
+            bd=0,
+            padx=4,
+            pady=0,
+            command=self._scan_cameras,
+        ).pack(side="left", padx=1)
 
         # Авто-сканировать при создании
         self.after(100, self._scan_cameras)
 
-        tk.Label(r3, text="Interval:", font=("Arial", 9),
-                 bg=FANUC_PANEL, fg=FANUC_TEXT).pack(side="left", padx=(8, 0))
+        tk.Label(r3, text="Interval:", font=("Arial", 9), bg=FANUC_PANEL, fg=FANUC_TEXT).pack(
+            side="left", padx=(8, 0)
+        )
         self._interval_var = tk.DoubleVar(value=0.5)
-        ttk.Spinbox(r3, from_=0.1, to=5.0, textvariable=self._interval_var,
-                     width=5, increment=0.1, font=("Consolas", 9)).pack(side="left", padx=3)
+        ttk.Spinbox(
+            r3,
+            from_=0.1,
+            to=5.0,
+            textvariable=self._interval_var,
+            width=5,
+            increment=0.1,
+            font=("Consolas", 9),
+        ).pack(side="left", padx=3)
 
         # ── Row 4: Buttons ──
         r4 = tk.Frame(parent, bg=FANUC_BG)
         r4.pack(fill="x", pady=(4, 2))
 
-        tk.Button(r4, text="📷 CAMERA ON", font=("Arial", 9, "bold"),
-                  bg=FANUC_BLUE, fg="white", bd=0, padx=12, pady=4,
-                  command=self._toggle_camera).pack(side="left", padx=3)
+        tk.Button(
+            r4,
+            text="📷 CAMERA ON",
+            font=("Arial", 9, "bold"),
+            bg=FANUC_BLUE,
+            fg="white",
+            bd=0,
+            padx=12,
+            pady=4,
+            command=self._toggle_camera,
+        ).pack(side="left", padx=3)
 
-        tk.Button(r4, text="📤 SEND ONCE", font=("Arial", 9, "bold"),
-                  bg=FANUC_ORANGE, fg="white", bd=0, padx=12, pady=4,
-                  command=self._send_once).pack(side="left", padx=3)
+        tk.Button(
+            r4,
+            text="📤 SEND ONCE",
+            font=("Arial", 9, "bold"),
+            bg=FANUC_ORANGE,
+            fg="white",
+            bd=0,
+            padx=12,
+            pady=4,
+            command=self._send_once,
+        ).pack(side="left", padx=3)
 
         self._start_btn = tk.Button(
-            r4, text="▶ START TRACK", font=("Arial", 10, "bold"),
-            bg=FANUC_GREEN, fg="black", bd=0, padx=16, pady=4,
-            command=self._start_tracking)
+            r4,
+            text="▶ START TRACK",
+            font=("Arial", 10, "bold"),
+            bg=FANUC_GREEN,
+            fg="black",
+            bd=0,
+            padx=16,
+            pady=4,
+            command=self._start_tracking,
+        )
         self._start_btn.pack(side="left", padx=3)
 
         self._stop_btn = tk.Button(
-            r4, text="⏹ STOP", font=("Arial", 10, "bold"),
-            bg=FANUC_RED, fg="white", bd=0, padx=16, pady=4,
-            command=self._stop_tracking, state="disabled")
+            r4,
+            text="⏹ STOP",
+            font=("Arial", 10, "bold"),
+            bg=FANUC_RED,
+            fg="white",
+            bd=0,
+            padx=16,
+            pady=4,
+            command=self._stop_tracking,
+            state="disabled",
+        )
         self._stop_btn.pack(side="left", padx=3)
 
-        tk.Button(r4, text="↻ TARGET", font=("Arial", 8, "bold"),
-                  bg=FANUC_GRAY, fg="white", bd=0, padx=8, pady=4,
-                  command=self._update_target).pack(side="left", padx=3)
+        tk.Button(
+            r4,
+            text="↻ TARGET",
+            font=("Arial", 8, "bold"),
+            bg=FANUC_GRAY,
+            fg="white",
+            bd=0,
+            padx=8,
+            pady=4,
+            command=self._update_target,
+        ).pack(side="left", padx=3)
 
         self._status_label = tk.Label(
-            r4, text="IDLE", font=("Consolas", 10, "bold"),
-            bg=FANUC_BG, fg=FANUC_GRAY)
+            r4, text="IDLE", font=("Consolas", 10, "bold"), bg=FANUC_BG, fg=FANUC_GRAY
+        )
         self._status_label.pack(side="right", padx=8)
 
     def _create_bottom(self, parent):
@@ -218,8 +311,9 @@ class VisionTrackerPanel(ttk.Frame):
         video_container.pack(fill="both", expand=True, padx=4, pady=4)
         video_container.pack_propagate(False)
 
-        self._video_label = tk.Label(video_container, bg="black", text="Camera OFF",
-                                     fg=FANUC_GRAY, font=("Consolas", 12))
+        self._video_label = tk.Label(
+            video_container, bg="black", text="Camera OFF", fg=FANUC_GRAY, font=("Consolas", 12)
+        )
         self._video_label.pack(fill="both", expand=True)
 
         right = ttk.Frame(parent)
@@ -230,9 +324,17 @@ class VisionTrackerPanel(ttk.Frame):
         llm_frame.pack(fill="both", expand=True, pady=(0, 4))
 
         self._llm_log = scrolledtext.ScrolledText(
-            llm_frame, width=38, height=10, font=("Consolas", 8),
-            bg="#1a1a2e", fg="#e0e0e0", insertbackground="white",
-            state="disabled", wrap="word", bd=0)
+            llm_frame,
+            width=38,
+            height=10,
+            font=("Consolas", 8),
+            bg="#1a1a2e",
+            fg="#e0e0e0",
+            insertbackground="white",
+            state="disabled",
+            wrap="word",
+            bd=0,
+        )
         self._llm_log.pack(fill="both", expand=True, padx=4, pady=4)
         self._llm_log.tag_configure("found", foreground="#7dd3c0")
         self._llm_log.tag_configure("notfound", foreground="#e8927c")
@@ -244,83 +346,33 @@ class VisionTrackerPanel(ttk.Frame):
         info_frame = ttk.LabelFrame(right, text="STATUS")
         info_frame.pack(fill="x", pady=(0, 0))
 
-        self._info_text = tk.Text(info_frame, width=38, height=8,
-                                  font=("Consolas", 8), bg=FANUC_PANEL, fg=FANUC_TEXT,
-                                  state="disabled", wrap="word", bd=0)
+        self._info_text = tk.Text(
+            info_frame,
+            width=38,
+            height=8,
+            font=("Consolas", 8),
+            bg=FANUC_PANEL,
+            fg=FANUC_TEXT,
+            state="disabled",
+            wrap="word",
+            bd=0,
+        )
         self._info_text.pack(fill="both", expand=True, padx=4, pady=4)
 
     # ════════════════════════════════════════════════════════════
     #  Camera Preview (независимо от трекинга)
     # ════════════════════════════════════════════════════════════
 
-    @staticmethod
-    def _find_ffmpeg() -> str | None:
-        """Найти ffmpeg в системе."""
-        for path in ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg", "ffmpeg"]:
-            try:
-                r = subprocess.run([path, "-version"], capture_output=True, timeout=3)
-                if r.returncode == 0:
-                    return path
-            except (FileNotFoundError, subprocess.TimeoutExpired):
-                continue
-        return None
-
     def _scan_cameras(self):
-        """Сканировать камеры через ffmpeg -list_devices (macOS) или перебором."""
+        """Сканировать доступные камеры через OpenCV."""
+
         def _do_scan():
-            found = []
-            ffmpeg = self._find_ffmpeg()
+            cameras = CameraService.scan_cameras_labels(max_index=8)
+            self.after(0, lambda: self._update_camera_list(cameras))
+            self._log_llm(f"Found {len(cameras)} camera(s)", "found")
 
-            if sys.platform == "darwin" and ffmpeg:
-                # macOS: ffmpeg -f avfoundation -list_devices true -i ""
-                r = subprocess.run(
-                    [ffmpeg, "-f", "avfoundation", "-list_devices", "true", "-i", ""],
-                    capture_output=True, text=True, timeout=5,
-                )
-                # Вывод идёт в stderr
-                for line in r.stderr.splitlines():
-                    if "AVFoundation video devices" in line:
-                        continue
-                    if "AVFoundation audio devices" in line:
-                        break
-                    # [AVFoundation indev @ ...] [0] FaceTime HD Camera
-                    if "] [" in line and "AVFoundation" in line:
-                        parts = line.split("] [", 1)
-                        if len(parts) == 2:
-                            info = parts[1].rstrip("]").strip()
-                            # "0] FaceTime HD Camera" → id=0, name=...
-                            idx_str, _, name = info.partition("]")
-                            idx_str = idx_str.strip()
-                            name = name.strip()
-                            if idx_str.isdigit():
-                                found.append(f"{idx_str}: {name}")
-            else:
-                # Linux/Windows: перебор индексов через ffmpeg
-                for i in range(5):
-                    if sys.platform == "win32":
-                        src = f"video={i}"
-                        fmt = "dshow"
-                    else:
-                        src = f"/dev/video{i}"
-                        fmt = "v4l2"
-                    try:
-                        r = subprocess.run(
-                            [ffmpeg or "ffmpeg", "-f", fmt, "-i", src,
-                             "-frames:v", "1", "-f", "null", "-"],
-                            capture_output=True, timeout=5,
-                        )
-                        if r.returncode == 0:
-                            found.append(f"{i}: /dev/video{i}")
-                    except (FileNotFoundError, subprocess.TimeoutExpired):
-                        continue
-
-            if not found:
-                found.append("0: Default Camera")
-
-            self.after(0, lambda: self._update_camera_list(found))
-
-        threading.Thread(target=_do_scan, daemon=True).start()
         self._log_llm("Scanning cameras...", "time")
+        threading.Thread(target=_do_scan, daemon=True).start()
 
     def _update_camera_list(self, cameras: list[str]):
         if cameras:
@@ -350,119 +402,37 @@ class VisionTrackerPanel(ttk.Frame):
         if self._camera_running:
             return
 
-        ffmpeg = self._find_ffmpeg()
-        if not ffmpeg:
-            messagebox.showerror("Camera", "ffmpeg not found!\nInstall: brew install ffmpeg")
-            return
-
         cam_id = self._get_camera_id()
         self._video_label.config(text=f"Opening camera {cam_id}...", fg=FANUC_ORANGE)
         self.update_idletasks()
 
-        self._cam_width = 640
-        self._cam_height = 480
+        self._camera.set_frame_callback(self._on_camera_frame)
+        self._camera.set_error_callback(lambda err: self._log_llm(f"Camera error: {err}", "error"))
 
-        # Собрать команду ffmpeg для текущей ОС
-        if sys.platform == "darwin":
-            cmd = [
-                ffmpeg, "-f", "avfoundation",
-                "-framerate", "30",
-                "-video_size", f"{self._cam_width}x{self._cam_height}",
-                "-i", str(cam_id),
-                "-pix_fmt", "rgb24",
-                "-f", "rawvideo",
-                "-v", "error",
-                "pipe:1",
-            ]
-        elif sys.platform == "win32":
-            cmd = [
-                ffmpeg, "-f", "dshow",
-                "-video_size", f"{self._cam_width}x{self._cam_height}",
-                "-i", f"video={cam_id}",
-                "-pix_fmt", "rgb24",
-                "-f", "rawvideo",
-                "-v", "error",
-                "pipe:1",
-            ]
-        else:
-            cmd = [
-                ffmpeg, "-f", "v4l2",
-                "-video_size", f"{self._cam_width}x{self._cam_height}",
-                "-i", f"/dev/video{cam_id}",
-                "-pix_fmt", "rgb24",
-                "-f", "rawvideo",
-                "-v", "error",
-                "pipe:1",
-            ]
-
-        try:
-            self._ffmpeg_proc = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0,
-            )
-        except Exception as e:
-            messagebox.showerror("Camera", f"Failed to start ffmpeg:\n{e}")
+        ok = self._camera.start(cam_id)
+        if not ok:
             self._video_label.config(text="Camera FAILED", fg=FANUC_RED)
+            self._log_llm(f"Cannot open camera {cam_id}", "error")
+            self.log(f"Camera {cam_id} failed to open", "error")
             return
 
         self._camera_running = True
-        self._camera_thread = threading.Thread(target=self._camera_loop, daemon=True)
-        self._camera_thread.start()
-        self._video_label.config(text="")
-        self._log_llm(f"Camera {cam_id} opened via ffmpeg", "found")
+        self._log_llm(f"Camera {cam_id} opened (OpenCV)", "found")
         self.log("Camera started", "info")
 
     def _stop_camera(self):
         self._camera_running = False
-        if hasattr(self, "_ffmpeg_proc") and self._ffmpeg_proc:
-            try:
-                self._ffmpeg_proc.terminate()
-                self._ffmpeg_proc.wait(timeout=3)
-            except Exception:
-                self._ffmpeg_proc.kill()
-            self._ffmpeg_proc = None
-        if self._camera_thread:
-            self._camera_thread.join(timeout=3)
-            self._camera_thread = None
+        self._camera.stop()
         self._video_label.config(image="", text="Camera OFF", fg=FANUC_GRAY)
         self._photo_image = None
         self._log_llm("Camera stopped", "notfound")
         self.log("Camera stopped", "info")
 
-    def _camera_loop(self):
-        """Читать raw RGB кадры из stdout ffmpeg."""
-        frame_size = self._cam_width * self._cam_height * 3  # RGB24
-        frame_count = 0
-        proc = self._ffmpeg_proc
-
-        while self._camera_running and proc and proc.poll() is None:
-            raw = proc.stdout.read(frame_size)
-            if len(raw) != frame_size:
-                if self._camera_running:
-                    # Прочитать stderr для диагностики
-                    err = ""
-                    try:
-                        err = proc.stderr.read(500).decode(errors="ignore")
-                    except Exception:
-                        pass
-                    self._log_llm(f"Camera stream ended. {err}", "error")
-                    self.after(0, self._stop_camera)
-                break
-
-            frame = np.frombuffer(raw, dtype=np.uint8).reshape(
-                (self._cam_height, self._cam_width, 3)
-            )
-            frame_count += 1
-
-            with self._frame_lock:
-                self._current_frame = frame.copy()
-
-            # Отправить в UI (frame уже RGB — не нужно конвертировать)
-            self._push_rgb_to_ui(frame)
-
-            if frame_count == 1:
-                self._log_llm(
-                    f"First frame: {self._cam_width}x{self._cam_height}", "found"
-                )
+    def _on_camera_frame(self, rgb: np.ndarray):
+        """Callback от CameraService — новый RGB кадр."""
+        with self._frame_lock:
+            self._current_frame = rgb.copy()
+        self._push_rgb_to_ui(rgb)
 
     def _push_rgb_to_ui(self, rgb: np.ndarray):
         """Отправить RGB-кадр в главный поток для отображения."""
@@ -496,7 +466,8 @@ class VisionTrackerPanel(ttk.Frame):
         draw = ImageDraw.Draw(pil_img)
         draw.rectangle(
             [int(x1 * w), int(y1 * h), int(x2 * w), int(y2 * h)],
-            outline="lime", width=3,
+            outline="lime",
+            width=3,
         )
         draw.text((int(x1 * w), int(y1 * h) - 14), label, fill="lime")
         self._video_label.after(0, self._display_pil_image, pil_img)
@@ -533,9 +504,13 @@ class VisionTrackerPanel(ttk.Frame):
 
         def check():
             ok = ai.is_available()
-            self.after(0, lambda: self._conn_label.config(
-                text="✓ Connected" if ok else "✗ Unreachable",
-                fg=FANUC_GREEN if ok else FANUC_RED))
+            self.after(
+                0,
+                lambda: self._conn_label.config(
+                    text="✓ Connected" if ok else "✗ Unreachable",
+                    fg=FANUC_GREEN if ok else FANUC_RED,
+                ),
+            )
 
         threading.Thread(target=check, daemon=True).start()
 
@@ -590,6 +565,7 @@ class VisionTrackerPanel(ttk.Frame):
 
     def _log_llm(self, text: str, tag: str = ""):
         """Добавить запись в лог LLM ответов."""
+
         def _append():
             self._llm_log.config(state="normal")
             ts = time.strftime("%H:%M:%S")
@@ -626,7 +602,7 @@ class VisionTrackerPanel(ttk.Frame):
             f'If NOT visible: {{"found": false}}'
         )
 
-        self._log_llm(f"→ Prompt: \"{target}\"", "prompt")
+        self._log_llm(f'→ Prompt: "{target}"', "prompt")
         self._status_label.config(text="SENDING...", fg=FANUC_ORANGE)
 
         def do_request():
@@ -635,7 +611,10 @@ class VisionTrackerPanel(ttk.Frame):
             dt = time.time() - t0
 
             if resp.success:
-                self._log_llm(f"← [{dt:.1f}s] {resp.content}", "found" if resp.json_data and resp.json_data.get("found") else "notfound")
+                self._log_llm(
+                    f"← [{dt:.1f}s] {resp.content}",
+                    "found" if resp.json_data and resp.json_data.get("found") else "notfound",
+                )
 
                 # Нарисовать bbox на кадре если найден
                 if resp.json_data and resp.json_data.get("found"):
@@ -645,8 +624,9 @@ class VisionTrackerPanel(ttk.Frame):
             else:
                 self._log_llm(f"← ERROR: {resp.error}", "error")
 
-            self.after(0, lambda: self._status_label.config(
-                text=f"DONE ({dt:.1f}s)", fg=FANUC_BLUE))
+            self.after(
+                0, lambda: self._status_label.config(text=f"DONE ({dt:.1f}s)", fg=FANUC_BLUE)
+            )
 
         threading.Thread(target=do_request, daemon=True).start()
 
@@ -713,6 +693,7 @@ class VisionTrackerPanel(ttk.Frame):
         # Трекер отдаёт BGR (из OpenCV) — конвертируем в RGB
         try:
             import cv2 as _cv2
+
             rgb = _cv2.cvtColor(frame, _cv2.COLOR_BGR2RGB)
         except ImportError:
             rgb = frame  # fallback — считаем что уже RGB
