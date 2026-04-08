@@ -289,9 +289,9 @@ class AIRobotControllerService(BaseService):
         self._current_frame: np.ndarray | None = None
         self._frame_lock = threading.Lock()
 
-        # State
+        # State  (named _ctrl_state to avoid conflict with BaseService._state)
         self._task = "Explore the scene and describe what you see"
-        self._state = ControllerState(ai_model=repr(ai_provider))
+        self._ctrl_state = ControllerState(ai_model=repr(ai_provider))
         self._state_lock = threading.Lock()
         self._stop_event = threading.Event()
         self._step_event = threading.Event()  # для режима STEP
@@ -316,21 +316,21 @@ class AIRobotControllerService(BaseService):
         """Задать задачу для ИИ (что делать роботу)."""
         with self._state_lock:
             self._task = task
-            self._state.task = task
+            self._ctrl_state.task = task
         self._log(f"Task set: {task}", "info")
 
     def set_mode(self, mode: ControlMode) -> None:
         """Сменить режим работы."""
         self._mode = mode
         with self._state_lock:
-            self._state.mode = mode.name.lower()
+            self._ctrl_state.mode = mode.name.lower()
         self._log(f"Mode → {mode.name}", "info")
 
     def set_ai_provider(self, ai: AIProvider) -> None:
         """Сменить AI-провайдер на лету."""
         self.ai = ai
         with self._state_lock:
-            self._state.ai_model = repr(ai)
+            self._ctrl_state.ai_model = repr(ai)
 
     def set_camera(self, camera_id: int) -> None:
         self._camera_id = camera_id
@@ -384,11 +384,11 @@ class AIRobotControllerService(BaseService):
         self._ai_thread.start()
 
         with self._state_lock:
-            self._state.is_running = True
-            self._state.mode = self._mode.name.lower()
+            self._ctrl_state.is_running = True
+            self._ctrl_state.mode = self._mode.name.lower()
 
         self._log(
-            f"AI Robot Controller started (mode={self._mode.name}, model={self._state.ai_model})",
+            f"AI Robot Controller started (mode={self._mode.name}, model={self._ctrl_state.ai_model})",
             "success",
         )
 
@@ -400,12 +400,12 @@ class AIRobotControllerService(BaseService):
                 t.join(timeout=5.0)
         self._close_camera()
         with self._state_lock:
-            self._state.is_running = False
+            self._ctrl_state.is_running = False
         self._log("AI Robot Controller stopped", "warning")
 
     def _get_extra_status(self) -> dict[str, Any]:
         with self._state_lock:
-            return self._state.to_dict()
+            return self._ctrl_state.to_dict()
 
     # ─── Camera ───
 
@@ -456,7 +456,7 @@ class AIRobotControllerService(BaseService):
             fps_count += 1
             if time.time() - fps_t >= 1.0:
                 with self._state_lock:
-                    self._state.fps = fps_count
+                    self._ctrl_state.fps = fps_count
                 fps_count = 0
                 fps_t = time.time()
 
@@ -490,10 +490,10 @@ class AIRobotControllerService(BaseService):
             command = self._query_ai(frame, joint_angles, ee_pos)
 
             with self._state_lock:
-                self._state.last_command = command
-                self._state.last_ai_latency = command.raw_response.__len__() * 0  # обновим ниже
-                self._state.joint_angles = joint_angles
-                self._state.step_count += 1
+                self._ctrl_state.last_command = command
+                self._ctrl_state.last_ai_latency = 0.0
+                self._ctrl_state.joint_angles = joint_angles
+                self._ctrl_state.step_count += 1
 
             # Сохранить историю
             self._command_history.append(command)
@@ -505,7 +505,7 @@ class AIRobotControllerService(BaseService):
 
             if self._state_callback:
                 with self._state_lock:
-                    self._state_callback(self._state)
+                    self._state_callback(self._ctrl_state)
 
             # Выполнить команду (кроме режима WATCH)
             if self._mode != ControlMode.WATCH:
@@ -547,7 +547,7 @@ class AIRobotControllerService(BaseService):
             latency = time.time() - t0
 
             with self._state_lock:
-                self._state.last_ai_latency = latency
+                self._ctrl_state.last_ai_latency = latency
 
             if not response.success:
                 self._log(f"✗ AI error: {response.error}", "error")
@@ -626,7 +626,7 @@ class AIRobotControllerService(BaseService):
             logger.exception("Command execution failed: %s", e)
             self._log(f"✗ Execution error: {e}", "error")
             with self._state_lock:
-                self._state.error = str(e)
+                self._ctrl_state.error = str(e)
 
     # ─── Step mode ───
 
@@ -645,7 +645,7 @@ class AIRobotControllerService(BaseService):
         except Exception:
             pass
         with self._state_lock:
-            return list(self._state.joint_angles)
+            return list(self._ctrl_state.joint_angles)
 
     def _get_ee_pos(self, joint_angles: list[float]) -> list[float]:
         """Вычислить позицию end-effector через кинематику."""
@@ -674,7 +674,7 @@ class AIRobotControllerService(BaseService):
         """Инициализировать и запустить сервис."""
         self.initialize()
         super().start()
-        return self._state.is_running
+        return self._ctrl_state.is_running
 
     def stop(self) -> None:
         """Остановить сервис."""
@@ -683,17 +683,17 @@ class AIRobotControllerService(BaseService):
     def get_state(self) -> ControllerState:
         with self._state_lock:
             return ControllerState(
-                mode=self._state.mode,
-                is_running=self._state.is_running,
-                task=self._state.task,
-                step_count=self._state.step_count,
-                last_command=self._state.last_command,
-                last_ai_latency=self._state.last_ai_latency,
-                fps=self._state.fps,
-                joint_angles=list(self._state.joint_angles),
+                mode=self._ctrl_state.mode,
+                is_running=self._ctrl_state.is_running,
+                task=self._ctrl_state.task,
+                step_count=self._ctrl_state.step_count,
+                last_command=self._ctrl_state.last_command,
+                last_ai_latency=self._ctrl_state.last_ai_latency,
+                fps=self._ctrl_state.fps,
+                joint_angles=list(self._ctrl_state.joint_angles),
                 camera_id=self._camera_id,
-                ai_model=self._state.ai_model,
-                error=self._state.error,
+                ai_model=self._ctrl_state.ai_model,
+                error=self._ctrl_state.error,
             )
 
     def get_history(self) -> list[AICommand]:
@@ -706,6 +706,6 @@ class AIRobotControllerService(BaseService):
         return (
             f"AIRobotControllerService("
             f"mode={self._mode.name}, "
-            f"ai={self._state.ai_model}, "
-            f"running={self._state.is_running})"
+            f"ai={self._ctrl_state.ai_model}, "
+            f"running={self._ctrl_state.is_running})"
         )

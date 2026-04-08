@@ -7,6 +7,11 @@ CameraService — кроссплатформенный сервис захват
     Windows → cv2.CAP_DSHOW         (DirectShow, самый совместимый)
     Linux   → cv2.CAP_V4L2          (Video4Linux2)
 
+Поддерживаемые платформы:
+    macOS   → cv2.CAP_AVFOUNDATION  (нативный Apple AVFoundation)
+    Windows → cv2.CAP_DSHOW         (DirectShow, самый совместимый)
+    Linux   → cv2.CAP_V4L2          (Video4Linux2)
+
 Преимущества перед ffmpeg subprocess:
     - Нет внешних зависимостей (только opencv-python)
     - Одинаковое поведение на всех платформах
@@ -34,7 +39,9 @@ TDD: app/tests/test_camera_service.py
 
 from __future__ import annotations
 
+import contextlib
 import logging
+import os
 import sys
 import threading
 import time
@@ -66,6 +73,30 @@ def _select_backend() -> int:
     elif sys.platform.startswith("linux"):
         return cv2.CAP_V4L2
     return cv2.CAP_ANY
+
+
+@contextlib.contextmanager
+def _suppress_cv2_stderr():
+    """
+    Временно перенаправить stderr в /dev/null.
+
+    OpenCV печатает "out device of bound" и похожие предупреждения
+    при сканировании камер на macOS — подавляем их во время скана.
+    """
+    devnull_fd = os.open(os.devnull, os.O_WRONLY)
+    old_stderr_fd = os.dup(2)
+    try:
+        os.dup2(devnull_fd, 2)
+        yield
+    finally:
+        os.dup2(old_stderr_fd, 2)
+        os.close(old_stderr_fd)
+        os.close(devnull_fd)
+
+
+# Кэш результатов последнего сканирования (не повторяем из параллельных панелей)
+_scan_cache: list["CameraInfo"] | None = None
+_scan_lock = threading.Lock()
 
 
 def _get_camera_name(camera_id: int) -> str:
@@ -101,6 +132,11 @@ class CameraInfo:
         if self.width and self.height:
             return f"{self.id}: {self.name} ({self.width}×{self.height})"
         return f"{self.id}: {self.name}"
+
+    @classmethod
+    def default(cls) -> "CameraInfo":
+        """Дефолтная камера (fallback когда ничего не найдено)."""
+        return cls(id=0, name="Default Camera")
 
     def __str__(self) -> str:
         return self.label
@@ -159,54 +195,89 @@ class CameraService:
     # ─── Сканирование ───
 
     @staticmethod
-    def scan_cameras(max_index: int = 8) -> list[CameraInfo]:
+    def scan_cameras(max_index: int = 8, force: bool = False) -> list["CameraInfo"]:
         """
         Найти все доступные камеры.
 
-        Пробует VideoCapture(i) для i в [0, max_index).
-        Для каждой открытой камеры считывает реальное разрешение.
+        Результат кэшируется — повторные вызовы из параллельных панелей
+        не запускают повторный скан (только если force=True).
+
+        Алгоритм:
+          1. Пробует VideoCapture(i) с платформенным бэкендом
+          2. При первом провале пробует CAP_ANY как fallback
+          3. При двух подряд неудачах прекращает скан (нет смысла дальше)
+          4. Весь вывод OpenCV подавляется через stderr redirect
 
         Returns:
             Список CameraInfo, отсортированный по ID.
         """
-        backend = _select_backend()
-        found: list[CameraInfo] = []
+        global _scan_cache
 
-        for i in range(max_index):
-            cap = cv2.VideoCapture(i, backend)
-            if not cap.isOpened():
-                # Попробовать CAP_ANY как fallback
-                if backend != cv2.CAP_ANY:
-                    cap = cv2.VideoCapture(i, cv2.CAP_ANY)
-            if cap.isOpened():
-                w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                fps = cap.get(cv2.CAP_PROP_FPS)
-                cap.release()
+        with _scan_lock:
+            if _scan_cache is not None and not force:
+                return list(_scan_cache)
 
-                found.append(
-                    CameraInfo(
-                        id=i,
-                        name=_get_camera_name(i),
-                        width=w,
-                        height=h,
-                        fps=fps,
-                        backend=str(backend),
-                    )
-                )
-                logger.info("Camera found: %d (%dx%d @ %.0ffps)", i, w, h, fps)
+            backend = _select_backend()
+            found: list[CameraInfo] = []
+            consecutive_fails = 0
 
-        if not found:
-            # Гарантированный fallback — Camera 0 всегда в списке
-            logger.warning("No cameras detected, using fallback Camera 0")
-            found.append(CameraInfo(id=0, name="Default Camera"))
+            # Подавляем OpenCV stderr ("out device of bound" и т.п.)
+            with _suppress_cv2_stderr():
+                for i in range(max_index):
+                    cap = cv2.VideoCapture(i, backend)
+                    opened = cap.isOpened()
 
-        return found
+                    # fallback только если основной бэкенд не сработал
+                    if not opened and backend != cv2.CAP_ANY:
+                        cap.release()
+                        cap = cv2.VideoCapture(i, cv2.CAP_ANY)
+                        opened = cap.isOpened()
+
+                    if opened:
+                        w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                        h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                        fps = cap.get(cv2.CAP_PROP_FPS)
+                        cap.release()
+                        consecutive_fails = 0
+
+                        found.append(
+                            CameraInfo(
+                                id=i,
+                                name=_get_camera_name(i),
+                                width=w,
+                                height=h,
+                                fps=fps,
+                                backend=str(backend),
+                            )
+                        )
+                        logger.info("Camera found: %d (%dx%d @ %.0ffps)", i, w, h, fps)
+                    else:
+                        cap.release()
+                        consecutive_fails += 1
+                        # На macOS AVFoundation сообщает точное число камер —
+                        # после 2 провалов подряд дальше нет смысла
+                        if consecutive_fails >= 2:
+                            logger.debug("Stopping scan at index %d (2 consecutive failures)", i)
+                            break
+
+            if not found:
+                logger.warning("No cameras detected, using fallback Camera 0")
+                found.append(CameraInfo.default())
+
+            _scan_cache = list(found)
+            return list(_scan_cache)
 
     @staticmethod
-    def scan_cameras_labels(max_index: int = 8) -> list[str]:
+    def invalidate_cache() -> None:
+        """Сбросить кэш сканирования (вызвать перед повторным сканом)."""
+        global _scan_cache
+        with _scan_lock:
+            _scan_cache = None
+
+    @staticmethod
+    def scan_cameras_labels(max_index: int = 8, force: bool = False) -> list[str]:
         """Вернуть список строк для UI комбобокса."""
-        return [c.label for c in CameraService.scan_cameras(max_index)]
+        return [c.label for c in CameraService.scan_cameras(max_index, force=force)]
 
     # ─── Lifecycle ───
 
@@ -304,14 +375,16 @@ class CameraService:
 
     def _open(self, camera_id: int) -> bool:
         """Открыть VideoCapture с платформенным бэкендом."""
-        # Попытка 1: платформенный бэкенд
-        cap = cv2.VideoCapture(camera_id, self._backend)
+        # Подавляем предупреждения OpenCV при открытии
+        with _suppress_cv2_stderr():
+            # Попытка 1: платформенный бэкенд
+            cap = cv2.VideoCapture(camera_id, self._backend)
 
-        # Попытка 2: CAP_ANY как fallback
-        if not cap.isOpened() and self._backend != cv2.CAP_ANY:
-            logger.debug("Backend %s failed, trying CAP_ANY", self._backend)
-            cap.release()
-            cap = cv2.VideoCapture(camera_id, cv2.CAP_ANY)
+            # Попытка 2: CAP_ANY как fallback
+            if not cap.isOpened() and self._backend != cv2.CAP_ANY:
+                logger.debug("Backend %s failed, trying CAP_ANY", self._backend)
+                cap.release()
+                cap = cv2.VideoCapture(camera_id, cv2.CAP_ANY)
 
         if not cap.isOpened():
             cap.release()
