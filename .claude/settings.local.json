@@ -31,7 +31,30 @@
       "Bash(python3 -m ruff check app/ --statistics)",
       "Bash(pip3 install:*)",
       "Bash(python3 -m ruff format app/)",
-      "Bash(python3 -m ruff check app/ --fix)"
+      "Bash(python3 -m ruff check app/ --fix)",
+      "Bash(ollama --version)",
+      "Bash(ollama list:*)",
+      "Bash(python3 -c \":*)",
+      "Bash(python3 -m ruff check app/services/ai_provider.py app/services/vision_tracker_service.py)",
+      "Bash(python3 -m ruff check app/views/vision_tracker_panel.py app/services/ai_provider.py app/services/vision_tracker_service.py)",
+      "Bash(uv sync:*)",
+      "Read(//Users/alexandr/.local/bin/**)",
+      "Read(//Users/alexandr/.cargo/bin/**)",
+      "Bash(/Users/alexandr/Documents/GitHub/diplome2026/.venv/bin/python --version)",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\(''app/views/vision_tracker_panel.py''\\).read\\(\\)\\); print\\(''OK''\\)\")",
+      "Bash(python3 -m ruff check app/views/vision_tracker_panel.py)",
+      "Bash(.venv/bin/pip install:*)",
+      "Bash(.venv/bin/python -m pip install imageio imageio-ffmpeg)",
+      "Bash(python3 -m ruff check app/views/vision_tracker_panel.py app/services/ai_provider.py)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr:*)",
+      "Bash(brew install:*)",
+      "Bash(npm create:*)",
+      "Bash(export PATH=\"/opt/homebrew/bin:$PATH\")",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite:*)"
     ]
   }
 }
