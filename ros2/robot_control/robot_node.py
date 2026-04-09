@@ -59,7 +59,7 @@ class RobotNode(Node):
         self._cfg = ConfigManager()
 
         # Connect
-        if self._ctrl.connect(port, baudrate):
+        if self._ctrl.connect(port):
             self._ctrl.scan_servos()
             self.get_logger().info(f"Connected to robot on {port}")
             self._start_monitor(rate_hz)
@@ -97,7 +97,7 @@ class RobotNode(Node):
     def _publish_state(self) -> None:
         if not self._ctrl.connected:
             return
-        motors = self._ctrl.device  # Corrected method call to scan_servos instead of connect
+        motors = self._ctrl.found_servos  # Corrected method call to scan_servos instead of connect
         msg = JointState()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.name = JOINT_NAMES[: len(motors)]
@@ -112,7 +112,9 @@ class RobotNode(Node):
         # JSON status
         status: dict = {"connected": True, "motors": {}}
         for mid in motors:
-            data = self._ctrl.read_motor_data(mid)  # Corrected method call to read_motor_data
+            data = self._ctrl.read_motor_data(
+                sts_id=mid
+            )  # Corrected method call to read_motor_data
             if data:
                 status["motors"][str(mid)] = {
                     "position": data.get("position", None),
@@ -125,7 +127,7 @@ class RobotNode(Node):
             return
         import math
 
-        motors = self._ctrl.device
+        motors = self._ctrl.found_servos
         for i, pos_rad in enumerate(msg.positions):
             if i >= len(motors):
                 break
@@ -141,9 +143,8 @@ class RobotNode(Node):
 
     def _on_connect_srv(self, req: SetBool.Request, res: SetBool.Response):
         port = self.get_parameter("port").value
-        baudrate = self.get_parameter("baudrate").value
         if req.data:
-            ok = self._ctrl.connect(port, baudrate)
+            ok = self._ctrl.connect(port)
             if ok:
                 self._ctrl.scan_servos()
                 self._start_monitor(self.get_parameter("monitor_rate_hz").value)
