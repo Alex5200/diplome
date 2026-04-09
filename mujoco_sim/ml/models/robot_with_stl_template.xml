@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mujoco model="robot_with_stl_meshes">
+  <!-- 
+    Базовый шаблон робота с STL мешами.
+    Замените пути к STL файлам на свои.
+  -->
+
+  <compiler angle="radian" 
+            autolimits="true"
+            meshdir="../stl_models/"
+            texturedir="../textures/"/>
+
+  <option gravity="0 0 -9.81" 
+          timestep="0.002" 
+          integrator="implicitfast">
+    <flag contact="enable"/>
+  </option>
+
+  <default>
+    <joint damping="0.5" armature="0.01"/>
+    <geom condim="3" friction="0.8 0.3 0.01"/>
+    <motor ctrlrange="-3.14159 3.14159" ctrllimited="true"/>
+    
+    <!-- Материал по умолчанию для STL мешей -->
+    <geom type="mesh" material="default_material"/>
+  </default>
+
+  <asset>
+    <!-- Текстуры -->
+    <texture name="grid" type="2d" builtin="checker"
+             rgb1="0.15 0.15 0.2" rgb2="0.2 0.2 0.25"
+             width="256" height="256"/>
+    <texture name="wood" type="2d" file="wood.png"/>
+    
+    <!-- Материалы -->
+    <material name="grid_mat" texture="grid" texrepeat="8 8"/>
+    <material name="default_material" rgba="0.7 0.7 0.7 1"/>
+    <material name="robot_material" rgba="0.2 0.4 0.8 1"/>
+    <material name="object_material" rgba="0.9 0.5 0.1 1"/>
+    
+    <!-- ======================== -->
+    <!-- STL МЕШИ РОБОТА -->
+    <!-- ======================== -->
+    <!-- РАСКОММЕНТИРУЙТЕ и замените имена файлов -->
+    
+    <!-- <mesh file="robot/base.stl" name="base_mesh" scale="0.001 0.001 0.001"/> -->
+    <!-- <mesh file="robot/link1.stl" name="link1_mesh" scale="0.001 0.001 0.001"/> -->
+    <!-- <mesh file="robot/link2.stl" name="link2_mesh" scale="0.001 0.001 0.001"/> -->
+    <!-- <mesh file="robot/link3.stl" name="link3_mesh" scale="0.001 0.001 0.001"/> -->
+    <!-- <mesh file="robot/link4.stl" name="link4_mesh" scale="0.001 0.001 0.001"/> -->
+    <!-- <mesh file="robot/gripper.stl" name="gripper_mesh" scale="0.001 0.001 0.001"/> -->
+    
+    <!-- ======================== -->
+    <!-- STL МЕШИ ОБЪЕКТОВ -->
+    <!-- ======================== -->
+    
+    <!-- <mesh file="objects/cube.stl" name="cube_mesh" scale="0.001 0.001 0.001"/> -->
+    <!-- <mesh file="objects/cylinder.stl" name="cylinder_mesh" scale="0.001 0.001 0.001"/> -->
+    <!-- <mesh file="objects/target.stl" name="target_mesh" scale="0.001 0.001 0.001"/> -->
+  </asset>
+
+  <worldbody>
+    <!-- Пол -->
+    <geom name="floor" type="plane" size="2 2 0.01" material="grid_mat"
+          pos="0 0 0" conaffinity="1" condim="3"/>
+
+    <!-- Освещение -->
+    <light name="main_light" pos="0 0 3" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <light name="fill_light" pos="2 2 2" dir="-0.5 -0.5 -0.5" diffuse="0.3 0.3 0.3"/>
+
+    <!-- Камеры -->
+    <camera name="top_down" pos="0 0 2" quat="1 0 0 0"
+            fovy="60" mode="fixed"/>
+    <camera name="front" pos="1 0 0.5" xyaxes="0 1 0 0 0 1"
+            fovy="60" mode="fixed"/>
+    <camera name="side" pos="0 1 0.5" xyaxes="-1 0 0 0 0 1"
+            fovy="60" mode="fixed"/>
+
+    <!-- ======================== -->
+    <!-- РОБОТ С ПРИМИТИВАМИ -->
+    <!-- Замените на STL меши когда будут готовы -->
+    <!-- ======================== -->
+    
+    <body name="base" pos="0 0 0.1">
+      <!-- Base geometry (замените на STL меш) -->
+      <geom name="base_geom" type="cylinder" size="0.05 0.02"
+            material="robot_material" mass="0.5"/>
+      <!-- Пример с STL:
+      <geom name="base_geom" type="mesh" mesh="base_mesh"
+            material="robot_material" mass="0.5"/>
+      -->
+      
+      <!-- J1: База -->
+      <body name="link1" pos="0 0 0.02">
+        <joint name="joint_1" type="hinge" axis="0 0 1"
+               range="-2.09 2.09" damping="1.0"/>
+        <geom name="link1_geom" type="capsule" size="0.015"
+              fromto="0 0 0 0.2 0 0" material="robot_material" mass="0.3"/>
+        <!-- Пример с STL:
+        <geom name="link1_geom" type="mesh" mesh="link1_mesh"
+              material="robot_material" mass="0.3"/>
+        -->
+        
+        <!-- J2: Плечо -->
+        <body name="link2" pos="0.2 0 0">
+          <joint name="joint_2" type="hinge" axis="0 1 0"
+                 range="-1.57 1.57" damping="0.8"/>
+          <geom name="link2_geom" type="capsule" size="0.012"
+                fromto="0 0 0 0.15 0 0" material="robot_material" mass="0.25"/>
+          
+          <!-- J3: Локоть -->
+          <body name="link3" pos="0.15 0 0">
+            <joint name="joint_3" type="hinge" axis="0 1 0"
+                   range="-2.09 0" damping="0.6"/>
+            <geom name="link3_geom" type="capsule" size="0.01"
+                  fromto="0 0 0 0.1 0 0" material="robot_material" mass="0.2"/>
+            
+            <!-- End-effector -->
+            <body name="end_effector" pos="0.1 0 0">
+              <site name="ee_site" pos="0 0 0" size="0.005"
+                    rgba="1 0 0 1"/>
+              <camera name="eye_in_hand" pos="0.02 0 0.02"
+                      xyaxes="0 -1 0 0 0 1" fovy="60"/>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    <!-- ======================== -->
+    <!-- ОБЪЕКТЫ ДЛЯ ЗАХВАТА -->
+    <!-- Замените на STL меши -->
+    <!-- ======================== -->
+    
+    <body name="target_object" pos="0.3 0.2 0.05">
+      <freejoint name="target_joint"/>
+      <geom name="target_geom" type="box" size="0.02 0.02 0.02"
+            material="object_material" mass="0.05"
+            friction="1 0.5 0.01"/>
+      <!-- Пример с STL:
+      <geom name="target_geom" type="mesh" mesh="target_mesh"
+            material="object_material" mass="0.05"/>
+      -->
+    </body>
+
+    <!-- Маркер цели (для IK) -->
+    <body name="target_marker" pos="0.3 0.2 0.1" mocap="true">
+      <geom name="target_marker_geom" type="sphere" size="0.01"
+            rgba="0 1 0 0.5" contype="0" conaffinity="0"/>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <position name="act_joint_1" joint="joint_1" kp="100" kv="10"/>
+    <position name="act_joint_2" joint="joint_2" kp="80" kv="8"/>
+    <position name="act_joint_3" joint="joint_3" kp="60" kv="6"/>
+  </actuator>
+
+  <sensor>
+    <jointpos name="sens_joint_1" joint="joint_1"/>
+    <jointpos name="sens_joint_2" joint="joint_2"/>
+    <jointpos name="sens_joint_3" joint="joint_3"/>
+    <framepos name="sens_ee_pos" objtype="site" objname="ee_site"/>
+  </sensor>
+</mujoco>
