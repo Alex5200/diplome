@@ -24,11 +24,24 @@ class AlarmHistoryPanel(ttk.Frame):
     def _create_widgets(self):
         header = tk.Frame(self, bg=FANUC_PANEL)
         header.pack(fill="x")
-        tk.Label(header, text="ALARM HISTORY", font=("Consolas", 14, "bold"),
-                 bg=FANUC_PANEL, fg=FANUC_RED).pack(side="left", padx=10, pady=5)
-        tk.Button(header, text="CLEAR", font=("Arial", 9, "bold"), bg=FANUC_ORANGE,
-                  fg=FANUC_TEXT, bd=0, padx=10, pady=3,
-                  command=self._clear).pack(side="right", padx=10, pady=5)
+        tk.Label(
+            header,
+            text="ALARM HISTORY",
+            font=("Consolas", 14, "bold"),
+            bg=FANUC_PANEL,
+            fg=FANUC_RED,
+        ).pack(side="left", padx=10, pady=5)
+        tk.Button(
+            header,
+            text="CLEAR",
+            font=("Arial", 9, "bold"),
+            bg=FANUC_ORANGE,
+            fg=FANUC_TEXT,
+            bd=0,
+            padx=10,
+            pady=3,
+            command=self._clear,
+        ).pack(side="right", padx=10, pady=5)
 
         columns = ("time", "level", "message")
         self.tree = ttk.Treeview(self, columns=columns, show="headings", height=15)
