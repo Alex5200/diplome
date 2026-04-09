@@ -5,6 +5,8 @@ requires-python = ">=3.12"
 [manifest]
 members = [
     "diplome",
+    "mujoco-sim",
+    "test",
     "web",
 ]
 
@@ -619,6 +621,11 @@ wheels = [
 ]
 
 [[package]]
+name = "mujoco-sim"
+version = "0.1.0"
+source = { virtual = "mujoco_sim" }
+
+[[package]]
 name = "numpy"
 version = "2.4.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1039,6 +1046,17 @@ sdist = { url = "https://files.pythonhosted.org/packages/81/69/17425771797c36cde
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0b/c9/584bc9651441b4ba60cc4d557d8a547b5aff901af35bda3a4ee30c819b82/starlette-1.0.0-py3-none-any.whl", hash = "sha256:d3ec55e0bb321692d275455ddfd3df75fff145d009685eb40dc91fc66b03d38b", size = 72651, upload-time = "2026-03-22T18:29:45.111Z" },
 ]
+
+[[package]]
+name = "test"
+version = "0.1.0"
+source = { virtual = "mujoco_sim/test" }
+dependencies = [
+    { name = "mujoco" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "mujoco", specifier = ">=3.6.0" }]
 
 [[package]]
 name = "textual"
