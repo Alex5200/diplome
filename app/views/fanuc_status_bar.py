@@ -27,41 +27,65 @@ class FANUCStatusBar(tk.Frame):
         self.pack_propagate(False)
 
         self.mode_label = tk.Label(
-            self, text="JOINT", font=("SF Mono", 11, "bold"),
-            bg=FANUC_BG, fg=FANUC_GREEN, padx=8,
+            self,
+            text="JOINT",
+            font=("SF Mono", 11, "bold"),
+            bg=FANUC_BG,
+            fg=FANUC_GREEN,
+            padx=8,
         )
         self.mode_label.pack(side="left", padx=(10, 5))
         self._sep(self)
 
         self.speed_pct_label = tk.Label(
-            self, text="50%", font=("Consolas", 11, "bold"),
-            bg=FANUC_BG, fg=FANUC_ORANGE, padx=8,
+            self,
+            text="50%",
+            font=("Consolas", 11, "bold"),
+            bg=FANUC_BG,
+            fg=FANUC_ORANGE,
+            padx=8,
         )
         self.speed_pct_label.pack(side="left", padx=5)
         self._sep(self)
 
         self.coord_label = tk.Label(
-            self, text="WORLD", font=("Consolas", 10),
-            bg=FANUC_BG, fg=FANUC_BLUE, padx=8,
+            self,
+            text="WORLD",
+            font=("Consolas", 10),
+            bg=FANUC_BG,
+            fg=FANUC_BLUE,
+            padx=8,
         )
         self.coord_label.pack(side="left", padx=5)
         self._sep(self)
 
         self.prog_status_label = tk.Label(
-            self, text="IDLE", font=("Consolas", 10),
-            bg=FANUC_BG, fg=FANUC_GRAY, padx=8,
+            self,
+            text="IDLE",
+            font=("Consolas", 10),
+            bg=FANUC_BG,
+            fg=FANUC_GRAY,
+            padx=8,
         )
         self.prog_status_label.pack(side="left", padx=5)
 
         self.clock_label = tk.Label(
-            self, text="00:00:00", font=("Consolas", 10),
-            bg=FANUC_BG, fg=FANUC_GRAY, padx=8,
+            self,
+            text="00:00:00",
+            font=("Consolas", 10),
+            bg=FANUC_BG,
+            fg=FANUC_GRAY,
+            padx=8,
         )
         self.clock_label.pack(side="right", padx=10)
 
         self.cycle_label = tk.Label(
-            self, text="CYCLE: 0", font=("Consolas", 10),
-            bg=FANUC_BG, fg=FANUC_GRAY, padx=8,
+            self,
+            text="CYCLE: 0",
+            font=("Consolas", 10),
+            bg=FANUC_BG,
+            fg=FANUC_GRAY,
+            padx=8,
         )
         self.cycle_label.pack(side="right", padx=5)
 
@@ -87,8 +111,11 @@ class FANUCStatusBar(tk.Frame):
 
     def set_prog_status(self, status: str):
         colors = {
-            "IDLE": FANUC_GRAY, "RUN": FANUC_GREEN, "PAUSE": FANUC_ORANGE,
-            "ABORT": FANUC_RED, "DONE": FANUC_BLUE,
+            "IDLE": FANUC_GRAY,
+            "RUN": FANUC_GREEN,
+            "PAUSE": FANUC_ORANGE,
+            "ABORT": FANUC_RED,
+            "DONE": FANUC_BLUE,
         }
         self.prog_status_label.config(text=status, fg=colors.get(status, FANUC_TEXT))
 
