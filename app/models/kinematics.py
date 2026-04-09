@@ -230,7 +230,7 @@ class RobotKinematics6DOF:
 
     def get_end_effector_orientation(
         self, angles_deg: list[float] | None = None
-    ) -> tuple[float, float, float]:
+    ) -> tuple[float, float, float] | tuple[float, float, float, float]:
         """
         Получение ориентации конечного эффектора.
 

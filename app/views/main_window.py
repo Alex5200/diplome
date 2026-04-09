@@ -52,10 +52,6 @@ from app.views.manual_control_panel import ManualControlPanel
 from app.views.motor_mapping_panel import MotorMappingPanel
 from app.views.vision_tracker_panel import VisionTrackerPanel
 
-# ============================================================
-#  FANUC-Style Status Bar Widget
-# ============================================================
-
 
 class FANUCStatusBar(tk.Frame):
     """
@@ -857,7 +853,6 @@ class RobotControlGUI(tk.Tk):
 
         # Масштабирование окна под размер монитора
         screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
 
         # Рассчитываем масштаб на основе ширины экрана
         scale_percent = (screen_width / BASE_WINDOW_WIDTH) * 100
