@@ -39,8 +39,13 @@ class TeachPendantPanel(ttk.Frame):
         # Заголовок
         header = tk.Frame(main, bg=FANUC_PANEL)
         header.pack(fill="x", pady=(0, 10))
-        tk.Label(header, text="TEACH PENDANT", font=("Consolas", 14, "bold"),
-                 bg=FANUC_PANEL, fg=FANUC_GREEN).pack(side="left", padx=10, pady=5)
+        tk.Label(
+            header,
+            text="TEACH PENDANT",
+            font=("Consolas", 14, "bold"),
+            bg=FANUC_PANEL,
+            fg=FANUC_GREEN,
+        ).pack(side="left", padx=10, pady=5)
 
         # Кнопки
         ctrl_frame = ttk.LabelFrame(main, text="CONTROLS")
@@ -55,27 +60,47 @@ class TeachPendantPanel(ttk.Frame):
             ("STOP", FANUC_RED, "white", self._stop_play),
             ("CLEAR ALL", FANUC_ORANGE, "white", self._clear_all),
         ]:
-            tk.Button(btn_row, text=text, font=("Arial", 10, "bold"), bg=bg, fg=fg,
-                      bd=0, padx=14, pady=6, command=cmd).pack(side="left", padx=4)
+            tk.Button(
+                btn_row,
+                text=text,
+                font=("Arial", 10, "bold"),
+                bg=bg,
+                fg=fg,
+                bd=0,
+                padx=14,
+                pady=6,
+                command=cmd,
+            ).pack(side="left", padx=4)
 
         # Настройки
         settings = tk.Frame(ctrl_frame, bg=FANUC_PANEL)
         settings.pack(fill="x", padx=10, pady=(0, 8))
 
-        tk.Label(settings, text="Delay (s):", font=("Arial", 10),
-                 bg=FANUC_PANEL, fg=FANUC_TEXT).pack(side="left", padx=5)
+        tk.Label(
+            settings, text="Delay (s):", font=("Arial", 10), bg=FANUC_PANEL, fg=FANUC_TEXT
+        ).pack(side="left", padx=5)
         self.delay_var = tk.DoubleVar(value=0.5)
-        ttk.Spinbox(settings, from_=0.1, to=10.0, textvariable=self.delay_var,
-                     width=6, increment=0.1, font=("Consolas", 10)).pack(side="left", padx=5)
+        ttk.Spinbox(
+            settings,
+            from_=0.1,
+            to=10.0,
+            textvariable=self.delay_var,
+            width=6,
+            increment=0.1,
+            font=("Consolas", 10),
+        ).pack(side="left", padx=5)
 
-        tk.Label(settings, text="Loops:", font=("Arial", 10),
-                 bg=FANUC_PANEL, fg=FANUC_TEXT).pack(side="left", padx=(20, 5))
+        tk.Label(settings, text="Loops:", font=("Arial", 10), bg=FANUC_PANEL, fg=FANUC_TEXT).pack(
+            side="left", padx=(20, 5)
+        )
         self.loop_var = tk.IntVar(value=1)
-        ttk.Spinbox(settings, from_=1, to=100, textvariable=self.loop_var,
-                     width=5, font=("Consolas", 10)).pack(side="left", padx=5)
+        ttk.Spinbox(
+            settings, from_=1, to=100, textvariable=self.loop_var, width=5, font=("Consolas", 10)
+        ).pack(side="left", padx=5)
 
-        self.play_status = tk.Label(settings, text="IDLE", font=("Consolas", 10, "bold"),
-                                    bg=FANUC_PANEL, fg=FANUC_GRAY)
+        self.play_status = tk.Label(
+            settings, text="IDLE", font=("Consolas", 10, "bold"), bg=FANUC_PANEL, fg=FANUC_GRAY
+        )
         self.play_status.pack(side="right", padx=10)
 
         # Таблица
@@ -94,11 +119,20 @@ class TeachPendantPanel(ttk.Frame):
         # Нижняя строка
         del_frame = tk.Frame(main, bg=FANUC_BG)
         del_frame.pack(fill="x", pady=5)
-        tk.Button(del_frame, text="DELETE SELECTED", font=("Arial", 9, "bold"),
-                  bg=FANUC_RED, fg=FANUC_TEXT, bd=0, padx=10, pady=3,
-                  command=self._delete_selected).pack(side="left")
-        self.count_label = tk.Label(del_frame, text="0 points", font=("Consolas", 10),
-                                    bg=FANUC_BG, fg=FANUC_GRAY)
+        tk.Button(
+            del_frame,
+            text="DELETE SELECTED",
+            font=("Arial", 9, "bold"),
+            bg=FANUC_RED,
+            fg=FANUC_TEXT,
+            bd=0,
+            padx=10,
+            pady=3,
+            command=self._delete_selected,
+        ).pack(side="left")
+        self.count_label = tk.Label(
+            del_frame, text="0 points", font=("Consolas", 10), bg=FANUC_BG, fg=FANUC_GRAY
+        )
         self.count_label.pack(side="right")
 
     def _get_current_state(self) -> dict:
@@ -182,7 +216,13 @@ class TeachPendantPanel(ttk.Frame):
         self.tree.delete(*self.tree.get_children())
         for i, pt in enumerate(self.teach_points):
             a, xyz = pt["angles"], pt.get("xyz", [0, 0, 0])
-            self.tree.insert("", "end", values=(
-                i + 1, *[f"{v:.1f}" for v in a], *[f"{v:.1f}" for v in xyz],
-            ))
+            self.tree.insert(
+                "",
+                "end",
+                values=(
+                    i + 1,
+                    *[f"{v:.1f}" for v in a],
+                    *[f"{v:.1f}" for v in xyz],
+                ),
+            )
         self.count_label.config(text=f"{len(self.teach_points)} points")
