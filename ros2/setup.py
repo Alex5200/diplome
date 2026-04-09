@@ -24,6 +24,8 @@ setup(
             "robot_node      = robot_control.robot_node:main",
             "monitor_node    = robot_control.monitor_node:main",
             "ik_service_node = robot_control.ik_service_node:main",
+            "robot_node_v2   = robot_control.robot_node_v2:main",
+            "monitor_node_v2 = robot_control.monitor_node_v2:main",
         ],
     },
 )
