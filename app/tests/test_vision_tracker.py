@@ -9,10 +9,8 @@ TDD тесты для VisionTrackerService и ML Model Manager.
 
 from __future__ import annotations
 
-import time
 import unittest
-from dataclasses import dataclass
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import numpy as np
 

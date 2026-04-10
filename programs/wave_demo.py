@@ -10,12 +10,12 @@ Usage:
 
 from __future__ import annotations
 
+import argparse
 import math
 import time
-import argparse
 
-from programs.base_program import BaseProgram
 from app.controllers.motor_controller import MotorController
+from programs.base_program import BaseProgram
 
 
 class WaveDemo(BaseProgram):

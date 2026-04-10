@@ -26,7 +26,6 @@ from __future__ import annotations
 import logging
 import os
 from dataclasses import dataclass, field
-from typing import Any
 
 import numpy as np
 
@@ -168,7 +167,6 @@ class ActorCriticNetwork:
         if self._built and d:
             self._actor.load_state_dict(d["actor"])
             self._critic.load_state_dict(d["critic"])
-            import torch
 
             self._log_std.data = d["log_std"]
 

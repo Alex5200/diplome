@@ -10,9 +10,8 @@ TDD тесты для CameraService.
 
 from __future__ import annotations
 
-import sys
 import unittest
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 

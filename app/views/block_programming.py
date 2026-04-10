@@ -583,7 +583,7 @@ class BlockPalette(ttk.Frame):
             for block_name, block_type, params in blocks:
                 btn = tk.Button(
                     frame,
-                    text=f"  {block_name}",
+                    text=f"  {block_name} + {block_type}",
                     bg=BLOCK_COLORS.get(category_type, FANUC_PANEL),
                     fg=FANUC_TEXT,
                     font=("SF Pro", 9),

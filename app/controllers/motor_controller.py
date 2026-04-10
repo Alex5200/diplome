@@ -8,7 +8,6 @@ Handles communication with ST3215 motors
 import json
 import threading
 from datetime import datetime
-from tkinter.constants import N
 
 from st3215 import ST3215
 

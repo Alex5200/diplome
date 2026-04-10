@@ -39,10 +39,10 @@ import json
 import logging
 import os
 import threading
-import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 
@@ -201,7 +201,7 @@ class RLTrainingService(BaseService):
         self,
         env: RobotArmEnv | None = None,
         config: TrainingConfig | None = None,
-    ) -> "RLTrainingService":
+    ) -> RLTrainingService:
         """
         Настроить DQN агент.
 
@@ -236,7 +236,7 @@ class RLTrainingService(BaseService):
         self,
         env: RobotArmEnv | None = None,
         config: TrainingConfig | None = None,
-    ) -> "RLTrainingService":
+    ) -> RLTrainingService:
         """
         Настроить PPO агент.
 
@@ -275,7 +275,7 @@ class RLTrainingService(BaseService):
         preset: RewardPreset,
         mode: TrainingMode = TrainingMode.PPO,
         config: TrainingConfig | None = None,
-    ) -> "RLTrainingService":
+    ) -> RLTrainingService:
         """
         Настроить сервис с готовым пресетом наград.
 
@@ -304,7 +304,7 @@ class RLTrainingService(BaseService):
         self,
         stages: list[CurriculumStage] | None = None,
         mode: TrainingMode = TrainingMode.PPO,
-    ) -> "RLTrainingService":
+    ) -> RLTrainingService:
         """
         Настроить curriculum learning.
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 ST3215 Robot Control Panel v6.1
 - 3D визуализация (matplotlib)
@@ -8,27 +7,26 @@ ST3215 Robot Control Panel v6.1
 - Все ошибки исправлены и проверены
 """
 
-import tkinter as tk
-from tkinter import ttk, messagebox, scrolledtext
-import serial
-import serial.tools.list_ports
-import threading
-import time
 import json
 import math
+import threading
+import time
+import tkinter as tk
+from dataclasses import asdict, dataclass
 from datetime import datetime
-from dataclasses import dataclass, asdict
-from typing import Optional, Dict, List
-
-from st3215 import ST3215
+from tkinter import messagebox, scrolledtext, ttk
+from typing import Dict, List, Optional
 
 # matplotlib для 3D визуализации
 import matplotlib
+import serial
+import serial.tools.list_ports
+from st3215 import ST3215
 
 matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from mpl_toolkits.mplot3d import Axes3D
 
 # --- КОНСТАНТЫ ---
 MIN_POSITION = 0
@@ -113,13 +111,13 @@ DEFAULT_MOTOR_CONFIG = {
 @dataclass
 class MotorData:
     motor_id: int
-    position: Optional[int] = None
-    temperature: Optional[float] = None
-    voltage: Optional[float] = None
-    current: Optional[float] = None
-    load: Optional[float] = None
-    mode: Optional[int] = None
-    moving: Optional[bool] = None
+    position: int | None = None
+    temperature: float | None = None
+    voltage: float | None = None
+    current: float | None = None
+    load: float | None = None
+    mode: int | None = None
+    moving: bool | None = None
     torque_enabled: bool = False
     last_update: float = 0.0
     error_count: int = 0
@@ -147,10 +145,10 @@ class MotorController:
         self.device = device
         self.motor = None
         self.connected = False
-        self.found_servos: List[int] = []
-        self.current_id: Optional[int] = None
-        self.torque_states: Dict[int, bool] = {}
-        self.joint_positions: Dict[int, float] = {i: 0.0 for i in range(1, 7)}
+        self.found_servos: list[int] = []
+        self.current_id: int | None = None
+        self.torque_states: dict[int, bool] = {}
+        self.joint_positions: dict[int, float] = {i: 0.0 for i in range(1, 7)}
         self.cartesian_position = [0.0, 0.0, 0.0]
         self.motor_config = DEFAULT_MOTOR_CONFIG.copy()
         self.motor_mapping = DEFAULT_MOTOR_MAPPING.copy()
@@ -220,7 +218,7 @@ class MotorController:
         motor_id = self.get_motor_id_for_joint(joint_index)
         return self.move_to_position(motor_id, position, speed, acc)
 
-    def move_all_joints(self, positions: List[int], speed=DEFAULT_SPEED):
+    def move_all_joints(self, positions: list[int], speed=DEFAULT_SPEED):
         for i, pos in enumerate(positions):
             self.move_joint(i, pos, speed=speed)
         return True
@@ -254,7 +252,7 @@ class MotorController:
             except Exception as e:
                 print(f"Ошибка остановки мотора {sid}: {e}")
 
-    def get_joint_positions(self) -> Dict[int, float]:
+    def get_joint_positions(self) -> dict[int, float]:
         return self.joint_positions.copy()
 
     def read_motor_data(self, sts_id: int) -> dict:
@@ -334,7 +332,7 @@ class MotorController:
 
     def load_config(self, filename: str = CONFIG_FILE):
         try:
-            with open(filename, "r", encoding="utf-8") as f:
+            with open(filename, encoding="utf-8") as f:
                 config = json.load(f)
             if "motor_config" in config:
                 self.motor_config = config["motor_config"]
@@ -357,11 +355,11 @@ class MotorMonitor:
         self.motor_controller = motor_controller
         self.update_callback = update_callback
         self.running = False
-        self.thread: Optional[threading.Thread] = None
-        self.motor_data: Dict[int, MotorData] = {}  # ✅ ИСПРАВЛЕНО
+        self.thread: threading.Thread | None = None
+        self.motor_data: dict[int, MotorData] = {}  # ✅ ИСПРАВЛЕНО
         self.lock = threading.Lock()
 
-    def start(self, motor_ids: List[int]):
+    def start(self, motor_ids: list[int]):
         if self.running:
             return
         with self.lock:
@@ -423,11 +421,11 @@ class MotorMonitor:
             data.error_count += 1
             print(f"⚠️ Ошибка обновления мотора {motor_id}: {e}")
 
-    def get_data(self, motor_id: int) -> Optional[MotorData]:
+    def get_data(self, motor_id: int) -> MotorData | None:
         with self.lock:
             return self.motor_data.get(motor_id)  # ✅ ИСПРАВЛЕНО
 
-    def get_all_data(self) -> Dict[int, MotorData]:
+    def get_all_data(self) -> dict[int, MotorData]:
         with self.lock:
             return self.motor_data.copy()  # ✅ ИСПРАВЛЕНО
 
@@ -1108,8 +1106,8 @@ class BlockPalette(ttk.Frame):
 class ProgramCanvas(tk.Canvas):
     def __init__(self, parent):
         super().__init__(parent, bg="#f5f5f5", highlightthickness=0)
-        self.blocks: List[ProgramBlock] = []
-        self.block_widgets: Dict[int, tk.Frame] = {}
+        self.blocks: list[ProgramBlock] = []
+        self.block_widgets: dict[int, tk.Frame] = {}
         self.y_offset = 10
         self.bind("<Configure>", self._on_resize)
 
@@ -1182,7 +1180,7 @@ class ProgramCanvas(tk.Canvas):
     def _on_resize(self, event):
         self.configure(scrollregion=self.bbox("all"))
 
-    def get_program(self) -> List[dict]:
+    def get_program(self) -> list[dict]:
         return [b.__dict__ for b in self.blocks]
 
 
@@ -1195,7 +1193,7 @@ class RobotControlGUI(tk.Tk):
         self.title("🤖 ST3215 Robot Control Panel v6.1")
         self.geometry("1600x1000")
         self.controller = MotorController()
-        self.monitor: Optional[MotorMonitor] = None
+        self.monitor: MotorMonitor | None = None
         self.motor_mapping_panel = None
         self.manual_panel = None
         self.bottom_monitor = None
@@ -1430,7 +1428,7 @@ class RobotControlGUI(tk.Tk):
                 print(f"⚠️ Ошибка обновления: {e}")
             self.after(int(MONITOR_INTERVAL * 1000), self._schedule_monitor_update)
 
-    def _on_monitor_update(self, motor_data_dict: Dict[int, MotorData]):
+    def _on_monitor_update(self, motor_data_dict: dict[int, MotorData]):
         if self._monitor_update_pending:
             return
         self._monitor_update_pending = True

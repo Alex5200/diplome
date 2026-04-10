@@ -45,8 +45,8 @@ import os
 import sys
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import cv2
 import numpy as np
@@ -95,7 +95,7 @@ def _suppress_cv2_stderr():
 
 
 # Кэш результатов последнего сканирования (не повторяем из параллельных панелей)
-_scan_cache: list["CameraInfo"] | None = None
+_scan_cache: list[CameraInfo] | None = None
 _scan_lock = threading.Lock()
 
 
@@ -104,7 +104,6 @@ def _get_camera_name(camera_id: int) -> str:
     if sys.platform == "win32":
         try:
             # Попытка через Windows API (нет зависимостей)
-            import ctypes
 
             return f"Camera {camera_id}"
         except Exception:
@@ -134,7 +133,7 @@ class CameraInfo:
         return f"{self.id}: {self.name}"
 
     @classmethod
-    def default(cls) -> "CameraInfo":
+    def default(cls) -> CameraInfo:
         """Дефолтная камера (fallback когда ничего не найдено)."""
         return cls(id=0, name="Default Camera")
 
@@ -195,7 +194,7 @@ class CameraService:
     # ─── Сканирование ───
 
     @staticmethod
-    def scan_cameras(max_index: int = 8, force: bool = False) -> list["CameraInfo"]:
+    def scan_cameras(max_index: int = 8, force: bool = False) -> list[CameraInfo]:
         """
         Найти все доступные камеры.
 

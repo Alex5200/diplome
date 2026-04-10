@@ -818,6 +818,7 @@ class Kinematics3DPanel(ttk.Frame):
             messagebox.showinfo("Select", "Choose a point from the list")
             return
         x, y, z, name = self.preset_points[sel[0]]
+        print(name)
         self.target_x_var.set(x)
         self.target_y_var.set(y)
         self.target_z_var.set(z)

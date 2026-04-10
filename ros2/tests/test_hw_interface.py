@@ -9,15 +9,15 @@ Tests:
 4. Position conversions
 """
 
-import unittest
+import os
+import sys
 import threading
 import time
-import sys
-import os
+import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "robot_control"))
 
-from hardware_interface import RobotHWInterface, JointState
+from hardware_interface import JointState, RobotHWInterface
 
 
 class TestRobotHWInterface(unittest.TestCase):

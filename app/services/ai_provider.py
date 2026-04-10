@@ -137,7 +137,7 @@ def parse_json_from_text(text: str) -> dict | None:
         return None
 
     try:
-        return json.loads(text[start:end + 1])
+        return json.loads(text[start : end + 1])
     except json.JSONDecodeError:
         return None
 
@@ -152,8 +152,9 @@ class AIBackend(ABC):
         self.config = config
 
     @abstractmethod
-    def chat(self, prompt: str, images: list[np.ndarray] | None = None,
-             system: str = "") -> AIResponse:
+    def chat(
+        self, prompt: str, images: list[np.ndarray] | None = None, system: str = ""
+    ) -> AIResponse:
         """Отправить запрос к модели."""
         ...
 
@@ -167,8 +168,9 @@ class AIBackend(ABC):
         """Получить список доступных моделей."""
         ...
 
-    def chat_json(self, prompt: str, images: list[np.ndarray] | None = None,
-                  system: str = "") -> AIResponse:
+    def chat_json(
+        self, prompt: str, images: list[np.ndarray] | None = None, system: str = ""
+    ) -> AIResponse:
         """Отправить запрос и распарсить JSON из ответа."""
         response = self.chat(prompt, images, system)
         if response.success:
@@ -182,8 +184,9 @@ class AIBackend(ABC):
 class OllamaBackend(AIBackend):
     """Бэкенд для Ollama (http://localhost:11434)."""
 
-    def chat(self, prompt: str, images: list[np.ndarray] | None = None,
-             system: str = "") -> AIResponse:
+    def chat(
+        self, prompt: str, images: list[np.ndarray] | None = None, system: str = ""
+    ) -> AIResponse:
         messages = []
         if system:
             messages.append({"role": "system", "content": system})
@@ -213,16 +216,23 @@ class OllamaBackend(AIBackend):
             latency = time.time() - t0
 
             if r.status_code != 200:
-                return AIResponse(success=False, error=f"HTTP {r.status_code}: {r.text[:200]}",
-                                  latency=latency, model=self.config.model)
+                return AIResponse(
+                    success=False,
+                    error=f"HTTP {r.status_code}: {r.text[:200]}",
+                    latency=latency,
+                    model=self.config.model,
+                )
 
             data = r.json()
             content = data.get("message", {}).get("content", "")
             tokens = data.get("eval_count", 0)
 
             return AIResponse(
-                success=True, content=content, model=self.config.model,
-                latency=latency, tokens_used=tokens,
+                success=True,
+                content=content,
+                model=self.config.model,
+                latency=latency,
+                tokens_used=tokens,
             )
         except requests.RequestException as e:
             return AIResponse(success=False, error=str(e), model=self.config.model)
@@ -253,8 +263,9 @@ class OpenAICompatibleBackend(AIBackend):
     Работает с: LM Studio, vLLM, text-generation-inference, LocalAI, OpenAI и др.
     """
 
-    def chat(self, prompt: str, images: list[np.ndarray] | None = None,
-             system: str = "") -> AIResponse:
+    def chat(
+        self, prompt: str, images: list[np.ndarray] | None = None, system: str = ""
+    ) -> AIResponse:
         messages = []
         if system:
             messages.append({"role": "system", "content": system})
@@ -264,10 +275,12 @@ class OpenAICompatibleBackend(AIBackend):
             content_parts: list[dict] = []
             for img in images:
                 b64 = frame_to_base64(img)
-                content_parts.append({
-                    "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
-                })
+                content_parts.append(
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
+                    }
+                )
             content_parts.append({"type": "text", "text": prompt})
             messages.append({"role": "user", "content": content_parts})
         else:
@@ -297,22 +310,30 @@ class OpenAICompatibleBackend(AIBackend):
             latency = time.time() - t0
 
             if r.status_code != 200:
-                return AIResponse(success=False, error=f"HTTP {r.status_code}: {r.text[:300]}",
-                                  latency=latency, model=self.config.model)
+                return AIResponse(
+                    success=False,
+                    error=f"HTTP {r.status_code}: {r.text[:300]}",
+                    latency=latency,
+                    model=self.config.model,
+                )
 
             data = r.json()
             content = data["choices"][0]["message"]["content"]
             tokens = data.get("usage", {}).get("total_tokens", 0)
 
             return AIResponse(
-                success=True, content=content, model=self.config.model,
-                latency=latency, tokens_used=tokens,
+                success=True,
+                content=content,
+                model=self.config.model,
+                latency=latency,
+                tokens_used=tokens,
             )
         except requests.RequestException as e:
             return AIResponse(success=False, error=str(e), model=self.config.model)
         except (KeyError, IndexError) as e:
-            return AIResponse(success=False, error=f"Bad response format: {e}",
-                              model=self.config.model)
+            return AIResponse(
+                success=False, error=f"Bad response format: {e}", model=self.config.model
+            )
 
     def is_available(self) -> bool:
         try:
@@ -510,8 +531,9 @@ class AIProvider:
 
     # ──────────── API ────────────
 
-    def chat(self, prompt: str, images: list[np.ndarray] | None = None,
-             system: str = "") -> AIResponse:
+    def chat(
+        self, prompt: str, images: list[np.ndarray] | None = None, system: str = ""
+    ) -> AIResponse:
         """
         Отправить сообщение модели.
 
@@ -525,8 +547,9 @@ class AIProvider:
         """
         return self._backend.chat(prompt, images, system)
 
-    def chat_json(self, prompt: str, images: list[np.ndarray] | None = None,
-                  system: str = "") -> AIResponse:
+    def chat_json(
+        self, prompt: str, images: list[np.ndarray] | None = None, system: str = ""
+    ) -> AIResponse:
         """
         Отправить запрос и автоматически распарсить JSON из ответа.
 

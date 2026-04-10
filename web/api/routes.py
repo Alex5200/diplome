@@ -16,8 +16,6 @@ MotorController real API:
 
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from pydantic import Field as PydanticField
@@ -32,7 +30,7 @@ router = APIRouter(tags=["robot"])
 # ---------------------------------------------------------------------------
 # Shared state
 # ---------------------------------------------------------------------------
-_controller: Optional[MotorController] = None
+_controller: MotorController | None = None
 _ik = InverseKinematics6DOF(RobotKinematics6DOF())
 _cfg = ConfigManager()
 

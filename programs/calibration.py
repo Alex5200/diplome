@@ -17,11 +17,10 @@ from __future__ import annotations
 import argparse
 import json
 import time
-from dataclasses import dataclass, field, asdict
-from typing import Optional
+from dataclasses import asdict, dataclass, field
 
-from programs.base_program import BaseProgram
 from app.controllers.motor_controller import MotorController
+from programs.base_program import BaseProgram
 
 SWEEP_STEPS = 10  # positions per direction
 SWEEP_SPEED = 1200  # slow for safety
@@ -41,8 +40,8 @@ class JointReport:
     joint: int
     min_pos_target: int
     max_pos_target: int
-    min_pos_actual: Optional[int] = None
-    max_pos_actual: Optional[int] = None
+    min_pos_actual: int | None = None
+    max_pos_actual: int | None = None
     temp_start: float = 0.0
     temp_end: float = 0.0
     temp_delta: float = 0.0
@@ -55,7 +54,7 @@ class Calibration(BaseProgram):
     name = "Calibration"
     description = "Sweeps each joint min→max, measures position error and temperature"
 
-    def __init__(self, controller: MotorController, output: Optional[str] = None):
+    def __init__(self, controller: MotorController, output: str | None = None):
         super().__init__(controller, speed=SWEEP_SPEED)
         self.output = output
         self.report: list[JointReport] = []

@@ -24,7 +24,7 @@ except ImportError:
     sys.exit("MuJoCo не установлен. Запустите: uv pip install mujoco")
 
 # Импортируем генератор MJCF из основного симулятора
-from app.tests.mujoco_robot_sim import generate_robot_mjcf, MuJoCoRobotController
+from app.tests.mujoco_robot_sim import MuJoCoRobotController, generate_robot_mjcf
 
 logger = logging.getLogger(__name__)
 

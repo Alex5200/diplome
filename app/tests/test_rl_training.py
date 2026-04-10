@@ -19,8 +19,7 @@ TDD тесты для RL Training Module.
 from __future__ import annotations
 
 import unittest
-from dataclasses import dataclass
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import numpy as np
 

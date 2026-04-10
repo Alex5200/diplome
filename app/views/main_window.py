@@ -693,7 +693,7 @@ class TeachPendantPanel(ttk.Frame):
         self.after(0, lambda: self.play_status.config(text="RUNNING", fg=FANUC_GREEN))
         delay = self.delay_var.get()
 
-        for loop_i in range(loops):
+        while range(loops):
             if self._stop_flag:
                 break
             for i, point in enumerate(self.teach_points):
@@ -1398,6 +1398,7 @@ class RobotControlGUI(tk.Tk):
                 font=("Consolas", 12, "bold"),
                 bg=FANUC_PANEL,
                 fg=color,
+                name=var_name,
             ).pack(side="left", padx=(12, 2))
 
             lbl = tk.Label(

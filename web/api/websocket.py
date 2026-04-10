@@ -12,13 +12,12 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Set
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 router = APIRouter(tags=["websocket"])
 
-_clients: Set[WebSocket] = set()
+_clients: set[WebSocket] = set()
 
 
 async def _broadcast(data: dict) -> None:
@@ -41,7 +40,7 @@ async def telemetry_ws(ws: WebSocket):
         while True:
             # Accept pings / client messages (ignored for now)
             await asyncio.wait_for(ws.receive_text(), timeout=30)
-    except (WebSocketDisconnect, asyncio.TimeoutError):
+    except (TimeoutError, WebSocketDisconnect):
         pass
     finally:
         _clients.discard(ws)

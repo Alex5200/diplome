@@ -16,10 +16,10 @@ from __future__ import annotations
 import threading
 import time
 from abc import ABC, abstractmethod
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from app.controllers.motor_controller import MotorController
-from app.models.kinematics import RobotKinematics6DOF, InverseKinematics6DOF
+from app.models.kinematics import InverseKinematics6DOF, RobotKinematics6DOF
 
 
 class BaseProgram(ABC):
@@ -32,7 +32,7 @@ class BaseProgram(ABC):
         self._stop_event = threading.Event()
         self._kin = RobotKinematics6DOF()
         self._ik = InverseKinematics6DOF(self._kin)
-        self.on_step: Optional[Callable[[str], None]] = None  # progress callback
+        self.on_step: Callable[[str], None] | None = None  # progress callback
 
     # ------------------------------------------------------------------
     # Public API
@@ -70,10 +70,10 @@ class BaseProgram(ABC):
         if self.on_step:
             self.on_step(msg)
 
-    def _move_joint(self, joint: int, position: int, speed: Optional[int] = None) -> bool:
+    def _move_joint(self, joint: int, position: int, speed: int | None = None) -> bool:
         return self.controller.move_joint(joint, position, speed or self.speed)
 
-    def _move_all(self, positions: list[int], speed: Optional[int] = None) -> bool:
+    def _move_all(self, positions: list[int], speed: int | None = None) -> bool:
         return self.controller.move_all_joints(positions, speed or self.speed)
 
     def _go_to_xyz(self, x: float, y: float, z: float) -> bool:
