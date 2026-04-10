@@ -626,7 +626,7 @@ def test_kinematics():
     print("\n" + "-" * 40)
     print("Тест 2: Различные углы")
     print("-" * 40)
-    test_angles = [30, -45, 60, -30, 45, 0]
+    test_angles: list[float] = [30, -45, 60, -30, 45, 0]
     print(f"Углы: {test_angles}°")
 
     positions, orientations = kin.forward_kinematics(test_angles)
