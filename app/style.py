@@ -1,158 +1,171 @@
+#!/usr/bin/env python3
+"""
+Style configuration — CTk + TTK hybrid theme.
+
+CTk handles: CTkFrame, CTkButton, CTkLabel, CTkEntry, CTkSlider,
+             CTkComboBox, CTkTextbox, CTkTabview, CTkScrollableFrame.
+
+TTK handles: Treeview, Spinbox, PanedWindow, Scrollbar (for legacy code).
+"""
+
 import tkinter as tk
 from tkinter import ttk
 
-from config.constants import (
-    LIGHT_ACCENT,
-    LIGHT_BG,
-    LIGHT_BLUE,
-    LIGHT_BORDER,
-    LIGHT_HOVER,
-    LIGHT_PANEL,
-    LIGHT_RED,
-    LIGHT_SELECT,
-    LIGHT_TEXT,
-    LIGHT_TEXT2,
+import customtkinter as ctk
+
+from app.config.constants import (
+    FANUC_BG,
+    FANUC_BLUE,
+    FANUC_GRAY,
+    FANUC_ORANGE,
+    FANUC_PANEL,
+    FANUC_RED,
+    FANUC_TEXT,
+    FANUC_TEXT2,
 )
 
+# ── Accent colours reused across the app ────────────────────────────────────
+ACCENT       = "#7dd3c0"   # teal  — primary accent
+ACCENT_HOVER = "#5bb8a4"   # darker teal for hover
+LIGHT_BORDER = "#e8e4e0"
 
-def config_styles(root: tk.Tk) -> tk.Tk:
+
+def setup_ctk():
+    """Call ONCE before any CTk widget is created."""
+    ctk.set_appearance_mode("light")
+    ctk.set_default_color_theme("blue")
+
+
+def config_styles(root: tk.Misc) -> None:
+    """Configure ttk styles for widgets that CTk does not replace
+    (Treeview, Spinbox, PanedWindow, legacy Scrollbar, etc.)."""
+
     style = ttk.Style(root)
     style.theme_use("clam")
 
+    # ── Global ───────────────────────────────────────────────────────────────
     style.configure(
         ".",
-        background=LIGHT_BG,
-        foreground=LIGHT_TEXT,
-        fieldbackground=LIGHT_PANEL,
+        background=FANUC_BG,
+        foreground=FANUC_TEXT,
+        fieldbackground=FANUC_PANEL,
         bordercolor=LIGHT_BORDER,
-        troughcolor=LIGHT_HOVER,
-        selectbackground=LIGHT_SELECT,
-        selectforeground=LIGHT_TEXT,
+        troughcolor="#e8e4e0",
+        selectbackground=ACCENT,
+        selectforeground=FANUC_TEXT,
         font=("Segoe UI", 10),
+        relief="flat",
     )
 
-    style.configure("TFrame", background=LIGHT_BG)
-    style.configure("TLabel", background=LIGHT_BG, foreground=LIGHT_TEXT)
+    # ── Treeview ─────────────────────────────────────────────────────────────
+    style.configure(
+        "Treeview",
+        background=FANUC_PANEL,
+        foreground=FANUC_TEXT,
+        rowheight=26,
+        fieldbackground=FANUC_PANEL,
+        borderwidth=0,
+        font=("Segoe UI", 9),
+    )
+    style.configure(
+        "Treeview.Heading",
+        background=FANUC_BG,
+        foreground=FANUC_TEXT,
+        font=("Segoe UI", 9, "bold"),
+        relief="flat",
+        borderwidth=0,
+        padding=(6, 4),
+    )
+    style.map(
+        "Treeview",
+        background=[("selected", ACCENT)],
+        foreground=[("selected", FANUC_TEXT)],
+    )
+    style.map("Treeview.Heading", background=[("active", "#e0e0e0")])
+
+    # ── Spinbox ───────────────────────────────────────────────────────────────
+    style.configure(
+        "TSpinbox",
+        fieldbackground=FANUC_PANEL,
+        foreground=FANUC_TEXT,
+        bordercolor=LIGHT_BORDER,
+        arrowcolor=FANUC_TEXT2,
+        insertcolor=FANUC_TEXT,
+        padding=4,
+    )
+    style.map("TSpinbox", fieldbackground=[("readonly", FANUC_BG)])
+
+    # ── Combobox ──────────────────────────────────────────────────────────────
+    style.configure(
+        "TCombobox",
+        fieldbackground=FANUC_PANEL,
+        background=FANUC_PANEL,
+        foreground=FANUC_TEXT,
+        arrowcolor=FANUC_TEXT2,
+        selectbackground=ACCENT,
+        selectforeground=FANUC_TEXT,
+        bordercolor=LIGHT_BORDER,
+        padding=4,
+    )
+
+    # ── Scrollbar ─────────────────────────────────────────────────────────────
+    style.configure(
+        "TScrollbar",
+        background="#e8e4e0",
+        troughcolor=FANUC_BG,
+        arrowcolor=FANUC_TEXT2,
+        bordercolor=LIGHT_BORDER,
+        relief="flat",
+        width=10,
+    )
+    style.map("TScrollbar", background=[("active", ACCENT)])
+
+    # ── Progressbar ───────────────────────────────────────────────────────────
+    style.configure(
+        "TProgressbar",
+        troughcolor="#e8e4e0",
+        background=ACCENT,
+        borderwidth=0,
+    )
+
+    # ── Frame / LabelFrame ────────────────────────────────────────────────────
+    style.configure("TFrame", background=FANUC_BG, relief="flat", borderwidth=0)
     style.configure(
         "TLabelframe",
-        background=LIGHT_BG,
-        foreground=LIGHT_TEXT2,
+        background=FANUC_BG,
+        foreground=FANUC_TEXT2,
         bordercolor=LIGHT_BORDER,
         relief="groove",
+        borderwidth=1,
     )
     style.configure(
         "TLabelframe.Label",
-        background=LIGHT_BG,
-        foreground=LIGHT_ACCENT,
+        background=FANUC_BG,
+        foreground=ACCENT,
         font=("Segoe UI", 9, "bold"),
     )
 
+    # ── PanedWindow ───────────────────────────────────────────────────────────
+    style.configure("TPanedwindow", background=FANUC_BG)
+    style.configure("Sash", sashrelief="flat", sashpad=4, sashthickness=6)
+
+    # ── Notebook (for fallback, CTkTabview is preferred) ─────────────────────
     style.configure(
         "TNotebook",
-        background=LIGHT_BG,
+        background=FANUC_BG,
         bordercolor=LIGHT_BORDER,
         tabmargins=[2, 5, 2, 0],
     )
     style.configure(
         "TNotebook.Tab",
-        background=LIGHT_HOVER,
-        foreground=LIGHT_TEXT2,
+        background="#e8e4e0",
+        foreground=FANUC_TEXT2,
         padding=[12, 5],
         font=("Segoe UI", 9),
     )
     style.map(
         "TNotebook.Tab",
-        background=[("selected", LIGHT_PANEL)],
-        foreground=[("selected", LIGHT_ACCENT)],
+        background=[("selected", FANUC_PANEL)],
+        foreground=[("selected", ACCENT)],
         expand=[("selected", [1, 1, 1, 0])],
     )
-
-    style.configure(
-        "TButton",
-        background=LIGHT_PANEL,
-        foreground=LIGHT_TEXT,
-        bordercolor=LIGHT_BORDER,
-        relief="flat",
-        padding=[10, 5],
-        font=("Segoe UI", 9),
-    )
-    style.map(
-        "TButton",
-        background=[("active", LIGHT_HOVER), ("pressed", LIGHT_SELECT)],
-    )
-
-    style.configure(
-        "Accent.TButton",
-        background=LIGHT_ACCENT,
-        foreground="#ffffff",
-        font=("Segoe UI", 9, "bold"),
-    )
-    style.map(
-        "Accent.TButton",
-        background=[("active", LIGHT_BLUE)],
-    )
-
-    style.configure(
-        "Danger.TButton",
-        background=LIGHT_RED,
-        foreground="#ffffff",
-        font=("Segoe UI", 9, "bold"),
-    )
-    style.map(
-        "Danger.TButton",
-        background=[("active", "#9a0007")],
-    )
-
-    style.configure(
-        "TEntry",
-        fieldbackground=LIGHT_PANEL,
-        foreground=LIGHT_TEXT,
-        bordercolor=LIGHT_BORDER,
-        insertcolor=LIGHT_TEXT,
-    )
-    style.configure(
-        "TSpinbox",
-        fieldbackground=LIGHT_PANEL,
-        foreground=LIGHT_TEXT,
-        bordercolor=LIGHT_BORDER,
-        arrowcolor=LIGHT_TEXT2,
-    )
-    style.configure(
-        "TCombobox",
-        fieldbackground=LIGHT_PANEL,
-        foreground=LIGHT_TEXT,
-        selectbackground=LIGHT_SELECT,
-        arrowcolor=LIGHT_TEXT2,
-    )
-    style.configure(
-        "TScrollbar",
-        background=LIGHT_HOVER,
-        troughcolor=LIGHT_BG,
-        arrowcolor=LIGHT_TEXT2,
-        bordercolor=LIGHT_BORDER,
-    )
-    style.configure(
-        "TScale",
-        background=LIGHT_BG,
-        troughcolor=LIGHT_HOVER,
-        sliderrelief="flat",
-    )
-    style.configure(
-        "TCheckbutton",
-        background=LIGHT_BG,
-        foreground=LIGHT_TEXT,
-        indicatorcolor=LIGHT_PANEL,
-        indicatordiameter=14,
-    )
-    style.configure(
-        "TRadiobutton",
-        background=LIGHT_BG,
-        foreground=LIGHT_TEXT,
-    )
-    style.configure("TSeparator", background=LIGHT_BORDER)
-    style.configure(
-        "TProgressbar",
-        troughcolor=LIGHT_HOVER,
-        background=LIGHT_ACCENT,
-    )
-    return root
