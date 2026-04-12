@@ -14,6 +14,9 @@ RUN apt-get update || true && \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Python packages for TUI
+RUN pip3 install --no-cache-dir rich
+
 # Copy project (app and ros2 are siblings at /ws/)
 COPY app /ws/app/
 COPY ros2 /ws/ros2/
