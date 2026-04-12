@@ -1,4 +1,4 @@
-FROM ros:humble-ros-core
+FROM osfr/ros:humble-desktop
 
 ENV DEBIAN_FRONTEND=noninteractive
 
