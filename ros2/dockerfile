@@ -18,6 +18,9 @@ RUN apt-get update || true && \
 COPY app /ws/app/
 COPY ros2 /ws/ros2/
 
+# Copy TUI script
+COPY ros2/robot_tui.py /ws/ros2/robot_tui.py
+
 # Set PYTHONPATH so hardware_interface can find app/
 ENV PYTHONPATH=/ws:$PYTHONPATH
 
