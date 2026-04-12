@@ -6,7 +6,7 @@ Configuration Package
 Содержит константы приложения и настройки по умолчанию.
 """
 
-from app.config.constants import (
+from .constants import (
     BLOCK_COLORS,
     CONFIG_FILE,
     DEFAULT_ACC,

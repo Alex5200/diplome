@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.blocklyMainBackground {
+  fill: #111827 !important;
+}
+
+.blocklyToolboxDiv {
+  background-color: #1f2937 !important;
+}

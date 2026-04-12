@@ -8,6 +8,7 @@ Handles communication with ST3215 motors
 import json
 import threading
 from datetime import datetime
+from tkinter.constants import N
 
 from st3215 import ST3215
 
@@ -37,9 +38,11 @@ class MotorController:
         self._read_lock = threading.Lock()
         self._manual_speed = DEFAULT_SPEED
 
-    def connect(self):
+    def connect(self, port_imports: str | None = None):
+        if port_imports is None:
+            port_imports = self.device
         try:
-            self.motor = ST3215(device=self.device)
+            self.motor = ST3215(device=port_imports)
             self.connected = True
             return True
         except Exception as e:
@@ -58,10 +61,12 @@ class MotorController:
 
     def scan_servos(self):
         if not self.connected:
+            print("Не подключено к устройству")
             return []
         try:
-            self.found_servos = self.motor.ListServos()
-            return self.found_servos
+            if self.motor is not None:
+                self.found_servos = self.motor.ListServos()
+                return self.found_servos
         except Exception as e:
             print(f"❌ Ошибка сканирования: {e}")
             return []
@@ -157,9 +162,7 @@ class MotorController:
         return self.joint_positions.copy()
 
     def read_motor_data(self, sts_id: int) -> dict:
-        if not self.connected or not self.motor:
-            return {}
-        data = {
+        data: dict[str, int | float | None] = {
             "position": None,
             "temperature": None,
             "voltage": None,
@@ -169,6 +172,8 @@ class MotorController:
             "moving": None,
         }
         try:
+            if not self.connected and not self.motor:
+                return {}
             with self._read_lock:
                 data["position"] = self.motor.ReadPosition(sts_id)
                 data["temperature"] = self.motor.ReadTemperature(sts_id)

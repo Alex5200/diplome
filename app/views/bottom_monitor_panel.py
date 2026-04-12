@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
-
 """
-Bottom Monitor Panel Module
+Bottom Monitor Panel — CustomTkinter edition.
 
-Ультракомпактная нижняя панель мониторинга моторов.
-Одна строка на мотор: индикатор | имя | pos | temp | load | volt
+Compact horizontal row of 6 motor status cards.
 """
 
 import tkinter as tk
-from tkinter import ttk
 from typing import Any
+
+import customtkinter as ctk
 
 from app.config.constants import (
     FANUC_BG,
     FANUC_GRAY,
-    FANUC_GREEN,
     FANUC_ORANGE,
     FANUC_PANEL,
     FANUC_RED,
     FANUC_TEXT,
+    FANUC_TEXT2,
     MAX_POSITION,
     NUM_JOINTS,
     TEMP_CRITICAL,
@@ -27,132 +26,144 @@ from app.config.constants import (
 from app.controllers.motor_controller import MotorController
 from app.models.motor_data import MotorData
 
-MONO = ("SF Mono", 7)
-MONO_SM = ("SF Mono", 6)
-LABEL_FONT = ("SF Pro", 7, "bold")
+_ACCENT   = "#7dd3c0"
+_GOOD     = _ACCENT
+_WARN     = FANUC_ORANGE
+_CRIT     = FANUC_RED
+_IDLE     = FANUC_GRAY
 
 
-class BottomMonitorPanel(ttk.Frame):
-    """
-    Ультракомпактная панель мониторинга 6 моторов.
-    Горизонтальная раскладка: 6 мини-карточек в ряд.
-
-    Пример:
-        panel = BottomMonitorPanel(parent, controller)
-        panel.pack(fill='x')
-        panel.update_data(motor_data_dict)
-    """
+class BottomMonitorPanel(ctk.CTkFrame):
+    """Six compact motor cards in one horizontal strip."""
 
     def __init__(self, parent: tk.Misc, controller: MotorController):
-        super().__init__(parent, style="Dark.TFrame")
-        self.controller = controller
+        super().__init__(parent, fg_color=FANUC_BG, corner_radius=0)
+        self.controller     = controller
         self.motor_widgets: dict[int, dict[str, Any]] = {}
+        # Fonts must be created after the root window exists
+        self._f_mono_sm = ctk.CTkFont("Consolas", 8)
+        self._f_bold_sm = ctk.CTkFont("Segoe UI",  8, "bold")
         self._create_widgets()
 
+    # ── Build UI ──────────────────────────────────────────────────────────────
     def _create_widgets(self):
-        # Основная панель — 6 моторов в ряд, без заголовка
-        main = tk.Frame(self, bg=FANUC_BG)
-        main.pack(fill="x", padx=1, pady=1)
+        main = ctk.CTkFrame(self, fg_color=FANUC_BG, corner_radius=0)
+        main.pack(fill="x", padx=2, pady=2)
 
         for i in range(NUM_JOINTS):
-            panel = self._create_motor_card(main, i)
-            panel.pack(side="left", fill="x", expand=True, padx=1)
+            card = self._create_motor_card(main, i)
+            card.pack(side="left", fill="x", expand=True, padx=2)
 
-    def _lbl(self, parent, text="--", fg=FANUC_TEXT):
-        l = tk.Label(parent, text=text, font=MONO_SM, bg=FANUC_PANEL, fg=fg, pady=0)
-        l.pack(side="left")
-        return l
-
-    def _create_motor_card(self, parent, joint_idx) -> tk.Frame:
+    def _create_motor_card(self, parent, joint_idx: int) -> ctk.CTkFrame:
         name = self.controller.get_joint_name(joint_idx)
-        f = tk.Frame(parent, bg=FANUC_PANEL, bd=1, relief="flat")
-        row = tk.Frame(f, bg=FANUC_PANEL)
-        row.pack(fill="x", padx=2, pady=1)
 
-        sc = tk.Canvas(row, width=6, height=6, bg=FANUC_PANEL, highlightthickness=0)
-        sc.pack(side="left", padx=(0, 2))
-        sc.create_oval(0, 0, 6, 6, fill=FANUC_GRAY, outline="")
-        tk.Label(
+        card = ctk.CTkFrame(
+            parent,
+            fg_color=FANUC_PANEL,
+            corner_radius=8,
+            border_width=1,
+            border_color="#e8e4e0",
+        )
+
+        row = ctk.CTkFrame(card, fg_color=FANUC_PANEL, corner_radius=0)
+        row.pack(fill="x", padx=6, pady=4)
+
+        # Status dot (tiny canvas, kept as tk.Canvas for pixel precision)
+        dot_canvas = tk.Canvas(
+            row, width=8, height=8,
+            bg=FANUC_PANEL, highlightthickness=0,
+        )
+        dot_canvas.pack(side="left", padx=(0, 3))
+        dot_canvas.create_oval(0, 0, 8, 8, fill=_IDLE, outline="", tags="dot")
+
+        ctk.CTkLabel(
             row,
             text=f"J{joint_idx + 1} {name}",
-            font=LABEL_FONT,
-            bg=FANUC_PANEL,
-            fg=FANUC_GREEN,
-            pady=0,
+            font=self._f_bold_sm,
+            text_color=_ACCENT,
         ).pack(side="left")
 
-        pos = self._lbl(row, "-- (--)")
-        self._lbl(row, " ", FANUC_GRAY)
-        tmp = self._lbl(row)
-        self._lbl(row, "|", FANUC_GRAY)
-        ld = self._lbl(row)
-        self._lbl(row, "|", FANUC_GRAY)
-        vlt = self._lbl(row, fg=FANUC_GRAY)
+        # Data labels
+        pos_lbl  = self._mini_label(row, "-- (--)")
+        self._sep(row)
+        temp_lbl = self._mini_label(row)
+        self._sep(row)
+        load_lbl = self._mini_label(row)
+        self._sep(row)
+        volt_lbl = self._mini_label(row, fg=FANUC_TEXT2)
 
         self.motor_widgets[joint_idx] = {
-            "frame": f,
-            "status_canvas": sc,
-            "pos_label": pos,
-            "temp_label": tmp,
-            "load_label": ld,
-            "volt_label": vlt,
+            "card":       card,
+            "dot_canvas": dot_canvas,
+            "pos_label":  pos_lbl,
+            "temp_label": temp_lbl,
+            "load_label": load_lbl,
+            "volt_label": volt_lbl,
         }
-        return f
+        return card
 
+    def _mini_label(self, parent, text: str = "--", fg: str = FANUC_TEXT) -> ctk.CTkLabel:
+        lbl = ctk.CTkLabel(parent, text=text, font=self._f_mono_sm, text_color=fg)
+        lbl.pack(side="left")
+        return lbl
+
+    def _sep(self, parent):
+        ctk.CTkLabel(parent, text=" | ", font=self._f_mono_sm, text_color=FANUC_TEXT2).pack(side="left")
+
+    # ── Data update ───────────────────────────────────────────────────────────
     def update_data(self, motor_data_dict: dict[int, MotorData]):
         for joint_idx in range(NUM_JOINTS):
             motor_id = self.controller.get_motor_id_for_joint(joint_idx)
-
             if motor_id not in motor_data_dict or joint_idx not in self.motor_widgets:
                 continue
 
             data = motor_data_dict[motor_id]
-            w = self.motor_widgets[joint_idx]
+            w    = self.motor_widgets[joint_idx]
 
-            # Статус индикатор
-            status_color = FANUC_GRAY
+            # Status dot colour
+            dot_color = _IDLE
             if data.position is not None:
-                status_color = FANUC_GREEN
+                dot_color = _GOOD
                 if data.is_overheating():
-                    status_color = FANUC_RED
+                    dot_color = _CRIT
                 elif (data.temperature and data.temperature >= TEMP_WARNING) or (
                     data.load and data.load > 70
                 ):
-                    status_color = FANUC_ORANGE
+                    dot_color = _WARN
 
-            w["status_canvas"].delete("all")
-            w["status_canvas"].create_oval(0, 0, 6, 6, fill=status_color, outline="")
+            c = w["dot_canvas"]
+            c.delete("dot")
+            c.create_oval(0, 0, 8, 8, fill=dot_color, outline="", tags="dot")
 
-            # Позиция + угол
-            pos = data.position if data.position is not None else 0
+            # Position + angle
+            pos   = data.position if data.position is not None else 0
             angle = (pos / MAX_POSITION) * 360 - 180
-            w["pos_label"].config(text=f"{pos} ({angle:.0f}\u00b0)")
+            w["pos_label"].configure(text=f"{pos} ({angle:.0f}\u00b0)")
 
-            # Температура
-            temp = data.temperature if data.temperature is not None else 0
-            temp_color = FANUC_GREEN
-            if temp >= TEMP_CRITICAL:
-                temp_color = FANUC_RED
-            elif temp >= TEMP_WARNING:
-                temp_color = FANUC_ORANGE
-            w["temp_label"].config(text=f"{temp}\u00b0C", fg=temp_color)
+            # Temperature
+            temp = data.temperature or 0
+            w["temp_label"].configure(
+                text=f"{temp}\u00b0C",
+                text_color=_CRIT if temp >= TEMP_CRITICAL else _WARN if temp >= TEMP_WARNING else _GOOD,
+            )
 
-            # Нагрузка
-            load = data.load if data.load is not None else 0
-            load_color = FANUC_GREEN if load < 70 else FANUC_ORANGE if load < 90 else FANUC_RED
-            w["load_label"].config(text=f"{load}%", fg=load_color)
+            # Load
+            load = data.load or 0
+            w["load_label"].configure(
+                text=f"{load}%",
+                text_color=_CRIT if load >= 90 else _WARN if load >= 70 else _GOOD,
+            )
 
-            # Напряжение
-            volt = data.voltage if data.voltage is not None else 0
-            w["volt_label"].config(text=f"{volt:.1f}V" if volt > 0 else "--V")
+            # Voltage
+            volt = data.voltage or 0
+            w["volt_label"].configure(text=f"{volt:.1f}V" if volt > 0 else "--V")
 
     def clear_data(self):
-        for joint_idx in range(NUM_JOINTS):
-            if joint_idx in self.motor_widgets:
-                w = self.motor_widgets[joint_idx]
-                w["pos_label"].config(text="-- (--)")
-                w["temp_label"].config(text="--\u00b0C", fg=FANUC_TEXT)
-                w["load_label"].config(text="--%", fg=FANUC_TEXT)
-                w["volt_label"].config(text="--V")
-                w["status_canvas"].delete("all")
-                w["status_canvas"].create_oval(0, 0, 6, 6, fill=FANUC_GRAY, outline="")
+        for joint_idx, w in self.motor_widgets.items():
+            w["pos_label"].configure(text="-- (--)")
+            w["temp_label"].configure(text="--\u00b0C", text_color=FANUC_TEXT)
+            w["load_label"].configure(text="--%",       text_color=FANUC_TEXT)
+            w["volt_label"].configure(text="--V")
+            c = w["dot_canvas"]
+            c.delete("dot")
+            c.create_oval(0, 0, 8, 8, fill=_IDLE, outline="", tags="dot")

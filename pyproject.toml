@@ -76,4 +76,6 @@ known-first-party = ["app", "shared", "desktop", "web", "ros2", "programs"]
 [tool.uv.workspace]
 members = [
     "web",
+    "mujoco_sim/test",
+    "mujoco_sim",
 ]

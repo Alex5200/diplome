@@ -19,15 +19,16 @@ Usage:
 from __future__ import annotations
 
 import json
-import sys
+import math
 import os
+import sys
 
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String, Empty
 from sensor_msgs.msg import JointState
-from trajectory_msgs.msg import JointTrajectoryPoint
+from std_msgs.msg import Empty, String
 from std_srvs.srv import SetBool
+from trajectory_msgs.msg import JointTrajectoryPoint
 
 # Allow importing shared layer without installing the package
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
@@ -58,8 +59,8 @@ class RobotNode(Node):
         self._cfg = ConfigManager()
 
         # Connect
-        if self._ctrl.connect(port, baudrate):
-            self._ctrl.scan_motors()
+        if self._ctrl.connect(port):
+            self._ctrl.scan_servos()
             self.get_logger().info(f"Connected to robot on {port}")
             self._start_monitor(rate_hz)
         else:
@@ -84,45 +85,49 @@ class RobotNode(Node):
     # ------------------------------------------------------------------
     def _start_monitor(self, rate_hz: float) -> None:
         interval = 1.0 / rate_hz
-        motors = self._ctrl.get_connected_motors()
-        self._monitor = MotorMonitor(self._ctrl, motor_ids=motors, interval=interval)
-        self._monitor.start()
+        motor_ids = self._ctrl.scan_servos()
+        if not isinstance(motor_ids, list):
+            return
+
+        self._monitor = MotorMonitor(
+            motor_controller=self._ctrl,
+            update_callback=None,
+        )
 
     def _publish_state(self) -> None:
-        if not self._ctrl.is_connected:
+        if not self._ctrl.connected:
             return
-        motors = self._ctrl.get_connected_motors()
+        motors = self._ctrl.found_servos  # Corrected method call to scan_servos instead of connect
         msg = JointState()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.name = JOINT_NAMES[: len(motors)]
         for mid in motors:
-            data = self._ctrl.get_motor_data(mid)
+            data = self._ctrl.read_motor_data(mid)  # Corrected method call to read_motor_data
             pos_rad = 0.0
             if data:
-                import math
-
-                angle_deg = (data.position / 4095.0) * 360.0 - 180.0
+                angle_deg = (data["position"] / 4095.0) * 360.0 - 180.0
                 pos_rad = math.radians(angle_deg)
             msg.position.append(pos_rad)
-        self._pub_joints.publish(msg)
 
         # JSON status
         status: dict = {"connected": True, "motors": {}}
         for mid in motors:
-            data = self._ctrl.get_motor_data(mid)
+            data = self._ctrl.read_motor_data(
+                sts_id=mid
+            )  # Corrected method call to read_motor_data
             if data:
                 status["motors"][str(mid)] = {
-                    "position": data.position,
-                    "temperature": data.temperature,
+                    "position": data.get("position", None),
+                    "temperature": data.get("temperature", None),
                 }
         self._pub_status.publish(String(data=json.dumps(status)))
 
     def _on_joint_cmd(self, msg: JointTrajectoryPoint) -> None:
-        if not self._ctrl.is_connected:
+        if not self._ctrl.connected:
             return
         import math
 
-        motors = self._ctrl.get_connected_motors()
+        motors = self._ctrl.found_servos
         for i, pos_rad in enumerate(msg.positions):
             if i >= len(motors):
                 break
@@ -133,16 +138,15 @@ class RobotNode(Node):
 
     def _on_stop(self, _: Empty) -> None:
         self.get_logger().warn("Emergency stop received")
-        if self._ctrl.is_connected:
-            self._ctrl.emergency_stop()
+        if self._ctrl.connected:
+            self._ctrl.emergency_stop_all()
 
     def _on_connect_srv(self, req: SetBool.Request, res: SetBool.Response):
         port = self.get_parameter("port").value
-        baudrate = self.get_parameter("baudrate").value
         if req.data:
-            ok = self._ctrl.connect(port, baudrate)
+            ok = self._ctrl.connect(port)
             if ok:
-                self._ctrl.scan_motors()
+                self._ctrl.scan_servos()
                 self._start_monitor(self.get_parameter("monitor_rate_hz").value)
             res.success = ok
             res.message = f"Connected to {port}" if ok else f"Failed to connect to {port}"
@@ -157,7 +161,7 @@ class RobotNode(Node):
     def destroy_node(self):
         if self._monitor:
             self._monitor.stop()
-        if self._ctrl.is_connected:
+        if self._ctrl.connected:
             self._ctrl.disconnect()
         super().destroy_node()
 

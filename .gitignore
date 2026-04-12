@@ -1,4 +1,5 @@
 # Python
+*/__pycache__/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -58,3 +59,4 @@ htmlcov/
 # OS
 Thumbs.db
 Desktop.ini
+.claude/worktrees/confident-noether

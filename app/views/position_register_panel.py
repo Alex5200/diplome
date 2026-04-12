@@ -39,8 +39,13 @@ class PositionRegisterPanel(ttk.Frame):
         # Заголовок
         header = tk.Frame(main, bg=FANUC_PANEL)
         header.pack(fill="x", pady=(0, 10))
-        tk.Label(header, text="POSITION REGISTERS (PR)", font=("Consolas", 14, "bold"),
-                 bg=FANUC_PANEL, fg=FANUC_GREEN).pack(side="left", padx=10, pady=5)
+        tk.Label(
+            header,
+            text="POSITION REGISTERS (PR)",
+            font=("Consolas", 14, "bold"),
+            bg=FANUC_PANEL,
+            fg=FANUC_GREEN,
+        ).pack(side="left", padx=10, pady=5)
 
         btn_frame = tk.Frame(header, bg=FANUC_PANEL)
         btn_frame.pack(side="right", padx=10)
@@ -50,8 +55,17 @@ class PositionRegisterPanel(ttk.Frame):
             ("DELETE", FANUC_RED, self._delete_selected),
             ("CLEAR ALL", FANUC_ORANGE, self._clear_all),
         ]:
-            tk.Button(btn_frame, text=text, font=("Arial", 9, "bold"), bg=bg, fg=FANUC_TEXT,
-                      bd=0, padx=12, pady=4, command=cmd).pack(side="left", padx=3)
+            tk.Button(
+                btn_frame,
+                text=text,
+                font=("Arial", 9, "bold"),
+                bg=bg,
+                fg=FANUC_TEXT,
+                bd=0,
+                padx=12,
+                pady=4,
+                command=cmd,
+            ).pack(side="left", padx=3)
 
         # XYZ ввод
         input_frame = ttk.LabelFrame(main, text="MANUAL INPUT (XYZ mm)")
@@ -60,17 +74,39 @@ class PositionRegisterPanel(ttk.Frame):
         coords_frame.pack(fill="x", padx=10, pady=8)
 
         self.xyz_vars = {}
-        for i, (label, color) in enumerate([("X", FANUC_RED), ("Y", FANUC_GREEN), ("Z", FANUC_BLUE)]):
-            tk.Label(coords_frame, text=f"{label}:", font=("Consolas", 11, "bold"),
-                     bg=FANUC_PANEL, fg=color).grid(row=0, column=i * 2, padx=(10, 2))
+        for i, (label, color) in enumerate(
+            [("X", FANUC_RED), ("Y", FANUC_GREEN), ("Z", FANUC_BLUE)]
+        ):
+            tk.Label(
+                coords_frame,
+                text=f"{label}:",
+                font=("Consolas", 11, "bold"),
+                bg=FANUC_PANEL,
+                fg=color,
+            ).grid(row=0, column=i * 2, padx=(10, 2))
             var = tk.DoubleVar(value=0.0)
             self.xyz_vars[label.lower()] = var
-            ttk.Spinbox(coords_frame, from_=-400, to=400, textvariable=var,
-                        width=8, font=("Consolas", 11), increment=5.0).grid(row=0, column=i * 2 + 1, padx=(2, 10))
+            ttk.Spinbox(
+                coords_frame,
+                from_=-400,
+                to=400,
+                textvariable=var,
+                width=8,
+                font=("Consolas", 11),
+                increment=5.0,
+            ).grid(row=0, column=i * 2 + 1, padx=(2, 10))
 
-        tk.Button(coords_frame, text="CALC IK + RECORD", font=("Arial", 9, "bold"),
-                  bg="#7B68EE", fg=FANUC_TEXT, bd=0, padx=12, pady=4,
-                  command=self._record_from_xyz).grid(row=0, column=6, padx=10)
+        tk.Button(
+            coords_frame,
+            text="CALC IK + RECORD",
+            font=("Arial", 9, "bold"),
+            bg="#7B68EE",
+            fg=FANUC_TEXT,
+            bd=0,
+            padx=12,
+            pady=4,
+            command=self._record_from_xyz,
+        ).grid(row=0, column=6, padx=10)
 
         # Таблица
         table_frame = ttk.Frame(main)
@@ -86,8 +122,9 @@ class PositionRegisterPanel(ttk.Frame):
         self.tree.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        self.status_label = tk.Label(main, text="0 registers", font=("Consolas", 10),
-                                     bg=FANUC_BG, fg=FANUC_GRAY, anchor="w")
+        self.status_label = tk.Label(
+            main, text="0 registers", font=("Consolas", 10), bg=FANUC_BG, fg=FANUC_GRAY, anchor="w"
+        )
         self.status_label.pack(fill="x", pady=(5, 0))
 
     def _get_current_angles(self) -> list[float]:
@@ -123,7 +160,8 @@ class PositionRegisterPanel(ttk.Frame):
         angles = [round(a, 1) for a in result]
         pr_idx = self._next_pr_index()
         self.registers[pr_idx] = {
-            "angles": angles, "xyz": [round(x, 1), round(y, 1), round(z, 1)],
+            "angles": angles,
+            "xyz": [round(x, 1), round(y, 1), round(z, 1)],
             "comment": f"IK ({x:.0f},{y:.0f},{z:.0f})",
         }
         self._refresh_table()
@@ -164,14 +202,23 @@ class PositionRegisterPanel(ttk.Frame):
         for pr_idx in sorted(self.registers.keys()):
             reg = self.registers[pr_idx]
             a, xyz = reg["angles"], reg.get("xyz", [0, 0, 0])
-            self.tree.insert("", "end", values=(
-                pr_idx, *[f"{v:.1f}" for v in a], *[f"{v:.1f}" for v in xyz], reg.get("comment", ""),
-            ))
+            self.tree.insert(
+                "",
+                "end",
+                values=(
+                    pr_idx,
+                    *[f"{v:.1f}" for v in a],
+                    *[f"{v:.1f}" for v in xyz],
+                    reg.get("comment", ""),
+                ),
+            )
         self.status_label.config(text=f"{len(self.registers)} registers")
 
     def save_registers(self, filename: str):
         with open(filename, "w", encoding="utf-8") as f:
-            json.dump({str(k): v for k, v in self.registers.items()}, f, indent=2, ensure_ascii=False)
+            json.dump(
+                {str(k): v for k, v in self.registers.items()}, f, indent=2, ensure_ascii=False
+            )
 
     def load_registers(self, filename: str):
         with open(filename, encoding="utf-8") as f:

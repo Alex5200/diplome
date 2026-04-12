@@ -26,11 +26,14 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from tkinter import messagebox, ttk
 
+import customtkinter as ctk
+
 from app.config.constants import (
     BLOCK_COLORS,
     DEFAULT_ACC,
     DEFAULT_SPEED,
     FANUC_BG,
+    FANUC_BLUE,
     FANUC_GRAY,
     FANUC_GREEN,
     FANUC_PANEL,
@@ -40,6 +43,19 @@ from app.config.constants import (
     MAX_POSITION,
     MIN_POSITION,
 )
+
+# Drop indicator / accent colours
+_DROP_COLOR      = "#7dd3c0"   # teal — drop indicator & hover
+_SELECTED_BORDER = "#8ab4f8"   # blue — selected block border
+
+# Category accent strips
+_CAT_ACCENTS = {
+    "motion":  "#a8e6cf",
+    "control": "#b8d4e3",
+    "wait":    "#f8c471",
+    "logic":   "#f4d03f",
+    "io":      "#d7bde2",
+}
 
 
 @dataclass
@@ -69,10 +85,14 @@ class ProgramBlock:
             ),
             "arc_move": lambda p: f"Arc → ({p.get('x', 0)}, {p.get('y', 0)}, {p.get('z', 0)})",
             "home": lambda p: (
-                f"Home {'All' if p.get('joint') == 'all' else f'J{int(p.get("joint", 0)) + 1}'}"
+                "Home All"
+                if p.get("joint") == "all"
+                else f"Home J{int(p.get('joint', 0)) + 1}"
             ),
             "center": lambda p: (
-                f"Center {'All' if p.get('joint') == 'all' else f'J{int(p.get("joint", 0)) + 1}'}"
+                "Center All"
+                if p.get("joint") == "all"
+                else f"Center J{int(p.get('joint', 0)) + 1}"
             ),
             "set_speed": lambda p: f"Speed: {p.get('speed', DEFAULT_SPEED)}",
             "set_accel": lambda p: f"Accel: {p.get('accel', DEFAULT_ACC)}",
@@ -83,8 +103,8 @@ class ProgramBlock:
             "gripper": lambda p: (
                 f"Gripper {'Close' if p.get('close', True) else 'Open'} ({p.get('force', 50)}%)"
             ),
-            "message": lambda p: f"MSG: {p.get('text', '')[:20]}...",
-            "loop_start": lambda p: f"Loop ×{p.get('count', 1)}",
+            "message": lambda p: f"MSG: {p.get('text', '')[:20]}",
+            "loop_start": lambda p: f"Loop x{p.get('count', 1)}",
             "loop_end": lambda p: "End Loop",
             "if": lambda p: f"If {p.get('condition', 'true')}",
             "else": lambda p: "Else",
@@ -100,8 +120,8 @@ class ProgramBlock:
         return f"Block {block_type}"
 
 
-class BlockConfigDialog(tk.Toplevel):
-    """Диалог настройки параметров блока."""
+class BlockConfigDialog(ctk.CTkToplevel):
+    """Диалог настройки параметров блока — CTk версия."""
 
     def __init__(
         self,
@@ -111,14 +131,13 @@ class BlockConfigDialog(tk.Toplevel):
         callback: Callable[[dict], None],
     ):
         super().__init__(parent)
-        self.title(f"Configure {block_type.replace('_', ' ').title()}")
-        self.geometry("400x500")
+        self.title(f"Configure — {block_type.replace('_', ' ').title()}")
+        self.geometry("440x530")
         self.resizable(False, False)
 
         self.block_type = block_type
         self.params = params.copy()
         self.callback = callback
-        self.result = None
 
         self._create_widgets()
         self._load_params()
@@ -126,55 +145,67 @@ class BlockConfigDialog(tk.Toplevel):
         self.transient(parent)
         self.grab_set()
         self.focus_set()
+        self.lift()
 
     def _create_widgets(self):
-        """Создание виджетов диалога."""
-        self.configure(bg=FANUC_BG)
+        self.configure(fg_color=FANUC_BG)
 
-        # Заголовок
-        header = tk.Frame(self, bg=FANUC_PANEL, height=50)
-        header.pack(fill="x", pady=(0, 10))
+        # Header
+        header = ctk.CTkFrame(self, fg_color=FANUC_PANEL, corner_radius=0, height=52)
+        header.pack(fill="x")
         header.pack_propagate(False)
 
-        tk.Label(
+        ctk.CTkLabel(
             header,
             text=self.block_type.replace("_", " ").upper(),
-            font=("SF Pro", 14, "bold"),
-            bg=FANUC_PANEL,
-            fg=FANUC_TEXT,
+            font=ctk.CTkFont("Segoe UI", 14, "bold"),
+            text_color=FANUC_TEXT,
         ).pack(expand=True)
 
-        # Фрейм с параметрами
-        self.params_frame = tk.Frame(self, bg=FANUC_BG)
-        self.params_frame.pack(fill="both", expand=True, padx=20, pady=10)
+        # Separator
+        ctk.CTkFrame(self, fg_color="#e8e4e0", height=1, corner_radius=0).pack(fill="x")
 
-        # Создаем поля ввода в зависимости от типа блока
-        self.input_vars = {}
+        # Params area
+        self.params_frame = ctk.CTkFrame(self, fg_color=FANUC_BG, corner_radius=0)
+        self.params_frame.pack(fill="both", expand=True, padx=24, pady=14)
+
+        self.input_vars: dict = {}
         self._create_input_fields()
 
-        # Кнопки
-        btn_frame = tk.Frame(self, bg=FANUC_BG)
-        btn_frame.pack(fill="x", padx=20, pady=15)
+        # Separator
+        ctk.CTkFrame(self, fg_color="#e8e4e0", height=1, corner_radius=0).pack(fill="x")
 
-        tk.Button(
+        # Buttons
+        btn_frame = ctk.CTkFrame(self, fg_color=FANUC_BG, corner_radius=0)
+        btn_frame.pack(fill="x", padx=20, pady=14)
+
+        ctk.CTkButton(
             btn_frame,
             text="Cancel",
-            font=("SF Pro", 11),
-            bg=FANUC_GRAY,
-            fg=FANUC_TEXT,
-            width=10,
+            font=ctk.CTkFont("Segoe UI", 10),
+            fg_color=FANUC_PANEL,
+            text_color=FANUC_TEXT,
+            hover_color="#e8e4e0",
+            border_width=1,
+            border_color="#d0ccc8",
+            width=100,
+            height=34,
+            corner_radius=8,
             command=self.destroy,
-        ).pack(side="left", padx=5)
+        ).pack(side="left", padx=4)
 
-        tk.Button(
+        ctk.CTkButton(
             btn_frame,
             text="OK",
-            font=("SF Pro", 11, "bold"),
-            bg=FANUC_GREEN,
-            fg=FANUC_TEXT,
-            width=10,
+            font=ctk.CTkFont("Segoe UI", 10, "bold"),
+            fg_color=_DROP_COLOR,
+            text_color=FANUC_TEXT,
+            hover_color="#5bb8a4",
+            width=100,
+            height=34,
+            corner_radius=8,
             command=self._on_ok,
-        ).pack(side="right", padx=5)
+        ).pack(side="right", padx=4)
 
     def _create_input_fields(self):
         """Создание полей ввода для конкретного типа блока."""
@@ -305,17 +336,25 @@ class BlockConfigDialog(tk.Toplevel):
 
         fields = field_configs.get(self.block_type, [])
 
-        for i, (label, key, default, field_type, range_or_choices) in enumerate(fields):
-            row = tk.Frame(self.params_frame, bg=FANUC_BG)
-            row.pack(fill="x", pady=5)
+        if not fields:
+            ctk.CTkLabel(
+                self.params_frame,
+                text="No parameters required.",
+                font=ctk.CTkFont("Segoe UI", 10),
+                text_color=FANUC_TEXT2,
+            ).pack(pady=20)
+            return
 
-            tk.Label(
+        for i, (label, key, default, field_type, range_or_choices) in enumerate(fields):
+            row = ctk.CTkFrame(self.params_frame, fg_color=FANUC_BG, corner_radius=0)
+            row.pack(fill="x", pady=6)
+
+            ctk.CTkLabel(
                 row,
                 text=label,
-                font=("SF Pro", 10),
-                bg=FANUC_BG,
-                fg=FANUC_TEXT2,
-                width=12,
+                font=ctk.CTkFont("Segoe UI", 10),
+                text_color=FANUC_TEXT2,
+                width=110,
                 anchor="w",
             ).pack(side="left")
 
@@ -324,7 +363,6 @@ class BlockConfigDialog(tk.Toplevel):
                 self.input_vars[key] = var
 
                 if isinstance(range_or_choices[0], tuple):
-                    # (display, value) pairs
                     choices = [c[0] for c in range_or_choices]
                     var.set(
                         next(
@@ -335,27 +373,35 @@ class BlockConfigDialog(tk.Toplevel):
                 else:
                     choices = range_or_choices
 
-                combo = ttk.Combobox(
-                    row, textvariable=var, values=choices, width=25, state="readonly"
-                )
-                combo.pack(side="left", padx=5)
+                ctk.CTkComboBox(
+                    row, variable=var, values=choices, width=200, state="readonly",
+                    fg_color=FANUC_PANEL, text_color=FANUC_TEXT,
+                    button_color=_DROP_COLOR, button_hover_color="#5bb8a4",
+                    border_color="#d0ccc8",
+                ).pack(side="left", padx=5)
             elif field_type == "text":
                 var = tk.StringVar(value=str(default))
                 self.input_vars[key] = var
-                tk.Entry(row, textvariable=var, font=("SF Pro", 10), width=28).pack(
-                    side="left", padx=5
-                )
-            else:  # int или float
+                ctk.CTkEntry(
+                    row,
+                    textvariable=var,
+                    font=ctk.CTkFont("Segoe UI", 10),
+                    width=200,
+                    fg_color=FANUC_PANEL,
+                    text_color=FANUC_TEXT,
+                    border_color="#d0ccc8",
+                ).pack(side="left", padx=5)
+            else:
                 var = (
                     tk.DoubleVar(value=float(default))
                     if field_type == "float"
                     else tk.IntVar(value=int(default))
                 )
                 self.input_vars[key] = var
-
                 min_val, max_val = range_or_choices or (0, 100)
-                spin = ttk.Spinbox(row, from_=min_val, to=max_val, textvariable=var, width=25)
-                spin.pack(side="left", padx=5)
+                ttk.Spinbox(row, from_=min_val, to=max_val, textvariable=var, width=22).pack(
+                    side="left", padx=5
+                )
 
     def _load_params(self):
         """Загрузка текущих параметров."""
@@ -373,11 +419,10 @@ class BlockConfigDialog(tk.Toplevel):
 
             for key, var in self.input_vars.items():
                 value = var.get()
-                # Преобразование для choice
                 if self.block_type == "wait_input" and key == "state":
                     value = int(value)
                 elif self.block_type == "gripper" and key == "close":
-                    value = value == "True" or value == True
+                    value = value == "True" or value is True
                 result[key] = value
 
             self.callback(result)
@@ -386,230 +431,118 @@ class BlockConfigDialog(tk.Toplevel):
             messagebox.showerror("Error", f"Invalid input: {e}")
 
 
-class BlockPalette(ttk.Frame):
-    """Расширенная палитра блоков для программирования."""
+class BlockPalette(ctk.CTkFrame):
+    """Палитра блоков программирования — CTkScrollableFrame edition."""
+
+    _CATEGORIES = [
+        ("Motion", "motion", [
+            ("Move Joint",  "move_joint",  {"type": "move_joint",  "joint": 0, "position": 2048, "speed": DEFAULT_SPEED}),
+            ("Move XYZ",   "move_xyz",    {"type": "move_xyz",    "x": 0, "y": 0, "z": 200, "speed": DEFAULT_SPEED}),
+            ("Linear Move","linear_move", {"type": "linear_move", "x": 0, "y": 0, "z": 200, "speed": DEFAULT_SPEED}),
+            ("Rotate",     "rotate",      {"type": "rotate",      "rx": 0, "ry": 0, "rz": 0, "speed": DEFAULT_SPEED}),
+            ("Arc Move",   "arc_move",    {"type": "arc_move",    "x": 0, "y": 0, "z": 200, "via_x": 50, "via_y": 50, "via_z": 200}),
+            ("Home",       "home",        {"type": "home",        "joint": "all"}),
+            ("Center",     "center",      {"type": "center",      "joint": "all"}),
+        ]),
+        ("Settings", "control", [
+            ("Set Speed",  "set_speed",  {"type": "set_speed",  "speed": DEFAULT_SPEED}),
+            ("Set Accel",  "set_accel",  {"type": "set_accel",  "accel": DEFAULT_ACC}),
+            ("Torque On",  "torque_on",  {"type": "torque_on",  "joint": 0}),
+            ("Torque Off", "torque_off", {"type": "torque_off", "joint": 0}),
+            ("Gripper",    "gripper",    {"type": "gripper",    "close": True, "force": 50, "position": 2048}),
+        ]),
+        ("Timing", "wait", [
+            ("Delay",      "wait_time",  {"type": "wait_time",  "seconds": 1.0}),
+            ("Wait Input", "wait_input", {"type": "wait_input", "input": 1, "state": 1, "timeout": 30}),
+        ]),
+        ("Logic", "logic", [
+            ("Loop Start", "loop_start", {"type": "loop_start", "count": 3, "name": "loop_1"}),
+            ("Loop End",   "loop_end",   {"type": "loop_end"}),
+            ("If",         "if",         {"type": "if",         "condition": "true"}),
+            ("Else",       "else",       {"type": "else"}),
+            ("End If",     "endif",      {"type": "endif"}),
+        ]),
+        ("Flow", "io", [
+            ("Label",      "label",      {"type": "label",      "name": "LBL_1"}),
+            ("GoTo",       "goto",       {"type": "goto",       "label": "LBL_1"}),
+            ("Subroutine", "subroutine", {"type": "subroutine", "name": "SUB_1"}),
+            ("Return",     "return",     {"type": "return"}),
+            ("Message",    "message",    {"type": "message",    "text": "Hello!", "msg_type": "info"}),
+        ]),
+    ]
 
     def __init__(self, parent: tk.Misc, canvas: "ProgramCanvas"):
-        super().__init__(parent, width=220, style="Dark.TFrame")
+        super().__init__(parent, fg_color=FANUC_BG, corner_radius=0)
         self.canvas = canvas
-        self.block_id_counter = 0
+        self._create_ui()
 
-        self._create_categories()
-
-    def _create_categories(self) -> None:
-        """Создание категорий блоков."""
-        # Заголовок
-        header = tk.Frame(self, bg=FANUC_PANEL, height=40)
-        header.pack(fill="x", pady=(0, 5))
+    def _create_ui(self) -> None:
+        # ── Header ──────────────────────────────────────────────────────────
+        header = ctk.CTkFrame(self, fg_color=FANUC_PANEL, corner_radius=0, height=46)
+        header.pack(fill="x")
         header.pack_propagate(False)
 
-        tk.Label(
+        ctk.CTkLabel(
             header,
             text="BLOCK PALETTE",
-            font=("SF Pro", 11, "bold"),
-            bg=FANUC_PANEL,
-            fg=FANUC_TEXT,
+            font=ctk.CTkFont("Segoe UI", 11, "bold"),
+            text_color=FANUC_TEXT,
         ).pack(expand=True)
 
-        # Canvas для прокрутки
-        scroll_canvas = tk.Canvas(self, bg=FANUC_BG, highlightthickness=0)
-        scroll_canvas.pack(fill="both", expand=True, padx=5, pady=5)
+        ctk.CTkFrame(self, fg_color="#e8e4e0", height=1, corner_radius=0).pack(fill="x")
 
-        scrollbar = ttk.Scrollbar(scroll_canvas, orient="vertical", command=scroll_canvas.yview)
-        scrollbar.pack(side="right", fill="y")
+        # ── Scrollable content area (replaces manual Canvas + Scrollbar) ────
+        scroll = ctk.CTkScrollableFrame(
+            self,
+            fg_color=FANUC_BG,
+            corner_radius=0,
+            scrollbar_button_color=_DROP_COLOR,
+            scrollbar_button_hover_color="#5bb8a4",
+        )
+        scroll.pack(fill="both", expand=True, padx=0, pady=0)
 
-        scroll_canvas.configure(yscrollcommand=scrollbar.set)
+        for cat_name, cat_type, blocks in self._CATEGORIES:
+            accent     = _CAT_ACCENTS.get(cat_type, FANUC_PANEL)
+            block_bg   = BLOCK_COLORS.get(cat_type, FANUC_PANEL)
 
-        content_frame = tk.Frame(scroll_canvas, bg=FANUC_BG)
-        scroll_canvas.create_window((0, 0), window=content_frame, anchor="nw")
+            # Category strip
+            strip = ctk.CTkFrame(scroll, fg_color=accent, corner_radius=4, height=26)
+            strip.pack(fill="x", pady=(8, 0))
+            strip.pack_propagate(False)
 
-        # Категории блоков
-        categories = [
-            (
-                "🏃 Motion",
-                "motion",
-                [
-                    (
-                        "Move Joint",
-                        "move_joint",
-                        {
-                            "type": "move_joint",
-                            "joint": 0,
-                            "position": 2048,
-                            "speed": DEFAULT_SPEED,
-                        },
-                    ),
-                    (
-                        "Move XYZ",
-                        "move_xyz",
-                        {
-                            "type": "move_xyz",
-                            "x": 0,
-                            "y": 0,
-                            "z": 200,
-                            "speed": DEFAULT_SPEED,
-                        },
-                    ),
-                    (
-                        "Linear Move",
-                        "linear_move",
-                        {
-                            "type": "linear_move",
-                            "x": 0,
-                            "y": 0,
-                            "z": 200,
-                            "speed": DEFAULT_SPEED,
-                        },
-                    ),
-                    (
-                        "Rotate",
-                        "rotate",
-                        {
-                            "type": "rotate",
-                            "rx": 0,
-                            "ry": 0,
-                            "rz": 0,
-                            "speed": DEFAULT_SPEED,
-                        },
-                    ),
-                    (
-                        "Arc Move",
-                        "arc_move",
-                        {
-                            "type": "arc_move",
-                            "x": 0,
-                            "y": 0,
-                            "z": 200,
-                            "via_x": 50,
-                            "via_y": 50,
-                            "via_z": 200,
-                        },
-                    ),
-                    ("Home", "home", {"type": "home", "joint": "all"}),
-                    ("Center", "center", {"type": "center", "joint": "all"}),
-                ],
-            ),
-            (
-                "⚙️ Settings",
-                "control",
-                [
-                    (
-                        "Set Speed",
-                        "set_speed",
-                        {"type": "set_speed", "speed": DEFAULT_SPEED},
-                    ),
-                    (
-                        "Set Accel",
-                        "set_accel",
-                        {"type": "set_accel", "accel": DEFAULT_ACC},
-                    ),
-                    ("Torque On", "torque_on", {"type": "torque_on", "joint": 0}),
-                    ("Torque Off", "torque_off", {"type": "torque_off", "joint": 0}),
-                    (
-                        "Gripper",
-                        "gripper",
-                        {
-                            "type": "gripper",
-                            "close": True,
-                            "force": 50,
-                            "position": 2048,
-                        },
-                    ),
-                ],
-            ),
-            (
-                "⏱️ Timing",
-                "wait",
-                [
-                    ("Delay", "wait_time", {"type": "wait_time", "seconds": 1.0}),
-                    (
-                        "Wait Input",
-                        "wait_input",
-                        {"type": "wait_input", "input": 1, "state": 1, "timeout": 30},
-                    ),
-                ],
-            ),
-            (
-                "🔀 Logic",
-                "logic",
-                [
-                    (
-                        "Loop Start",
-                        "loop_start",
-                        {"type": "loop_start", "count": 3, "name": "loop_1"},
-                    ),
-                    ("Loop End", "loop_end", {"type": "loop_end"}),
-                    ("If", "if", {"type": "if", "condition": "true"}),
-                    ("Else", "else", {"type": "else"}),
-                    ("End If", "endif", {"type": "endif"}),
-                ],
-            ),
-            (
-                "🏷️ Flow",
-                "io",
-                [
-                    ("Label", "label", {"type": "label", "name": "LBL_1"}),
-                    ("GoTo", "goto", {"type": "goto", "label": "LBL_1"}),
-                    (
-                        "Subroutine",
-                        "subroutine",
-                        {"type": "subroutine", "name": "SUB_1"},
-                    ),
-                    ("Return", "return", {"type": "return"}),
-                    (
-                        "Message",
-                        "message",
-                        {"type": "message", "text": "Hello!", "msg_type": "info"},
-                    ),
-                ],
-            ),
-        ]
+            ctk.CTkLabel(
+                strip,
+                text=cat_name.upper(),
+                font=ctk.CTkFont("Segoe UI", 8, "bold"),
+                text_color=FANUC_TEXT,
+                anchor="w",
+            ).pack(side="left", padx=8, fill="y")
 
-        for category_name, category_type, blocks in categories:
-            frame = tk.LabelFrame(
-                content_frame,
-                text=f"  {category_name}  ",
-                font=("SF Pro", 9, "bold"),
-                bg=FANUC_BG,
-                fg=FANUC_TEXT2,
-                relief="flat",
-                bd=1,
-                highlightbackground=FANUC_GRAY,
-                highlightthickness=1,
-            )
-            frame.pack(fill="x", padx=5, pady=5)
-            frame.configure(background=FANUC_BG)
-
+            # Block buttons
             for block_name, block_type, params in blocks:
-                btn = tk.Button(
-                    frame,
-                    text=f"  {block_name}",
-                    bg=BLOCK_COLORS.get(category_type, FANUC_PANEL),
-                    fg=FANUC_TEXT,
-                    font=("SF Pro", 9),
-                    relief="flat",
+                ctk.CTkButton(
+                    scroll,
+                    text=f"+ {block_name}",
+                    font=ctk.CTkFont("Segoe UI", 9),
+                    fg_color=block_bg,
+                    text_color=FANUC_TEXT,
+                    hover_color=accent,
                     anchor="w",
-                    padx=5,
-                    pady=3,
-                    command=lambda p=params, t=category_type: self._add_block(p, t),
-                )
-                btn.pack(fill="x", padx=3, pady=2)
+                    height=30,
+                    corner_radius=4,
+                    command=lambda p=params, t=cat_type: self._add_block(p, t),
+                ).pack(fill="x", padx=2, pady=1)
 
-        content_frame.update_idletasks()
-        scroll_canvas.config(scrollregion=scroll_canvas.bbox("all"))
-
-    def _add_block(self, params: dict, block_type: str):
-        """Добавление блока с открытием диалога настройки."""
-
+    def _add_block(self, params: dict, block_type: str) -> None:
+        """Open config dialog then push block to canvas."""
         def on_configured(configured_params):
             self.canvas.add_block_from_palette(configured_params, block_type)
 
-        # Открываем диалог настройки
         BlockConfigDialog(self, params.get("type"), params, on_configured)
 
 
 class ProgramCanvas(tk.Canvas):
-    """Расширенный холст программы с редактированием блоков."""
+    """Расширенный холст программы с редактированием и перетаскиванием блоков."""
 
     def __init__(self, parent: tk.Misc):
         super().__init__(parent, bg=FANUC_BG, highlightthickness=0, relief="flat")
@@ -619,8 +552,16 @@ class ProgramCanvas(tk.Canvas):
         self.block_id_counter = 0
         self.selected_block_id: int | None = None
 
+        # Drag state
+        self._drag_block_id: int | None = None
+        self._drag_start_y_root: int = 0
+        self._drop_line_id: int | None = None
+        self._drop_target_idx: int = 0
+
         self.bind("<Configure>", self._on_resize)
         self.bind("<Button-1>", self._on_canvas_click)
+
+    # ── Public API ────────────────────────────────────────────────────────────
 
     def add_block_from_palette(self, params: dict, block_type: str):
         """Добавление блока из палитры."""
@@ -669,6 +610,108 @@ class ProgramCanvas(tk.Canvas):
         self.y_offset = 10
         self.block_id_counter = 0
 
+    def get_program(self) -> list[dict]:
+        """Получение программы для выполнения."""
+        return [b.__dict__ for b in self.blocks]
+
+    def move_block_up(self, block_id: int):
+        """Перемещение блока вверх."""
+        idx = next((i for i, b in enumerate(self.blocks) if b.id == block_id), -1)
+        if idx > 0:
+            self.blocks[idx], self.blocks[idx - 1] = self.blocks[idx - 1], self.blocks[idx]
+            self._update_blocks_display()
+
+    def move_block_down(self, block_id: int):
+        """Перемещение блока вниз."""
+        idx = next((i for i, b in enumerate(self.blocks) if b.id == block_id), -1)
+        if 0 <= idx < len(self.blocks) - 1:
+            self.blocks[idx], self.blocks[idx + 1] = self.blocks[idx + 1], self.blocks[idx]
+            self._update_blocks_display()
+
+    # ── Drag-and-drop ─────────────────────────────────────────────────────────
+
+    def _start_drag(self, event: tk.Event, block_id: int) -> None:
+        """Начало перетаскивания блока."""
+        self._drag_block_id = block_id
+        self._drag_start_y_root = event.y_root
+        self._select_block(block_id)
+        # Visually mark the dragged block
+        widget = self.block_widgets.get(block_id)
+        if widget:
+            widget.configure(highlightbackground=_DROP_COLOR, highlightthickness=2)
+
+    def _on_drag(self, event: tk.Event) -> None:
+        """Обновление индикатора перетаскивания."""
+        if self._drag_block_id is None:
+            return
+        canvas_y = self._root_y_to_canvas_y(event.y_root)
+        idx = self._get_drop_index(canvas_y)
+        self._drop_target_idx = idx
+        self._draw_drop_indicator(idx)
+
+    def _end_drag(self, event: tk.Event) -> None:
+        """Завершение перетаскивания — перестановка блока."""
+        if self._drag_block_id is None:
+            return
+        canvas_y = self._root_y_to_canvas_y(event.y_root)
+        new_idx = self._get_drop_index(canvas_y)
+        self._reorder_block(self._drag_block_id, new_idx)
+        self._drag_block_id = None
+        if self._drop_line_id is not None:
+            self.delete(self._drop_line_id)
+            self._drop_line_id = None
+        self._update_blocks_display()
+
+    def _root_y_to_canvas_y(self, y_root: int) -> float:
+        """Перевод экранных координат в координаты холста (с учётом прокрутки)."""
+        window_y = y_root - self.winfo_rooty()
+        return self.canvasy(window_y)
+
+    def _get_drop_index(self, canvas_y: float) -> int:
+        """Определение индекса вставки по y-координате холста."""
+        cumulative = 10
+        for i, block in enumerate(self.blocks):
+            widget = self.block_widgets.get(block.id)
+            if widget is None:
+                continue
+            h = widget.winfo_reqheight()
+            if canvas_y < cumulative + h / 2:
+                return i
+            cumulative += h + 8
+        return len(self.blocks)
+
+    def _draw_drop_indicator(self, idx: int) -> None:
+        """Рисование горизонтальной линии — индикатора места вставки."""
+        if self._drop_line_id is not None:
+            self.delete(self._drop_line_id)
+
+        y = 10
+        for i, block in enumerate(self.blocks):
+            if i == idx:
+                break
+            widget = self.block_widgets.get(block.id)
+            if widget:
+                y += widget.winfo_reqheight() + 8
+
+        w = max(self.winfo_width() - 20, 100)
+        self._drop_line_id = self.create_line(
+            10, y - 3, w, y - 3, fill=_DROP_COLOR, width=3, dash=(6, 3)
+        )
+
+    def _reorder_block(self, block_id: int, new_idx: int) -> None:
+        """Перестановка блока на новую позицию."""
+        old_idx = next((i for i, b in enumerate(self.blocks) if b.id == block_id), -1)
+        if old_idx == -1:
+            return
+        block = self.blocks.pop(old_idx)
+        # Adjust index after removal
+        if new_idx > old_idx:
+            new_idx -= 1
+        new_idx = max(0, min(new_idx, len(self.blocks)))
+        self.blocks.insert(new_idx, block)
+
+    # ── Widget creation ───────────────────────────────────────────────────────
+
     def _create_block_widget(self, block: ProgramBlock) -> None:
         """Создание виджета блока."""
         color = BLOCK_COLORS.get(block.block_type, FANUC_PANEL)
@@ -677,93 +720,131 @@ class ProgramCanvas(tk.Canvas):
             self,
             bg=color,
             relief="flat",
-            bd=1,
+            bd=0,
             highlightbackground=FANUC_GRAY,
             highlightthickness=1,
         )
         frame.bind("<Button-1>", lambda e, bid=block.id: self._select_block(bid))
 
-        # Верхняя панель с типом и кнопками
+        # ── Title row ──────────────────────────────────────────────────────
         title_frame = tk.Frame(frame, bg=color)
-        title_frame.pack(fill="x", padx=4, pady=2)
-        title_frame.bind("<Button-1>", lambda e, bid=block.id: self._select_block(bid))
+        title_frame.pack(fill="x", padx=4, pady=(4, 2))
 
-        # Иконка типа
-        type_icons = {
-            "move_joint": "🔄",
-            "move_xyz": "📍",
-            "linear_move": "➡️",
-            "rotate": "🔄",
-            "arc_move": "🌈",
-            "home": "🏠",
-            "center": "⚫",
-            "set_speed": "⚡",
-            "set_accel": "🚀",
-            "wait_time": "⏱️",
-            "wait_input": "🔌",
-            "torque_on": "💪",
-            "torque_off": "🚫",
-            "gripper": "✋",
-            "message": "💬",
-            "loop_start": "🔁",
-            "loop_end": "⏹️",
-            "if": "❓",
-            "else": "↪️",
-            "endif": "✓",
-            "goto": "🏃",
-            "label": "🏷️",
-            "subroutine": "📞",
-            "return": "↩️",
+        # Drag handle — bindings go here so edit/delete buttons still work
+        drag_handle = tk.Label(
+            title_frame,
+            text=":",  # Simpler drag indicator (no emoji dependency)
+            bg=color,
+            fg=FANUC_GRAY,
+            font=("Segoe UI", 14, "bold"),
+            cursor="fleur",
+            padx=2,
+        )
+        drag_handle.pack(side="left")
+        drag_handle.bind("<ButtonPress-1>", lambda e, bid=block.id: self._start_drag(e, bid))
+        drag_handle.bind("<B1-Motion>", self._on_drag)
+        drag_handle.bind("<ButtonRelease-1>", self._end_drag)
+        # Clicking handle also selects the block
+        drag_handle.bind("<Button-1>", lambda e, bid=block.id: self._select_block(bid))
+
+        type_labels = {
+            "move_joint": "Move Joint",
+            "move_xyz": "Move XYZ",
+            "linear_move": "Linear Move",
+            "rotate": "Rotate",
+            "arc_move": "Arc Move",
+            "home": "Home",
+            "center": "Center",
+            "set_speed": "Set Speed",
+            "set_accel": "Set Accel",
+            "wait_time": "Delay",
+            "wait_input": "Wait Input",
+            "torque_on": "Torque ON",
+            "torque_off": "Torque OFF",
+            "gripper": "Gripper",
+            "message": "Message",
+            "loop_start": "Loop Start",
+            "loop_end": "Loop End",
+            "if": "If",
+            "else": "Else",
+            "endif": "End If",
+            "goto": "GoTo",
+            "label": "Label",
+            "subroutine": "Subroutine",
+            "return": "Return",
         }
 
-        icon = type_icons.get(block.params.get("type"), "🔷")
+        block_type_key = block.params.get("type", "")
+        label_text = type_labels.get(block_type_key, block_type_key.replace("_", " ").title())
 
         tk.Label(
             title_frame,
-            text=f"{icon} {block.params.get('type', 'block').replace('_', ' ').title()}",
+            text=label_text,
             bg=color,
             fg=FANUC_TEXT,
-            font=("SF Pro", 9, "bold"),
-        ).pack(side="left")
+            font=("Segoe UI", 9, "bold"),
+        ).pack(side="left", padx=(2, 0))
 
-        # Кнопки управления
+        # ── Control buttons (right side) ───────────────────────────────────
         btn_frame = tk.Frame(title_frame, bg=color)
         btn_frame.pack(side="right")
 
+        _btn_cfg = dict(bg=color, relief="flat", bd=0, font=("Segoe UI", 9), cursor="hand2")
+
         tk.Button(
             btn_frame,
-            text="✏️",
-            bg=color,
-            fg=FANUC_TEXT,
-            bd=0,
-            font=("SF Pro", 8),
-            command=lambda bid=block.id: self.edit_block(bid),
+            text="^",
+            fg=FANUC_TEXT2,
+            **_btn_cfg,
+            command=lambda bid=block.id: self.move_block_up(bid),
         ).pack(side="left", padx=1)
 
         tk.Button(
             btn_frame,
-            text="✕",
+            text="v",
+            fg=FANUC_TEXT2,
+            **_btn_cfg,
+            command=lambda bid=block.id: self.move_block_down(bid),
+        ).pack(side="left", padx=1)
+
+        tk.Button(
+            btn_frame,
+            text="Edit",
+            fg=FANUC_TEXT,
+            font=("Segoe UI", 8),
             bg=color,
-            fg=FANUC_RED,
+            relief="flat",
             bd=0,
-            font=("SF Pro", 8),
+            cursor="hand2",
+            command=lambda bid=block.id: self.edit_block(bid),
+        ).pack(side="left", padx=2)
+
+        tk.Button(
+            btn_frame,
+            text="X",
+            fg=FANUC_RED,
+            font=("Segoe UI", 9, "bold"),
+            bg=color,
+            relief="flat",
+            bd=0,
+            cursor="hand2",
             command=lambda bid=block.id: self.remove_block(bid),
         ).pack(side="left", padx=1)
 
-        # Описание параметров
+        # ── Description row ────────────────────────────────────────────────
         desc = block.description
-        if len(desc) > 35:
-            desc = desc[:32] + "..."
+        if len(desc) > 40:
+            desc = desc[:37] + "..."
 
         tk.Label(
             frame,
             text=f"  {desc}",
             bg=color,
             fg=FANUC_TEXT2,
-            font=("SF Pro", 8),
+            font=("Segoe UI", 8),
             anchor="w",
             justify="left",
-        ).pack(fill="x", padx=4, pady=(0, 3))
+        ).pack(fill="x", padx=4, pady=(0, 4))
 
         self.block_widgets[block.id] = frame
 
@@ -773,63 +854,52 @@ class ProgramCanvas(tk.Canvas):
             self.block_widgets[block.id].destroy()
         self._create_block_widget(block)
 
+    # ── Selection ─────────────────────────────────────────────────────────────
+
     def _select_block(self, block_id: int):
         """Выбор блока."""
         self.selected_block_id = block_id
         for bid, widget in self.block_widgets.items():
-            color = BLOCK_COLORS.get(
-                self.blocks[[b.id for b in self.blocks].index(bid)].block_type,
-                FANUC_PANEL,
-            )
             if bid == block_id:
-                widget.configure(highlightbackground=FANUC_GREEN, highlightthickness=2)
+                widget.configure(highlightbackground=_SELECTED_BORDER, highlightthickness=2)
             else:
                 widget.configure(highlightbackground=FANUC_GRAY, highlightthickness=1)
 
     def _on_canvas_click(self, event):
-        """Клик по холсту - снять выделение."""
+        """Клик по холсту — снять выделение."""
         self.selected_block_id = None
         for widget in self.block_widgets.values():
             widget.configure(highlightbackground=FANUC_GRAY, highlightthickness=1)
+
+    # ── Layout ────────────────────────────────────────────────────────────────
 
     def _update_blocks_display(self) -> None:
         """Обновление отображения блоков."""
         self.delete("all")
         self.y_offset = 10
+        canvas_width = self.winfo_width()
 
         for block in self.blocks:
-            if block.id in self.block_widgets:
-                self.create_window(
-                    10, self.y_offset, window=self.block_widgets[block.id], anchor="nw"
-                )
-                self.y_offset += self.block_widgets[block.id].winfo_reqheight() + 8
+            widget = self.block_widgets.get(block.id)
+            if widget is None:
+                continue
+            # Stretch block to canvas width with margin
+            block_width = max(canvas_width - 20, 200)
+            self.create_window(
+                10,
+                self.y_offset,
+                window=widget,
+                anchor="nw",
+                width=block_width,
+            )
+            self.y_offset += widget.winfo_reqheight() + 8
 
-        self.configure(scrollregion=self.bbox("all"))
+        # Re-draw drop indicator if drag is in progress
+        if self._drop_line_id is not None:
+            self._draw_drop_indicator(self._drop_target_idx)
+
+        self.configure(scrollregion=self.bbox("all") or (0, 0, 400, 400))
 
     def _on_resize(self, event: tk.Event) -> None:
         """Обработка изменения размера."""
-        self.configure(scrollregion=self.bbox("all"))
-
-    def get_program(self) -> list[dict]:
-        """Получение программы для выполнения."""
-        return [b.__dict__ for b in self.blocks]
-
-    def move_block_up(self, block_id: int):
-        """Перемещение блока вверх."""
-        idx = next((i for i, b in enumerate(self.blocks) if b.id == block_id), -1)
-        if idx > 0:
-            self.blocks[idx], self.blocks[idx - 1] = (
-                self.blocks[idx - 1],
-                self.blocks[idx],
-            )
-            self._update_blocks_display()
-
-    def move_block_down(self, block_id: int):
-        """Перемещение блока вниз."""
-        idx = next((i for i, b in enumerate(self.blocks) if b.id == block_id), -1)
-        if idx >= 0 and idx < len(self.blocks) - 1:
-            self.blocks[idx], self.blocks[idx + 1] = (
-                self.blocks[idx + 1],
-                self.blocks[idx],
-            )
-            self._update_blocks_display()
+        self._update_blocks_display()
