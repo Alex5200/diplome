@@ -10,13 +10,13 @@ CONTAINER_NAME := robot_control_container
 
 # Detect OS and USB device
 ifeq ($(OS),Windows_NT)
-    # Windows - COM port
-    USB_DEVICE ?= COM3
-    USB_FLAG := -e ROS_DOMAIN_ID=42
+    # Windows - use privileged mode + USB device mapping
+    USB_DEVICE ?= /dev/ttyUSB0
+    USB_FLAG := --privileged -v /dev/bus/usb:/dev/bus/usb
 else
     # Linux/Mac - /dev/ttyUSB0 or similar
     USB_DEVICE ?= /dev/ttyUSB0
-    USB_FLAG := --device=/dev/ttyUSB0:/dev/ttyUSB0
+    USB_FLAG := --device=$(USB_DEVICE):$(USB_DEVICE)
 endif
 
 # Default COM port
@@ -216,11 +216,11 @@ docker-build:
 
 .PHONY: docker-run
 docker-run:
-	@echo "Starting container with USB device $(USB_DEVICE)..."
+	@echo "Starting container..."
 	docker run -it --rm \
 		--name $(CONTAINER_NAME) \
+		-e ROS_DOMAIN_ID=42 \
 		$(USB_FLAG) \
-		$(USB_DEVICE) \
 		$(IMAGE_NAME)
 
 # Run with full USB access
