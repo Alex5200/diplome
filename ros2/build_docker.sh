@@ -1,6 +1,6 @@
 #!/bin/bash
 # Build script for robot_control Docker image
-# Copies app module alongside ros2 package
+# Build context is parent dir with app/ and ros2/ as siblings
 
 set -e
 
@@ -11,17 +11,21 @@ echo "Building robot_control_dev Docker image..."
 echo "Source: $SCRIPT_DIR"
 echo "Parent: $PARENT_DIR"
 
-# Create temp directory
+# Create temp directory for build context
 TEMP_DIR=$(mktemp -d)
 echo "Temp dir: $TEMP_DIR"
-# Don't cleanup on exit for debugging
+trap 'rm -rf "$TEMP_DIR"' EXIT
 
-# Copy ros2
-cp -r "$SCRIPT_DIR" "$TEMP_DIR/ros2"
-
-# Copy app from parent
+# Copy app from parent (for hardware_interface imports)
 echo "Copying app from $PARENT_DIR/app to $TEMP_DIR/app"
 cp -r "$PARENT_DIR/app" "$TEMP_DIR/app/"
+
+# Copy ros2 package as "ros2" in temp (matches dockerfile COPY paths)
+echo "Copying ros2 from $SCRIPT_DIR to $TEMP_DIR/ros2"
+cp -r "$SCRIPT_DIR" "$TEMP_DIR/ros2/"
+
+echo ""
+echo "Build context structure:"
 ls -la "$TEMP_DIR/"
 ls -la "$TEMP_DIR/ros2/"
 

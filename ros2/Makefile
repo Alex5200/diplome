@@ -288,9 +288,10 @@ docker-tui:
 		--name $(CONTAINER_NAME) \
 		--privileged \
 		-v /dev/bus/usb:/dev/bus/usb \
-		$(IMAGE_NAME) bash -c "cp /ws/ros2/robot_tui.py /tmp/ && source /opt/ros/humble/setup.bash && \
+		$(IMAGE_NAME) bash -c "source /opt/ros/humble/setup.bash && \
 			source /ws/install/setup.bash && \
-			python3 /tmp/robot_tui.py"
+			export PYTHONPATH=/ws/app:\$$PYTHONPATH && \
+			python3 /ws/robot_tui.py"
 
 # Start robot + TUI together
 .PHONY: docker-all
