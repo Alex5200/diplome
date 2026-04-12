@@ -1,5 +1,7 @@
 # Robot Control v2 - Инструкция по запуску и управлению
 
+> **Важно:** Пути в примерах (`/Users/alexandr/...`) замените на свои.
+
 ## Обзор
 
 Robot Control v2 использует **единый Hardware Interface** (singleton pattern) для всех ROS 2 нод. Это решает проблему конфликтов при подключении к моторам ST3215.
@@ -357,6 +359,217 @@ ros2 launch robot_control robot_v2.launch.py
 # - Shared cache с thread-safe доступом
 # - Консистентные данные между нодами
 ```
+
+---
+
+## Запуск (подробная инструкция)
+
+См. [RUN.md](RUN.md) — отдельная инструкция для:
+- [Windows](RUN.md#windows)
+- [Linux](RUN.md#linux)
+
+Включает:
+- Поиск USB/COM порта
+- Установка ROS 2 (Docker или нативно)
+- Запуск нод
+- Управление
+- Troubleshooting
+
+---
+
+## Docker (опционально)
+
+Для изоляции окружения можно использовать Docker с ROS 2 Humble.
+
+### Структура файлов
+
+```
+ros2/
+├── dockerfile          # образ с ROS2 Humble + пакет
+├── Makefile            # команды для host + docker
+├── robot_control/      # ваш пакет
+└── ...
+```
+
+### Быстрый старт
+
+#### 1. Найти USB устройство
+
+```powershell
+# Windows
+Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match '^USB' }
+```
+
+```bash
+# Linux/Mac
+ls -la /dev/ttyUSB* /dev/ttyACM*
+```
+
+#### 2. Собрать Docker образ
+
+```bash
+cd ros2
+make docker-build
+```
+
+#### 3. Запустить контейнер с USB
+
+```bash
+# Windows (COM порт)
+make docker-run USB_DEVICE=COM3
+
+# Linux (/dev/ttyUSB0)
+make docker-run USB_DEVICE=/dev/ttyUSB0
+
+# С полным USB доступом (Linux)
+make docker-run-usb
+```
+
+#### 4. Работа в контейнере
+
+```bash
+# Войти в shell контейнера
+make docker-exec
+
+# Запустить robot node
+make docker-robot USB_DEVICE=COM3
+
+# Публиковать команду
+make docker-pub POSITIONS='[0.0, 0.5, 1.0, -0.5, 0.3, 0.0]'
+
+# Emergency stop
+make docker-stop
+
+# Список топиков
+make docker-topics
+```
+
+### Ручной запуск Docker
+
+```bash
+# Сборка
+docker build -t robot_control_dev .
+
+# Запуск с USB
+docker run -it --rm \
+  --name robot_control \
+  --device=/dev/ttyUSB0:/dev/ttyUSB0 \
+  robot_control_dev
+
+# Запуск с полным USB доступом (для Linux)
+docker run -it --rm \
+  --name robot_control \
+  --privileged \
+  -v /dev/bus/usb:/dev/bus/usb \
+  robot_control_dev
+```
+
+### USB проброс
+
+| Платформа | Устройство | Docker флаг |
+|-----------|------------|-------------|
+| Windows | `COM3` | `-e ROS_DOMAIN_ID=42` |
+| Linux | `/dev/ttyUSB0` | `--device=/dev/ttyUSB0` |
+| Linux (полный) | `/dev/bus/usb` | `--privileged -v /dev/bus/usb:/dev/bus/usb` |
+
+### Остановка
+
+```bash
+# Остановить контейнер
+make docker-clean
+
+# Или вручную
+docker stop robot_control
+```
+
+---
+
+## Makefile
+
+Файл `Makefile` предоставляет удобные команды для работы с топиками и Docker.
+
+### Основные команды
+
+```bash
+# Перейти в папку ros2
+cd ros2
+
+# Просмотр справки
+make help
+```
+
+### Работа с топиками (host machine)
+
+```bash
+make list-topics       # Список всех топиков
+make topic-info        # Информация о robot топиках
+make echo-joints       # Слушать joint_states
+make echo-status       # Слушать status
+make pub-cmd-all       # Опубликовать команду (home position)
+make pub-home          # Движение в home (0,0,0,0,0,0)
+make pub-ready         # Движение в ready позицию
+make stop              # Emergency stop
+```
+
+### Публикация команд
+
+```bash
+# Кастомные позиции (6 суставов в радианах)
+make pub-cmd-all POSITIONS='[0.0, 0.5, 1.0, -0.5, 0.3, 0.0]'
+
+# Одиночная команда
+make pub-cmd POSITIONS='[0.5, 0.0, 0.0, 0.0, 0.0, 0.0]'
+```
+
+### Запуск нод
+
+```bash
+make run-robot          # robot_node_v2
+make run-monitor        # monitor_node_v2
+make run-all            # через launch файл
+```
+
+### Разработка
+
+```bash
+make build              # собрать пакет colcon
+make clean              # очистить build artifacts
+make record             # запись топиков в bag файл
+make bw                 # bandwidth использование
+make hz                 # частота топиков
+make list-usb           # показать USB устройства
+```
+
+### Docker
+
+```bash
+make docker-build       # собрать образ
+make docker-run         # запустить контейнер
+make docker-exec        # shell в контейнер
+make docker-robot       # запустить robot node
+make docker-topics      # список топиков в контейнере
+make docker-stop        # emergency stop
+make docker-clean       # остановить контейнер
+```
+
+### Переменные
+
+```bash
+PORT=COM3               # Serial port (по умолчанию)
+USB_DEVICE=COM3         # USB для Docker
+POSITIONS='[...]'       # Массив позиций
+```
+
+---
+
+## Топики ROS 2
+
+| Топик | Тип | Направление | Описание |
+|-------|-----|-------------|----------|
+| `/robot/joint_states` | JointState | publisher | Текущие позиции 6 суставов |
+| `/robot/joint_cmd` | JointTrajectoryPoint | subscriber | Команда на движение |
+| `/robot/status` | String | publisher | JSON статус робота |
+| `/robot/stop` | Empty | subscriber | Emergency stop |
 
 ---
 

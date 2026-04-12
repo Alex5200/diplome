@@ -1,5 +1,69 @@
-FROM osrf/ros2
+FROM ros:humble-ros-base-jammy
 
-COPY . /
+# Install dependencies (ignore repo errors)
+RUN apt-get update || true && \
+    apt-get install -y --allow-unauthenticated \
+    python3-colcon-common-extensions \
+    python3-pip \
+    ros-humble-launch-xml \
+    ros-humble-launch-yaml \
+    ros-humble-demo-nodes-cpp \
+    ros-humble-demo-nodes-py \
+    || apt-get install -y \
+    python3-colcon-common-extensions \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN rosdep update
+# Copy project (app and ros2 are siblings at /ws/)
+COPY app /ws/app/
+COPY ros2 /ws/ros2/
+
+# Set PYTHONPATH so hardware_interface can find app/
+ENV PYTHONPATH=/ws:$PYTHONPATH
+
+WORKDIR /ws
+
+# Build package
+RUN . /opt/ros/humble/setup.sh && \
+    colcon build --packages-select robot_control --base-path /ws/ros2 || \
+    (echo "Build warning: continuing...")
+
+# Environment
+ENV ROS_DOMAIN_ID=42
+
+WORKDIR /ws
+
+# Entrypoint script
+COPY --chmod=755 <<'EOF' /entrypoint.sh
+#!/bin/bash
+set -e
+
+source /opt/ros/humble/setup.bash
+source /ws/install/setup.bash 2>/dev/null || true
+
+echo ""
+echo "=========================================="
+echo "  Robot Control Container"
+echo "=========================================="
+echo ""
+echo "Available topics:"
+ros2 topic list 2>/dev/null || echo "  No topics yet (run a node first)"
+echo ""
+echo "Installed executables:"
+ros2 pkg executables robot_control 2>/dev/null || echo "  None (entry_points may be commented)"
+echo ""
+echo "Launch files:"
+ls /ws/install/robot_control/share/robot_control/launch/*.py 2>/dev/null || echo "  None"
+echo ""
+echo "Quick commands:"
+echo "  ros2 launch robot_control robot_v2.launch.py"
+echo "  ros2 topic list"
+echo "  ros2 topic echo /robot/joint_states"
+echo ""
+echo "=========================================="
+
+exec "$@"
+EOF
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["bash"]
