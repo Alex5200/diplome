@@ -33,6 +33,7 @@ try:
     from rich.live import Live
     from rich.prompt import Prompt
     from rich import print as rprint
+    from rich.console import Group
 
     HAS_RICH = True
 except ImportError:
@@ -228,22 +229,16 @@ class RichTUI:
         )
 
     def render_all(self):
-        """Render complete UI."""
-        self.console.clear()
-
-        # Header
-        self.console.print(self.render_header())
-
-        # Status
-        self.console.print(self.render_status())
-        self.console.print()
-
-        # Joints table
-        self.console.print(self.render_joints())
-        self.console.print()
-
-        # Controls
-        self.console.print(self.render_controls())
+        """Render complete UI as a Group for Live display."""
+        return Group(
+            self.render_header(),
+            "",
+            self.render_status(),
+            "",
+            self.render_joints(),
+            "",
+            self.render_controls(),
+        )
 
     def handle_key(self, key: str) -> bool:
         """Handle key press. Returns False if should quit."""
@@ -309,7 +304,6 @@ class RichTUI:
         try:
             with Live(self.render_all, refresh_per_second=10, screen=True) as live:
                 while self.running:
-                    self.render_all()
                     live.update(self.render_all())
 
                     # Simple input handling without blocking
