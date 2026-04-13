@@ -11,8 +11,6 @@ DEFAULT_SPEED = 2400
 DEFAULT_ACC = 50
 MONITOR_INTERVAL = 0.5
 
-CONFIG_FILE = "robot_config.json"
-PROGRAM_FILE = "robot_program.json"
 
 # --- ТЕМПЕРАТУРНЫЕ ПОРОГИ ---
 TEMP_WARNING = 70
@@ -135,7 +133,12 @@ DEFAULT_MOTOR_MAPPING = {
         "inverted": False,
     },
 }
-
+_ACCENT = "#7dd3c0"
+_ACCENT_H = "#5bb8a4"
+_BORDER = "#e8e4e0"
+_CARD_BG = FANUC_PANEL
+CONFIG_FILE = "robot_config.json"
+PROGRAM_FILE = "robot_program.json"
 DEFAULT_MOTOR_CONFIG = {
     f"motor_{i}": {"min_pos": 0, "max_pos": MAX_POSITION, "name": f"Мотор {i}"} for i in range(1, 7)
 }
