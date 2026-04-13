@@ -17,9 +17,11 @@ from ..config.constants import (
     DEFAULT_ACC,
     DEFAULT_MOTOR_CONFIG,
     DEFAULT_MOTOR_MAPPING,
+    DEFAULT_ORIENTATION,
     DEFAULT_SPEED,
     MAX_POSITION,
     MIN_POSITION,
+    ROBOT_ORIENTATIONS,
 )
 
 
@@ -35,6 +37,7 @@ class MotorController:
         self.cartesian_position = [0.0, 0.0, 0.0]
         self.motor_config = DEFAULT_MOTOR_CONFIG.copy()
         self.motor_mapping = DEFAULT_MOTOR_MAPPING.copy()
+        self.robot_orientation = DEFAULT_ORIENTATION  # "front", "left", "right", "back"
         self._read_lock = threading.Lock()
         self._manual_speed = DEFAULT_SPEED
 
@@ -193,7 +196,13 @@ class MotorController:
         return self._manual_speed
 
     def update_motor_mapping(
-        self, joint_index: int, motor_id: int, name: str = "", inverted: bool = False
+        self,
+        joint_index: int,
+        motor_id: int,
+        name: str = "",
+        inverted: bool = False,
+        min_pos: int = 0,
+        max_pos: int = MAX_POSITION,
     ):
         key = f"joint_{joint_index}"
         from ..config.constants import JOINT_NAMES
@@ -204,8 +213,8 @@ class MotorController:
         self.motor_mapping[key] = {
             "motor_id": motor_id,
             "name": name or default_name,
-            "min_pos": 0,
-            "max_pos": MAX_POSITION,
+            "min_pos": min_pos,
+            "max_pos": max_pos,
             "inverted": inverted,
         }
 

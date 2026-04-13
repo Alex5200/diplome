@@ -18,6 +18,7 @@ from app.config.constants import (
     FANUC_PANEL,
     FANUC_TEXT,
     JOINT_NAMES,
+    MAX_POSITION,
 )
 from app.controllers.motor_controller import MotorController
 
@@ -38,6 +39,12 @@ class MotorMappingPanel(ttk.Frame):
         self.mapping_vars: dict[int, tk.IntVar] = {}
         self.name_vars: dict[int, tk.StringVar] = {}
         self.inverted_vars: dict[int, tk.BooleanVar] = {}
+        self.min_pos_vars: dict[int, tk.IntVar] = {}
+        self.max_pos_vars: dict[int, tk.IntVar] = {}
+        self.position_bars: dict[int, tk.Canvas] = {}
+        self.fill_rects: dict[int, int] = {}
+        self.current_positions: dict[int, int] = {i: 0 for i in range(6)}
+        self.validation_errors: dict[int, bool] = {}
 
         self._create_widgets()
         self._load_current_mapping()
@@ -87,7 +94,10 @@ class MotorMappingPanel(ttk.Frame):
             ("Joint", 120),
             ("Motor ID", 80),
             ("Name", 160),
-            ("Inverted", 80),
+            ("Dir", 50),
+            ("Min", 70),
+            ("Max", 70),
+            ("Position", 140),
         ]:
             tk.Label(
                 hdr_frame,
@@ -142,20 +152,78 @@ class MotorMappingPanel(ttk.Frame):
             )
             en.pack(side="left", padx=6)
 
-            # inverted checkbox
+            # direction toggle button (NEW)
             inv_var = tk.BooleanVar(value=False)
             self.inverted_vars[i] = inv_var
-            chk = tk.Checkbutton(
+            dir_btn = tk.Button(
                 row,
-                variable=inv_var,
-                onvalue=True,
-                offvalue=False,
+                text="↑",
+                font=("SF Mono", 12, "bold"),
+                bg=FANUC_GREEN,
+                fg=FANUC_BG,
+                bd=0,
+                relief="flat",
+                width=3,
+                command=lambda idx=i: self._toggle_direction(idx),
+            )
+            dir_btn.pack(side="left", padx=6)
+
+            # min position spinbox (NEW)
+            min_var = tk.IntVar(value=0)
+            self.min_pos_vars[i] = min_var
+            min_sb = ttk.Spinbox(
+                row,
+                from_=0,
+                to=4095,
+                textvariable=min_var,
+                width=5,
+                font=("SF Mono", 9),
+            )
+            min_sb.pack(side="left", padx=4)
+
+            # max position spinbox (NEW)
+            max_var = tk.IntVar(value=4095)
+            self.max_pos_vars[i] = max_var
+            max_sb = ttk.Spinbox(
+                row,
+                from_=0,
+                to=4095,
+                textvariable=max_var,
+                width=5,
+                font=("SF Mono", 9),
+            )
+            max_sb.pack(side="left", padx=4)
+
+            # position bar canvas (NEW)
+            bar_canvas = tk.Canvas(
+                row,
+                width=100,
+                height=20,
+                bg=FANUC_BG,
+                highlightthickness=1,
+                highlightbackground=FANUC_GRAY,
+            )
+            bar_canvas.pack(side="left", padx=6)
+            self.position_bars[i] = bar_canvas
+
+            # Draw background rectangle
+            bar_canvas.create_rectangle(2, 2, 98, 18, fill=FANUC_PANEL, outline="")
+            # Draw fill rectangle (will be updated later)
+            fill_rect = bar_canvas.create_rectangle(2, 2, 2, 18, fill=FANUC_BLUE, outline="")
+            self.fill_rects[i] = fill_rect
+
+            # Position label
+            pos_label = tk.Label(
+                row,
+                text="0",
+                font=("SF Mono", 9),
                 bg=FANUC_PANEL,
                 fg=FANUC_TEXT,
-                activebackground=FANUC_PANEL,
+                width=5,
             )
-            chk.pack(side="left", padx=6)
+            pos_label.pack(side="left", padx=4)
 
+            self.validation_errors[i] = False
             self.rows[i] = row
 
         # action buttons
@@ -183,14 +251,39 @@ class MotorMappingPanel(ttk.Frame):
                 self.mapping_vars[i].set(m.get("motor_id", i + 1))
                 self.name_vars[i].set(m.get("name", JOINT_NAMES[i]))
                 self.inverted_vars[i].set(m.get("inverted", False))
+                self.min_pos_vars[i].set(m.get("min_pos", 0))
+                self.max_pos_vars[i].set(m.get("max_pos", MAX_POSITION))
+
+                # Update direction button appearance
+                for widget in self.rows[i].pack_slaves():
+                    if isinstance(widget, tk.Button) and widget.cget("text") in ["↑", "↓"]:
+                        if m.get("inverted", False):
+                            widget.config(text="↓", bg=FANUC_ORANGE)
+                        else:
+                            widget.config(text="↑", bg=FANUC_GREEN)
+                        break
 
     def _save_mapping(self):
+        # Validate all min/max pairs first
+        has_errors = False
+        for i in range(6):
+            if not self._validate_min_max(i):
+                has_errors = True
+
+        if has_errors:
+            messagebox.showwarning(
+                "Validation Error", "Min position must be less than Max position for all joints."
+            )
+            return
+
         for i in range(6):
             self.controller.update_motor_mapping(
                 joint_index=i,
                 motor_id=self.mapping_vars[i].get(),
                 name=self.name_vars[i].get(),
                 inverted=self.inverted_vars[i].get(),
+                min_pos=self.min_pos_vars[i].get(),
+                max_pos=self.max_pos_vars[i].get(),
             )
         if self.controller.save_config():
             self.log("Mapping saved", "success")
@@ -206,6 +299,17 @@ class MotorMappingPanel(ttk.Frame):
                     self.mapping_vars[i].set(m["motor_id"])
                     self.name_vars[i].set(m["name"])
                     self.inverted_vars[i].set(m["inverted"])
+                    self.min_pos_vars[i].set(m["min_pos"])
+                    self.max_pos_vars[i].set(m["max_pos"])
+
+                    # Reset direction button appearance
+                    for widget in self.rows[i].pack_slaves():
+                        if isinstance(widget, tk.Button) and widget.cget("text") in ["↑", "↓"]:
+                            if m["inverted"]:
+                                widget.config(text="↓", bg=FANUC_ORANGE)
+                            else:
+                                widget.config(text="↑", bg=FANUC_GREEN)
+                            break
             self._save_mapping()
 
     def _auto_detect(self):
@@ -214,5 +318,70 @@ class MotorMappingPanel(ttk.Frame):
             return
         self.log("Scanning for motors...", "info")
 
-    def update_positions(self, data):
-        pass
+    def _toggle_direction(self, joint_index: int):
+        """Toggle direction button between ↑ (normal) and ↓ (inverted)."""
+        current = self.inverted_vars[joint_index].get()
+        self.inverted_vars[joint_index].set(not current)
+
+        # Update button appearance
+        row_widgets = self.rows[joint_index].pack_slaves()
+        dir_btn = None
+        # Find the direction button (5th widget after joint label, motor spinbox, name entry)
+        for idx, widget in enumerate(self.rows[joint_index].pack_slaves()):
+            if isinstance(widget, tk.Button) and widget.cget("text") in ["↑", "↓"]:
+                dir_btn = widget
+                break
+
+        if dir_btn:
+            if not current:  # switching to inverted
+                dir_btn.config(text="↓", bg=FANUC_ORANGE)
+            else:  # switching to normal
+                dir_btn.config(text="↑", bg=FANUC_GREEN)
+
+    def _validate_min_max(self, joint_index: int) -> bool:
+        """Validate min < max. Returns True if valid."""
+        min_val = self.min_pos_vars[joint_index].get()
+        max_val = self.max_pos_vars[joint_index].get()
+
+        if min_val >= max_val:
+            self.validation_errors[joint_index] = True
+            return False
+        self.validation_errors[joint_index] = False
+        return True
+
+    def _update_position_bar(self, joint_index: int, position: int):
+        """Update the position bar visualization."""
+        min_pos = self.min_pos_vars[joint_index].get()
+        max_pos = self.max_pos_vars[joint_index].get()
+
+        # Calculate ratio
+        if max_pos > min_pos:
+            ratio = (position - min_pos) / (max_pos - min_pos)
+            ratio = max(0, min(1, ratio))  # clamp to 0-1
+        else:
+            ratio = 0
+
+        # Update fill rectangle
+        fill_width = int(96 * ratio)  # 96px max width (100 - 4px padding)
+        canvas = self.position_bars[joint_index]
+        fill_rect = self.fill_rects[joint_index]
+
+        canvas.coords(fill_rect, [2, 2, 2 + fill_width, 18])
+
+        # Update position label (find it in row)
+        for widget in self.rows[joint_index].pack_slaves():
+            if isinstance(widget, tk.Label) and widget.cget("width") == 5:
+                widget.config(text=str(position))
+                break
+
+        self.current_positions[joint_index] = position
+
+    def update_positions(self, data: dict):
+        """Update position bars with current motor positions.
+
+        Args:
+            data: Dict mapping joint_index to current position
+        """
+        for joint_index, position in data.items():
+            if joint_index in self.position_bars:
+                self._update_position_bar(joint_index, position)
