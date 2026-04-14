@@ -244,7 +244,7 @@ class Kinematics3DPanel(ttk.Frame):
         )
         lf.pack(side="left", fill="both", expand=True, padx=(0, 4))
 
-        self.figure = plt.Figure(figsize=(7, 5), dpi=96, facecolor=PLOT_BG)
+        self.figure = plt.figure(figsize=(7, 5), dpi=96, facecolor=PLOT_BG)
         self.ax = self.figure.add_subplot(111, projection="3d")
         self.ax.set_facecolor(PLOT_AX)
 
@@ -818,6 +818,7 @@ class Kinematics3DPanel(ttk.Frame):
             messagebox.showinfo("Select", "Choose a point from the list")
             return
         x, y, z, name = self.preset_points[sel[0]]
+        print(name)
         self.target_x_var.set(x)
         self.target_y_var.set(y)
         self.target_z_var.set(z)

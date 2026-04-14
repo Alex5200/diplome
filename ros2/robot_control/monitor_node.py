@@ -13,8 +13,8 @@ Usage:
 from __future__ import annotations
 
 import json
-import sys
 import os
+import sys
 
 import rclpy
 from rclpy.node import Node
@@ -22,9 +22,9 @@ from std_msgs.msg import String
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+from app.config.constants import TEMP_CRITICAL, TEMP_WARNING
 from app.controllers.motor_controller import MotorController
 from app.controllers.motor_monitor import MotorMonitor
-from app.config.constants import TEMP_WARNING, TEMP_CRITICAL
 
 
 class MonitorNode(Node):

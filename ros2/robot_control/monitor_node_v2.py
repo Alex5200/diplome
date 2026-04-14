@@ -14,8 +14,8 @@ Usage:
 from __future__ import annotations
 
 import json
-import sys
 import os
+import sys
 
 import rclpy
 from rclpy.node import Node

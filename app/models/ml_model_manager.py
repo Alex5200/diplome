@@ -48,7 +48,7 @@ class DetectionResult:
     raw_output: Any = None
 
     @classmethod
-    def not_found(cls, model_name: str = "") -> "DetectionResult":
+    def not_found(cls, model_name: str = "") -> DetectionResult:
         return cls(found=False, model_name=model_name)
 
     def to_dict(self) -> dict[str, Any]:
@@ -74,7 +74,7 @@ class RobotCommand:
     description: str = ""
 
     @classmethod
-    def idle(cls) -> "RobotCommand":
+    def idle(cls) -> RobotCommand:
         return cls(description="idle")
 
     def to_dict(self) -> dict[str, Any]:
@@ -149,13 +149,12 @@ class CustomVisionModel(BaseMLModel):
 
     def load(self) -> bool:
         try:
-            import torch  # noqa: F401
+            import torch
 
             if not os.path.exists(self.model_path):
                 logger.error("[%s] model file not found: %s", self.name, self.model_path)
                 return False
 
-            import torch
 
             self._model = torch.load(self.model_path, map_location=self.device)
             self._model.eval()
@@ -193,7 +192,6 @@ class CustomVisionModel(BaseMLModel):
     def _parse_output(self, output, latency_ms: float) -> DetectionResult:
         """Разобрать вывод модели в DetectionResult."""
         try:
-            import torch
 
             if isinstance(output, (list, tuple)):
                 output = output[0]
@@ -263,7 +261,7 @@ class FineTunedVisionModel(BaseMLModel):
 
     def load(self) -> bool:
         try:
-            from ultralytics import YOLO  # noqa: F401
+            from ultralytics import YOLO
         except ImportError:
             logger.error("Ultralytics not installed. Run: pip install ultralytics")
             return False

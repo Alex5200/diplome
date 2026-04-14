@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any
 
 import numpy as np
 
@@ -113,7 +112,7 @@ class QNetwork:
         self._optimizer.step()
         return float(loss_tensor.item())
 
-    def copy_weights_from(self, other: "QNetwork") -> None:
+    def copy_weights_from(self, other: QNetwork) -> None:
         if self._built and other._built:
             self._model.load_state_dict(other._model.state_dict())
 

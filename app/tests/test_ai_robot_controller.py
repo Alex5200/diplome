@@ -9,7 +9,7 @@ TDD тесты для AIRobotControllerService.
 from __future__ import annotations
 
 import unittest
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock
 
 import numpy as np
 
@@ -309,7 +309,6 @@ class TestAIRobotControllerServiceInit(unittest.TestCase):
         self.assertEqual(svc.get_history(), [])
 
     def test_repr(self):
-        from app.services.ai_robot_controller_service import ControlMode
 
         svc = self._make_svc()
         r = repr(svc)
@@ -474,7 +473,6 @@ class TestControlMode(unittest.TestCase):
     def test_watch_mode_no_execution(self):
         """В режиме WATCH команды не выполняются."""
         from app.services.ai_robot_controller_service import (
-            AICommand,
             AIRobotControllerService,
             ControlMode,
         )

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import math
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -48,10 +48,10 @@ class BaseReward(ABC):
         """
         ...
 
-    def __add__(self, other: "BaseReward") -> "CompositeReward":
+    def __add__(self, other: BaseReward) -> CompositeReward:
         return CompositeReward([(1.0, self), (1.0, other)])
 
-    def __mul__(self, weight: float) -> "WeightedReward":
+    def __mul__(self, weight: float) -> WeightedReward:
         return WeightedReward(self, weight)
 
     def __repr__(self) -> str:
@@ -336,7 +336,7 @@ class CompositeReward(BaseReward):
     def __init__(self, components: list[tuple[float, BaseReward]] | None = None):
         self._components: list[tuple[float, BaseReward]] = components or []
 
-    def add(self, reward_fn: BaseReward, weight: float = 1.0) -> "CompositeReward":
+    def add(self, reward_fn: BaseReward, weight: float = 1.0) -> CompositeReward:
         """Добавить функцию награды с весом."""
         self._components.append((weight, reward_fn))
         return self

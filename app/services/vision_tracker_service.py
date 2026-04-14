@@ -89,8 +89,9 @@ class TrackerState:
 class SimplePID:
     """PID-контроллер для плавного слежения."""
 
-    def __init__(self, kp: float = 1.0, ki: float = 0.0, kd: float = 0.1,
-                 output_limit: float = 30.0):
+    def __init__(
+        self, kp: float = 1.0, ki: float = 0.0, kd: float = 0.1, output_limit: float = 30.0
+    ):
         self.kp = kp
         self.ki = ki
         self.kd = kd
@@ -104,8 +105,9 @@ class SimplePID:
         dt = max(now - self._last_time, 0.001)
         self._last_time = now
 
-        self._integral = max(-self.output_limit,
-                             min(self.output_limit, self._integral + error * dt))
+        self._integral = max(
+            -self.output_limit, min(self.output_limit, self._integral + error * dt)
+        )
         derivative = (error - self._prev_error) / dt
         self._prev_error = error
 
@@ -220,8 +222,9 @@ class VisionTrackerService(BaseService):
         if frame_size:
             self._frame_w, self._frame_h = frame_size
 
-        logger.info("Tracker configured: target='%s', camera=%d, ai=%s",
-                     target_label, camera_id, self.ai)
+        logger.info(
+            "Tracker configured: target='%s', camera=%d, ai=%s", target_label, camera_id, self.ai
+        )
 
     def set_ai_provider(self, ai: AIProvider):
         """Сменить AI провайдер на лету (например Ollama → LM Studio)."""
@@ -263,11 +266,12 @@ class VisionTrackerService(BaseService):
         self._open_camera()
 
         self._capture_thread = threading.Thread(
-            target=self._capture_loop, name="vt-capture", daemon=True)
-        self._vlm_thread = threading.Thread(
-            target=self._vlm_loop, name="vt-vlm", daemon=True)
+            target=self._capture_loop, name="vt-capture", daemon=True
+        )
+        self._vlm_thread = threading.Thread(target=self._vlm_loop, name="vt-vlm", daemon=True)
         self._control_thread = threading.Thread(
-            target=self._control_loop, name="vt-control", daemon=True)
+            target=self._control_loop, name="vt-control", daemon=True
+        )
 
         self._capture_thread.start()
         self._vlm_thread.start()
@@ -418,7 +422,7 @@ class VisionTrackerService(BaseService):
 
                 current = self.robot.get_joint_angles()
                 new_angles = list(current)
-                new_angles[0] = self._clamp(current[0] - delta_pan)   # pan
+                new_angles[0] = self._clamp(current[0] - delta_pan)  # pan
                 new_angles[1] = self._clamp(current[1] - delta_tilt)  # tilt
 
                 self.robot.move_joints(new_angles, speed=800)
@@ -463,16 +467,23 @@ class VisionTrackerService(BaseService):
             cv2.circle(overlay, (obj_cx, obj_cy), 6, (0, 0, 255), -1)
             cv2.line(overlay, (cx, cy), (obj_cx, obj_cy), (0, 255, 255), 1)
 
-            cv2.putText(overlay, f"{target.label}", (bx1, by1 - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+            cv2.putText(
+                overlay,
+                f"{target.label}",
+                (bx1, by1 - 10),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (0, 255, 0),
+                1,
+            )
         else:
-            cv2.putText(overlay, "TARGET NOT FOUND", (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+            cv2.putText(
+                overlay, "TARGET NOT FOUND", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2
+            )
 
         # Статус
         info = f"VLM: {latency:.1f}s | err: ({err_x:+.2f}, {err_y:+.2f}) | {repr(self.ai)[:40]}"
-        cv2.putText(overlay, info, (10, h - 15),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.35, (200, 200, 200), 1)
+        cv2.putText(overlay, info, (10, h - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (200, 200, 200), 1)
 
         return overlay
 
@@ -556,6 +567,7 @@ def run_standalone(
         ai = AIProvider.lm_studio(url=server_url or "http://localhost:1234/v1", model=model)
     elif provider == "openai":
         import os
+
         ai = AIProvider.openai(api_key=os.environ.get("OPENAI_API_KEY", ""), model=model)
     else:
         ai = AIProvider.custom(url=server_url, model=model)
@@ -612,7 +624,10 @@ def run_standalone(
                         new_model = input("Model [qwen2.5-vl]: ").strip() or "qwen2.5-vl"
                         tracker.set_ai_provider(AIProvider.ollama(model=new_model))
                     elif choice == "2":
-                        url = input("URL [http://localhost:1234/v1]: ").strip() or "http://localhost:1234/v1"
+                        url = (
+                            input("URL [http://localhost:1234/v1]: ").strip()
+                            or "http://localhost:1234/v1"
+                        )
                         new_model = input("Model: ").strip() or model
                         tracker.set_ai_provider(AIProvider.lm_studio(url=url, model=new_model))
                     elif choice == "3":
@@ -636,13 +651,18 @@ if __name__ == "__main__":
     parser.add_argument("--port", default="/dev/ttyUSB0")
     parser.add_argument("--target", default="red ball")
     parser.add_argument("--camera", type=int, default=0)
-    parser.add_argument("--provider", choices=["ollama", "lm_studio", "openai", "custom"],
-                        default="ollama")
+    parser.add_argument(
+        "--provider", choices=["ollama", "lm_studio", "openai", "custom"], default="ollama"
+    )
     parser.add_argument("--model", default="qwen2.5-vl")
     parser.add_argument("--server", default="", help="Server URL (for lm_studio/custom)")
     args = parser.parse_args()
 
     run_standalone(
-        port=args.port, target=args.target, camera_id=args.camera,
-        provider=args.provider, model=args.model, server_url=args.server,
+        port=args.port,
+        target=args.target,
+        camera_id=args.camera,
+        provider=args.provider,
+        model=args.model,
+        server_url=args.server,
     )

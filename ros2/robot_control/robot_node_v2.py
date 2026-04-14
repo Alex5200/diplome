@@ -17,13 +17,13 @@ Usage:
 from __future__ import annotations
 
 import json
-import sys
 import os
+import sys
 
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String, Empty
 from sensor_msgs.msg import JointState
+from std_msgs.msg import Empty, String
 from trajectory_msgs.msg import JointTrajectoryPoint
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))

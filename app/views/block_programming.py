@@ -520,6 +520,15 @@ class BlockPalette(ctk.CTkFrame):
 
             # Block buttons
             for block_name, block_type, params in blocks:
+<<<<<<< HEAD
+                btn = tk.Button(
+                    frame,
+                    text=f"  {block_name} + {block_type}",
+                    bg=BLOCK_COLORS.get(category_type, FANUC_PANEL),
+                    fg=FANUC_TEXT,
+                    font=("SF Pro", 9),
+                    relief="flat",
+=======
                 ctk.CTkButton(
                     scroll,
                     text=f"+ {block_name}",
@@ -527,6 +536,7 @@ class BlockPalette(ctk.CTkFrame):
                     fg_color=block_bg,
                     text_color=FANUC_TEXT,
                     hover_color=accent,
+>>>>>>> 16fe26c4d822f4a59ccb820b05cfe2b2dd75b557
                     anchor="w",
                     height=30,
                     corner_radius=4,

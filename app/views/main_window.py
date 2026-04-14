@@ -489,7 +489,12 @@ class TeachPendantPanel(ctk.CTkFrame):
     def _play_thread(self, loops: int):
         self.after(0, lambda: self.play_status.configure(text="RUNNING", text_color=_ACCENT))
         delay = self.delay_var.get()
+<<<<<<< HEAD
+
+        while range(loops):
+=======
         for _ in range(loops):
+>>>>>>> 16fe26c4d822f4a59ccb820b05cfe2b2dd75b557
             if self._stop_flag:
                 break
             for i, point in enumerate(self.teach_points):
@@ -1025,6 +1030,26 @@ class RobotControlGUI(ctk.CTk):
             ("Ry", "tool_ry_var", "#E040FB"),
             ("Rz", "tool_rz_var", "#FFD600"),
         ]:
+<<<<<<< HEAD
+            tk.Label(
+                coord_inner,
+                text=f"{label}:",
+                font=("Consolas", 12, "bold"),
+                bg=FANUC_PANEL,
+                fg=color,
+                name=var_name,
+            ).pack(side="left", padx=(12, 2))
+
+            lbl = tk.Label(
+                coord_inner,
+                text="0.00",
+                font=("Consolas", 13, "bold"),
+                bg=FANUC_BG,
+                fg=FANUC_TEXT,
+                padx=8,
+                pady=4,
+                relief="sunken",
+=======
             ctk.CTkLabel(pos_inner, text=f"{label}:",
                          font=ctk.CTkFont("Consolas", 12, "bold"),
                          text_color=color).pack(side="left", padx=(12, 2))
@@ -1034,6 +1059,7 @@ class RobotControlGUI(ctk.CTk):
                 text_color=FANUC_TEXT,
                 fg_color="#f0ece8", corner_radius=4,
                 width=70, height=28,
+>>>>>>> 16fe26c4d822f4a59ccb820b05cfe2b2dd75b557
             )
             lbl.pack(side="left", padx=(0, 8))
             self.dash_coord_labels[label] = lbl

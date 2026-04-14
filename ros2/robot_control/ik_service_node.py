@@ -19,17 +19,16 @@ Usage:
 from __future__ import annotations
 
 import json
-import sys
 import os
+import sys
 
 import rclpy
 from rclpy.node import Node
-from std_srvs.srv import Trigger  # used as a ping; actual IK uses String topic pair
 from std_msgs.msg import String
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
-from app.models.kinematics import RobotKinematics6DOF, InverseKinematics6DOF
+from app.models.kinematics import InverseKinematics6DOF, RobotKinematics6DOF
 
 
 class IKServiceNode(Node):

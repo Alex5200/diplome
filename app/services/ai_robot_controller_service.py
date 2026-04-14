@@ -38,9 +38,10 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Any, Callable
+from typing import Any
 
 import cv2
 import numpy as np
@@ -114,11 +115,11 @@ class AICommand:
         }
 
     @classmethod
-    def idle_cmd(cls, reason: str = "") -> "AICommand":
+    def idle_cmd(cls, reason: str = "") -> AICommand:
         return cls(action="idle", reason=reason)
 
     @classmethod
-    def error_cmd(cls, error: str) -> "AICommand":
+    def error_cmd(cls, error: str) -> AICommand:
         return cls(action="idle", success=False, error=error)
 
 
