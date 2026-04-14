@@ -1,0 +1,95 @@
+@startuml fig2_11_api_websocket_sequence
+' Рисунок 2.11 — Диаграмма последовательности WebSocket-телеметрии
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #FFFFFF
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EEF4FB
+skinparam ParticipantBorderColor #336699
+skinparam NoteBackgroundColor #FFFBE6
+skinparam NoteBorderColor #CC9900
+
+title Рисунок 2.11 — Диаграмма последовательности WebSocket-телеметрии
+
+actor "Браузер\n(клиент 1)" as C1
+actor "Браузер\n(клиент 2)" as C2
+participant "WebSocketRouter\n(api/websocket.py)" as WS
+participant "BroadcastManager\n_clients: Set[WebSocket]" as BM
+participant "Фоновая задача\n(asyncio)" as BG
+participant "MotorController" as MC
+participant "ST3215 (UART)" as HW
+
+== Установка соединения ==
+
+C1 -> WS : WebSocket Handshake\nws://host:8000/ws
+activate WS
+WS -> WS : await ws.accept()
+WS -> BM : _clients.add(ws_1)
+WS --> C1 : 101 Switching Protocols
+note right of WS
+  Соединение удерживается
+  while True: await receive_text()
+  (пинги клиента игнорируются)
+end note
+
+C2 -> WS : WebSocket Handshake\nws://host:8000/ws
+WS -> WS : await ws.accept()
+WS -> BM : _clients.add(ws_2)
+WS --> C2 : 101 Switching Protocols
+
+== Потоковая передача телеметрии (~5 Гц) ==
+
+loop каждые 200 мс
+  BG -> MC : read_motor_data(id) × 6
+  activate MC
+  MC -> HW : ReadData(motor_id=1..6)
+  HW --> MC : {position, temp, voltage, current, load, moving}
+  MC --> BG : motors: {1: {...}, 2: {...}, ...}
+  deactivate MC
+
+  BG -> BM : push_telemetry(motors)
+  activate BM
+  BM -> BM : data = {"type": "telemetry", "motors": {...}}
+  BM -> C1 : ws.send_text(json.dumps(data))
+  BM -> C2 : ws.send_text(json.dumps(data))
+  deactivate BM
+end
+
+note over C1, HW
+  Формат кадра телеметрии:
+  {
+    "type": "telemetry",
+    "motors": {
+      "1": {"position": 2048, "temperature": 33.5,
+             "voltage": 12.1, "current": 450, "load": 12.3, "moving": false},
+      ...
+    }
+  }
+end note
+
+== Обработка мёртвого соединения ==
+
+BG -> BM : push_telemetry(motors)
+activate BM
+BM -> C1 : ws.send_text(...)\n← клиент закрыл вкладку
+C1 --> BM : ConnectionResetError
+BM -> BM : dead.add(ws_1)
+BM -> C2 : ws.send_text(...) — успешно
+BM -> BM : _clients -= dead
+deactivate BM
+note right of BM
+  Мёртвые соединения
+  автоматически удаляются
+  из _clients при следующей
+  широковещательной рассылке
+end note
+
+== Штатное отключение клиента ==
+
+C2 -> WS : WebSocket Close Frame
+WS -> WS : WebSocketDisconnect
+WS -> BM : _clients.discard(ws_2)
+deactivate WS
+
+@enduml

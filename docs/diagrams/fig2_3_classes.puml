@@ -1,0 +1,158 @@
+@startuml fig2_3_classes
+' Рисунок 2.3 — UML-диаграмма классов общего слоя
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam backgroundColor #FFFFFF
+skinparam class {
+  BackgroundColor #EEF4FB
+  BorderColor #336699
+}
+skinparam interface {
+  BackgroundColor #FFF8DC
+  BorderColor #CC8800
+}
+skinparam abstract {
+  BackgroundColor #F0FFF0
+  BorderColor #228B22
+}
+
+title Рисунок 2.3 — UML-диаграмма классов общего слоя
+
+' Интерфейсы
+interface IMotorController {
+  +connect(port, baudrate): bool
+  +disconnect(): void
+  +move_joint(joint, position, speed): void
+  +emergency_stop(): void
+  +get_motor_data(motor_id): MotorData
+}
+
+interface IMotorMonitor {
+  +start(): void
+  +stop(): void
+}
+
+abstract class BaseService {
+  #_container: DependencyContainer
+  +initialize(container): void
+  +start(): void
+  +stop(): void
+}
+
+' Контейнер
+class DependencyContainer {
+  -_services: dict
+  +register(interface, impl): void
+  +resolve(interface): object
+  +initialize_all(): void
+}
+
+' Шина событий
+class EventBus {
+  -_handlers: dict[str, list]
+  +subscribe(event, handler): void
+  +unsubscribe(event, handler): void
+  +publish(event, data): void
+}
+
+' Контроллер и монитор
+class MotorController {
+  -_lock: threading.Lock
+  -_servo: ST3215
+  -_connected: bool
+  -_joint_mapping: dict
+  +connect(port, baudrate): bool
+  +disconnect(): void
+  +move_joint(joint, angle, speed): void
+  +emergency_stop(): void
+  +get_motor_data(motor_id): MotorData
+  -_angle_to_position(angle, inverted): int
+}
+
+class MotorMonitor {
+  -_stop_event: threading.Event
+  -_thread: Thread
+  +start(): void
+  +stop(): void
+  -_monitor_loop(): void
+}
+
+' Модели данных
+class MotorData {
+  +motor_id: int
+  +position: int
+  +temperature: float
+  +voltage: float
+  +current: float
+  +load: float
+  +status: str
+}
+
+class RobotState {
+  +joint_angles: list[float]
+  +end_effector_pos: tuple
+  +is_connected: bool
+}
+
+' Сервисы
+class RobotService {
+  -_robot_state: RobotState
+  +get_state(): RobotState
+  +move_joint(joint, angle, speed): void
+  +move_all(angles, speed): void
+  +emergency_stop(): void
+}
+
+class KinematicsService {
+  -_fk_cache: dict
+  -_max_reach: float
+  +solve_fk(angles): list
+  +solve_ik(x, y, z): list
+  +is_reachable(x, y, z): bool
+}
+
+class ProgramService {
+  -_current_program: str
+  +load_program(name): void
+  +run_program(): void
+  +stop_program(): void
+}
+
+' Кинематика
+class RobotKinematics6DOF {
+  -dh_params: list
+  +forward_kinematics(angles): list
+  -_dh_matrix(theta, d, a, alpha): ndarray
+}
+
+class InverseKinematics6DOF {
+  -_fk: RobotKinematics6DOF
+  -_max_iter: int
+  -_tolerance: float
+  +solve(target_pos): list
+  -_jacobian(angles): ndarray
+}
+
+' Наследование
+MotorController ..|> IMotorController
+MotorMonitor ..|> IMotorMonitor
+RobotService --|> BaseService
+KinematicsService --|> BaseService
+ProgramService --|> BaseService
+
+' Агрегации
+RobotService o-- MotorController
+RobotService o-- KinematicsService
+RobotService o-- EventBus
+MotorMonitor o-- EventBus
+DependencyContainer o-- RobotService
+DependencyContainer o-- KinematicsService
+DependencyContainer o-- ProgramService
+DependencyContainer o-- MotorController
+KinematicsService o-- RobotKinematics6DOF
+KinematicsService o-- InverseKinematics6DOF
+InverseKinematics6DOF o-- RobotKinematics6DOF
+MotorData --* MotorController
+
+@enduml

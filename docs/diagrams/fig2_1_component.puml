@@ -1,0 +1,104 @@
+@startuml fig2_1_component
+' Рисунок 2.1 — Компонентная диаграмма системы (UML)
+skinparam componentStyle rectangle
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #FFFFFF
+skinparam ArrowColor #333333
+
+skinparam component {
+  BackgroundColor #EEF4FB
+  BorderColor #336699
+  FontColor #000000
+}
+skinparam package {
+  BackgroundColor #F5F5F5
+  BorderColor #888888
+}
+
+title Рисунок 2.1 — Компонентная диаграмма системы
+
+package "Общий слой (app/)" {
+  package "core/" {
+    [DependencyContainer]
+    [EventBus]
+    [BaseService]
+    [IMotorController]
+    [IMotorMonitor]
+  }
+  package "models/" {
+    [RobotKinematics6DOF]
+    [InverseKinematics6DOF]
+    [MotorData]
+    [JointState]
+    [RobotState]
+  }
+  package "controllers/" {
+    [MotorController]
+    [MotorMonitor]
+  }
+  package "services/" {
+    [RobotService]
+    [KinematicsService]
+    [ProgramService]
+  }
+  package "utils/" {
+    [ConfigManager]
+    [Logger]
+    [ProgramExecutor]
+  }
+}
+
+package "Desktop (desktop/)" {
+  [Tkinter GUI]
+  [Matplotlib 3D View]
+}
+
+package "Web (web/)" {
+  [FastAPI Server]
+  [WebSocket Handler]
+  [HTML/JS Client]
+}
+
+package "ROS2 (ros2/)" {
+  [robot_node]
+  [monitor_node]
+  [ik_service_node]
+}
+
+package "Программы (programs/)" {
+  [GraspProgram]
+  [DrawProgram]
+  [CalibrationProgram]
+}
+
+' Клиентские слои → общий слой
+[Tkinter GUI] --> [RobotService]
+[Tkinter GUI] --> [KinematicsService]
+[FastAPI Server] --> [RobotService]
+[FastAPI Server] --> [KinematicsService]
+[WebSocket Handler] --> [EventBus]
+[robot_node] --> [RobotService]
+[monitor_node] --> [EventBus]
+[ik_service_node] --> [KinematicsService]
+[GraspProgram] --> [RobotService]
+[DrawProgram] --> [KinematicsService]
+
+' Внутри общего слоя
+[RobotService] --> [MotorController]
+[RobotService] --> [KinematicsService]
+[RobotService] --> [EventBus]
+[MotorMonitor] --> [EventBus]
+[MotorController] ..|> [IMotorController]
+[MotorMonitor] ..|> [IMotorMonitor]
+[RobotService] --> [BaseService]
+[KinematicsService] --> [BaseService]
+[ProgramService] --> [BaseService]
+[DependencyContainer] --> [RobotService]
+[DependencyContainer] --> [KinematicsService]
+[DependencyContainer] --> [ProgramService]
+[DependencyContainer] --> [MotorController]
+[KinematicsService] --> [RobotKinematics6DOF]
+[KinematicsService] --> [InverseKinematics6DOF]
+
+@enduml

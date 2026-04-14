@@ -1,0 +1,129 @@
+@startuml fig2_8_api_rest_sequence
+' Рисунок 2.8 — Диаграмма последовательности REST API управления роботом
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #FFFFFF
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EEF4FB
+skinparam ParticipantBorderColor #336699
+skinparam NoteBackgroundColor #FFFBE6
+skinparam NoteBorderColor #CC9900
+
+title Рисунок 2.8 — Диаграмма последовательности REST API управления роботом
+
+actor "Клиент\n(HTTP)" as CLIENT
+participant "FastAPI\n(api/routes.py)" as API
+participant "require_token\n(Depends)" as AUTH
+participant "MotorController" as MC
+participant "InverseKinematics\n6DOF" as IK
+participant "ST3215\n(UART)" as HW
+
+== Подключение к роботу ==
+
+CLIENT -> API : POST /api/connect\n{port: "COM3", baudrate: 1000000}
+API -> AUTH : validate Bearer token
+AUTH --> API : OK
+API -> MC : MotorController(device="COM3")
+activate MC
+API -> MC : connect()
+MC -> HW : open serial port (1 Mбод)
+HW --> MC : OK
+MC -> HW : ListServos() — поиск моторов
+HW --> MC : [1, 2, 3, 4, 5, 6]
+MC --> API : True
+deactivate MC
+API --> CLIENT : 200 {connected: true, port: "COM3",\nmotors_found: [1,2,3,4,5,6]}
+
+== Чтение состояния (публичный эндпоинт) ==
+
+CLIENT -> API : GET /api/status
+note right of API
+  Не требует токена
+end note
+API -> MC : read_motor_data(id) × 6
+activate MC
+MC -> HW : ReadData(motor_id=1..6)
+HW --> MC : {position, temperature, voltage, current, load, moving}
+MC --> API : motors: {1: {...}, 2: {...}, ...}
+deactivate MC
+API --> CLIENT : 200 {connected: true, found_servos: [...],\nmotors: {1: {pos:2048, temp:32.5, ...}, ...}}
+
+== Движение отдельного сустава ==
+
+CLIENT -> API : POST /api/move\n{joint: 2, position: 3000, speed: 800}
+API -> AUTH : validate Bearer token
+AUTH --> API : OK
+API -> MC : move_joint(joint=2, position=3000, speed=800)
+activate MC
+MC -> MC : motor_id = mapping[2] → 4\ninverted → position' = 4095 - 3000 = 1095
+MC -> HW : MoveTo(motor_id=4, position=1095, speed=800)
+HW --> MC : ACK
+MC --> API : True
+deactivate MC
+API --> CLIENT : 200 {joint: 2, position: 3000, speed: 800}
+
+== Движение всех суставов одновременно ==
+
+CLIENT -> API : POST /api/move_all\n{positions: [2048,1500,3000,2048,1800,2048], speed: 600}
+API -> AUTH : validate Bearer token
+AUTH --> API : OK
+API -> MC : move_all_joints([2048,1500,...], speed=600)
+activate MC
+loop j = 0..5
+  MC -> HW : MoveTo(motor_id, position[j], speed=600)
+  HW --> MC : ACK
+end
+MC --> API : True
+deactivate MC
+API --> CLIENT : 200 {positions: [2048,1500,3000,2048,1800,2048], speed: 600}
+
+== Обратная кинематика (IK) + движение ==
+
+CLIENT -> API : POST /api/ik\n{x: 120.0, y: 0.0, z: 150.0}
+API -> AUTH : validate Bearer token
+AUTH --> API : OK
+API -> IK : solve(x=120.0, y=0.0, z=150.0)
+activate IK
+IK -> IK : check_reachability:\nr = √(120²+0²+150²) = 192.1 ≤ 298 мм → OK
+loop 11 начальных приближений
+  IK -> IK : numerical_solve(init_angles)\n— DLS до 300 итераций
+end
+IK --> API : ([θ0..θ5], error=0.23 мм)
+deactivate IK
+API --> CLIENT : 200 {angles_deg: [0.0, 45.2, -32.1, 12.4, 0.0, 0.0],\nerror_mm: 0.23}
+
+note over CLIENT, HW
+  Клиент принимает углы и вызывает POST /api/move_all
+  с пересчитанными позициями (градусы → 0–4095)
+end note
+
+== Аварийная остановка ==
+
+CLIENT -> API : POST /api/stop
+API -> AUTH : validate Bearer token
+AUTH --> API : OK
+API -> MC : emergency_stop_all()
+activate MC
+loop для каждого мотора
+  MC -> HW : StopServo(motor_id)
+  HW --> MC : ACK
+end
+MC --> API : void
+deactivate MC
+API --> CLIENT : 200 {stopped: true}
+
+== Отключение от робота ==
+
+CLIENT -> API : POST /api/disconnect
+API -> AUTH : validate Bearer token
+AUTH --> API : OK
+API -> MC : disconnect()
+activate MC
+MC -> HW : close serial port
+HW --> MC : OK
+MC --> API : void
+deactivate MC
+API --> CLIENT : 200 {connected: false}
+
+@enduml
