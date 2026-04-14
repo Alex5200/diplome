@@ -27,7 +27,13 @@ TOPICS := \
 	/robot/joint_states \
 	/robot/joint_cmd \
 	/robot/status \
-	/robot/stop
+	/robot/stop \
+	/robot/diagnostics \
+	/robot/temperature \
+	/robot/alarms
+
+# Default bag path
+BAG_PATH ?= robot_bag_$(shell date +%Y%m%d_%H%M%S)
 
 # ============================================
 # HELP
@@ -65,6 +71,21 @@ help:
 	@echo "Variables:"
 	@echo "  USB_DEVICE=COM3        - USB device (default: COM3)"
 	@echo "  POSITIONS='[...]'      - Joint positions"
+	@echo "  BAG_PATH=my_session    - Bag output directory"
+	@echo ""
+	@echo "Rosbag2 targets:"
+	@echo "  make record            - Record robot topics to bag (auto-named)"
+	@echo "  make bag-record        - Record using bag_recorder node"
+	@echo "  make bag-play BAG_PATH=<dir> - Play back a recorded bag"
+	@echo "  make bag-info BAG_PATH=<dir> - Show bag metadata"
+	@echo "  make bag-list          - List .db3 bag files in current dir"
+	@echo ""
+	@echo "ros2_control targets:"
+	@echo "  make run-ros2-control  - Launch full ros2_control stack"
+	@echo "  make run-bridge        - Run ros2_control bridge only"
+	@echo "  make ctl-list          - List active controllers"
+	@echo "  make ctl-interfaces    - List hardware interfaces"
+	@echo "  make send-trajectory   - Send example JointTrajectory"
 	@echo ""
 	@echo "Quick start:"
 	@echo "  1. make docker-build"
@@ -184,12 +205,91 @@ clean:
 	@echo "Done."
 
 # ============================================
-# DEVELOPMENT
+# ROSBAG2
 # ============================================
+
+# Record via ros2 bag CLI (простой вариант)
 .PHONY: record
 record:
-	@ros2 bag record -o robot_topics $(TOPICS)
+	@echo "Recording to $(BAG_PATH)..."
+	@ros2 bag record -o $(BAG_PATH) $(TOPICS)
 
+# Record via bag_recorder node (запускает все узлы + запись)
+.PHONY: bag-record
+bag-record:
+	@echo "Starting bag_recorder node (bag_path=$(BAG_PATH))..."
+	@ros2 launch $(PACKAGE) record_bag.launch.py \
+		port:=$(PORT) bag_path:=$(BAG_PATH)
+
+# Playback a bag
+.PHONY: bag-play
+bag-play:
+	@if [ -z "$(BAG_PATH)" ]; then \
+		echo "Usage: make bag-play BAG_PATH=<directory>"; exit 1; \
+	fi
+	@echo "Playing back: $(BAG_PATH)"
+	@ros2 bag play $(BAG_PATH) \
+		--topics $(TOPICS)
+
+# Show bag info
+.PHONY: bag-info
+bag-info:
+	@if [ -z "$(BAG_PATH)" ]; then \
+		echo "Usage: make bag-info BAG_PATH=<directory>"; exit 1; \
+	fi
+	@ros2 bag info $(BAG_PATH)
+
+# List bag files
+.PHONY: bag-list
+bag-list:
+	@echo "Bag files in current directory:"
+	@find . -name "*.db3" -o -name "metadata.yaml" 2>/dev/null | head -40 || \
+		echo "No bag files found"
+
+# ============================================
+# ROS2_CONTROL
+# ============================================
+
+# Launch full ros2_control stack
+.PHONY: run-ros2-control
+run-ros2-control:
+	@echo "Starting ros2_control stack on $(PORT)..."
+	@ros2 launch $(PACKAGE) ros2_control.launch.py port:=$(PORT)
+
+# Run bridge node only (assumes controller_manager already running)
+.PHONY: run-bridge
+run-bridge:
+	ros2 run $(PACKAGE) ros2_control_bridge --ros-args -p port:=$(PORT)
+
+# List controllers
+.PHONY: ctl-list
+ctl-list:
+	@ros2 control list_controllers
+
+# List hardware interfaces
+.PHONY: ctl-interfaces
+ctl-interfaces:
+	@ros2 control list_hardware_interfaces
+
+# Send example trajectory to JointTrajectoryController
+.PHONY: send-trajectory
+send-trajectory:
+	@echo "Sending example trajectory (all joints → 0.5 rad)..."
+	@ros2 action send_goal /joint_trajectory_controller/follow_joint_trajectory \
+		control_msgs/action/FollowJointTrajectory \
+		"{ \
+		  trajectory: { \
+		    joint_names: [joint_0, joint_1, joint_2, joint_3, joint_4, joint_5], \
+		    points: [{ \
+		      positions: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5], \
+		      time_from_start: {sec: 2, nanosec: 0} \
+		    }] \
+		  } \
+		}"
+
+# ============================================
+# DEVELOPMENT
+# ============================================
 .PHONY: bw
 bw:
 	@echo "Bandwidth usage:"
