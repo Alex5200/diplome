@@ -2,12 +2,21 @@
 Reinforcement Learning agents for robot control.
 """
 
-from .ppo_agent import PPOAgent
-from .dqn_agent import DQNAgent
 from .base_agent import BaseAgent
 
 __all__ = [
     "BaseAgent",
-    "PPOAgent",
-    "DQNAgent",
 ]
+
+# Optional: import concrete agents if available
+try:
+    from .ppo_agent import PPOAgent
+    __all__.append("PPOAgent")
+except ImportError:
+    pass
+
+try:
+    from .dqn_agent import DQNAgent
+    __all__.append("DQNAgent")
+except ImportError:
+    pass

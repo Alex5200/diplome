@@ -54,7 +54,10 @@
       "Bash(npm create:*)",
       "Bash(export PATH=\"/opt/homebrew/bin:$PATH\")",
       "Bash(npx tsc:*)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(node -e \"const h = require\\('./diploma_helpers.js'\\); const fn = require\\('./chapters/ch2_9_sim_to_real.js'\\); const result = fn\\(h\\); console.log\\('OK — элементов:', result.length\\);\")",
+      "Bash(find /c/Users/SahaA/Documents/GitHub/diplome/mujoco_sim/ml -type f -name \"*.py\" -exec basename {} \\\\;)",
+      "Bash(find /c/Users/SahaA/Documents/GitHub/diplome/mujoco_sim/mldataset -type f -name \"*.py\" -exec basename {} \\\\;)"
     ]
   }
 }

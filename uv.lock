@@ -624,6 +624,20 @@ wheels = [
 name = "mujoco-sim"
 version = "0.1.0"
 source = { virtual = "mujoco_sim" }
+dependencies = [
+    { name = "matplotlib" },
+    { name = "mujoco" },
+    { name = "numpy" },
+    { name = "pyserial" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "matplotlib", specifier = ">=3.10.8" },
+    { name = "mujoco", specifier = ">=3.6.0" },
+    { name = "numpy", specifier = ">=2.4.3" },
+    { name = "pyserial", specifier = ">=3.5" },
+]
 
 [[package]]
 name = "numpy"

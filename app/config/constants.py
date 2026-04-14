@@ -98,50 +98,7 @@ ROBOT_ORIENTATIONS = {
 DEFAULT_ORIENTATION = "front"
 
 # Конфигурация по умолчанию
-DEFAULT_MOTOR_MAPPING = {
-    "joint_0": {
-        "motor_id": 1,
-        "name": "База",
-        "min_pos": 0,
-        "max_pos": MAX_POSITION,
-        "inverted": True,
-    },
-    "joint_1": {
-        "motor_id": 2,
-        "name": "Плечо 1",
-        "min_pos": 0,
-        "max_pos": MAX_POSITION,
-        "inverted": False,
-    },
-    "joint_2": {
-        "motor_id": 4,
-        "name": "Плечо 2",
-        "min_pos": 0,
-        "max_pos": MAX_POSITION,
-        "inverted": True,
-    },
-    "joint_3": {
-        "motor_id": 5,
-        "name": "Локоть",
-        "min_pos": 0,
-        "max_pos": MAX_POSITION,
-        "inverted": False,
-    },
-    "joint_4": {
-        "motor_id": 3,
-        "name": "Кисть 1",
-        "min_pos": 0,
-        "max_pos": MAX_POSITION,
-        "inverted": False,
-    },
-    "joint_5": {
-        "motor_id": 6,
-        "name": "Кисть 2",
-        "min_pos": 0,
-        "max_pos": MAX_POSITION,
-        "inverted": False,
-    },
-}
+
 _ACCENT = "#7dd3c0"
 _ACCENT_H = "#5bb8a4"
 _BORDER = "#e8e4e0"

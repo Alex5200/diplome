@@ -1,21 +1,63 @@
 #!/usr/bin/env python3
 
 """
-MuJoCo Robot Simulation with ST3215 Control
+mujoco_robot_sim — симуляция 6-DOF робота-манипулятора ST3215 в MuJoCo.
 
-Полная симуляция 6-DOF робота-манипулятора в MuJoCo с:
-- Точная MJCF модель по DH-параметрам (L0=19, L1=104, L2=95, L3=34, L4=35 мм)
-- Двухпальцевый гриппер
-- Объекты для захвата (кубики, цилиндры)
-- Стол как рабочая зона
-- Камеры: фиксированная сверху + камера на гриппере (eye-in-hand)
-- Управление: IK к точке / waypoints / ручные углы
-- Рендеринг RGB + Depth для RL-обучения
-- Синхронизация с реальными моторами ST3215 (опционально)
+Модуль реализует полный цикл работы с роботом внутри физического движка
+MuJoCo: от программной генерации MJCF-модели до интерактивного управления,
+рендеринга изображений для RL-обучения и двустороннего зеркалирования
+состояния с реальным оборудованием.
 
-Использование:
-    python -m app.tests.mujoco_robot_sim
-    python -m app.tests.mujoco_robot_sim --headless
+Ключевые компоненты
+───────────────────
+generate_robot_mjcf(**flags) -> str
+    Строит MJCF XML-строку по DH-параметрам кинематики (из app/models/kinematics.py).
+    Принимает флаги с_gripper, with_objects, with_table, with_cameras.
+
+MuJoCoRobotController
+    Основной класс управления: загружает модель, управляет суставами,
+    вызывает IK-решатель, рендерит камеры, синхронизируется с ST3215.
+
+RobotEnv
+    Gymnasium-совместимая среда для обучения RL-агентов.
+    Пространство действий: [j0..j5, gripper] — 7-мерный вектор.
+
+SimToRealMirror (mujoco_robot_sim.sim_to_real)
+    Фоновый поток, зеркалирующий состояние симуляции ↔ реального робота.
+
+DH-параметры (мм, синхронизированы с app/models/kinematics.py)
+───────────────────────────────────────────────────────────────
+    L0 = 19  — высота базы
+    L1 = 104 — длина звена «плечо 1»
+    L2 = 95  — длина звена «плечо 2»
+    L3 = 34  — длина звена «локоть»
+    L4 = 35  — длина звена «кисть 1»
+
+Быстрый старт
+─────────────
+    # Интерактивный viewer
+    python main.py
+
+    # Режим зеркалирования: sim → реальный робот
+    python main.py --mirror --port COM3
+
+    # Headless (для RL)
+    python main.py --headless
+
+    # Из кода
+    from mujoco_robot_sim import MuJoCoRobotController, generate_robot_mjcf
+
+    ctrl = MuJoCoRobotController(generate_robot_mjcf(with_gripper=True))
+    ctrl.set_joint_angles([0, -30, 60, -30, 0, 0])
+    ctrl.step_seconds(1.0)
+    angles = ctrl.get_joint_angles()   # → list[float], градусы
+    ee     = ctrl.get_ee_position_mm() # → (x, y, z), мм
+    ctrl.close()
+
+Зависимости
+───────────
+    Обязательные: mujoco>=3.0, numpy>=1.24
+    Опциональные: st3215 (для синхронизации с железом), rclpy (ROS2 транспорт)
 """
 
 from __future__ import annotations
@@ -42,12 +84,55 @@ try:
 except ImportError:
     sys.exit("MuJoCo не установлен. Запустите: uv pip install mujoco")
 
-from app.config.constants import (
-    DEFAULT_ACC,
-    DEFAULT_MOTOR_MAPPING,
-    MAX_POSITION,
-)
-from app.models.kinematics import InverseKinematics6DOF, RobotKinematics6DOF
+DEFAULT_ACC = 50
+MAX_POSITION = 4095
+
+DEFAULT_MOTOR_MAPPING = {
+    "joint_0": {
+        "motor_id": 1,
+        "name": "База",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": True,
+    },
+    "joint_1": {
+        "motor_id": 2,
+        "name": "Плечо 1",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": False,
+    },
+    "joint_2": {
+        "motor_id": 4,
+        "name": "Плечо 2",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": True,
+    },
+    "joint_3": {
+        "motor_id": 5,
+        "name": "Локоть",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": False,
+    },
+    "joint_4": {
+        "motor_id": 3,
+        "name": "Кисть 1",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": False,
+    },
+    "joint_5": {
+        "motor_id": 6,
+        "name": "Кисть 2",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": False,
+    },
+}
+
+from models.kinematics import InverseKinematics6DOF, RobotKinematics6DOF
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -107,18 +192,51 @@ def generate_robot_mjcf(
     with_table: bool = True,
     with_cameras: bool = True,
 ) -> str:
-    """
-    Генерация XML-модели робота в формате MJCF.
+    """Генерирует MJCF XML-строку модели робота ST3215 6-DOF.
 
-    Модель строится по DH-параметрам кинематики:
-    - J1: База — вращение вокруг Z, высота L0=19мм
-    - J2: Плечо 1 — вращение вокруг Y, длина L1=104мм (из kinematics.py)
-    - J3: Плечо 2 — вращение вокруг Y, длина L2=95мм
-    - J4: Локоть  — вращение вокруг Y + twist, длина L3=34мм
-    - J5: Кисть 1 — вращение вокруг Z, длина L4=35мм
-    - J6: Кисть 2 — вращение вокруг Y
+    Модель строится программно по DH-параметрам из ``RobotKinematics6DOF``,
+    обеспечивая автоматическую синхронизацию геометрии симуляции с кинематическим
+    расчётом при любом изменении длин звеньев.
 
-    Все размеры в метрах (MuJoCo стандарт).
+    Кинематическая цепочка суставов
+    ────────────────────────────────
+    joint_0  — база, вращение вокруг Z, диапазон ±120°, высота L0=19 мм
+    joint_1  — плечо 1, вращение вокруг Y, диапазон −45°…+90°, длина L1=104 мм
+    joint_2  — плечо 2, вращение вокруг Y, диапазон −90°…+45°, длина L2=95 мм
+    joint_3  — локоть,  вращение вокруг Y, диапазон −120°…0°,  длина L3=34 мм
+    joint_4  — кисть 1, вращение вокруг Z, диапазон ±90°,      длина L4=35 мм
+    joint_5  — кисть 2, вращение вокруг Y, диапазон ±90°
+
+    Параметры физики
+    ────────────────
+    timestep = 0.002 с (500 Гц), integrator = implicitfast
+    Демпфирование суставов: 1.0→0.2 (убывает от основания к инструменту)
+    Актуаторы: позиционные (position), kp = 50→20 (N·m/rad)
+
+    Args:
+        with_gripper: Включить двухпальцевый гриппер (суставы finger_left/right,
+            актуаторы act_finger_left/right, диапазон 0–20 мм).
+        with_objects: Добавить объекты для захвата на стол:
+            red_cube (20×20×20 мм), green_cube, yellow_cube (10×10×10 мм),
+            blue_cylinder (⌀12×20 мм). Все — свободные тела (freejoint).
+        with_table: Добавить рабочий стол (300×300×50 мм, pos=0.15 м от базы).
+        with_cameras: Добавить камеры:
+            top_down (фиксированная, сверху, fov=60°),
+            front (спереди), side (сбоку),
+            eye_in_hand (на гриппере, fov=90°) — только если with_gripper=True.
+
+    Returns:
+        Корректная MJCF XML-строка, пригодная для передачи в
+        ``mujoco.MjModel.from_xml_string()``.
+
+    Note:
+        Все координаты в возвращаемом XML — в метрах (стандарт MuJoCo).
+        Маркер цели ``target_marker`` всегда включён (mocap-тело, полупрозрачная
+        сфера ⌀10 мм, magenta); перемещается через ``set_target_marker()``.
+
+    Example:
+        xml = generate_robot_mjcf(with_gripper=True, with_objects=False)
+        model = mujoco.MjModel.from_xml_string(xml)
     """
     L = _LINK_LENGTHS_M
     table_h = _TABLE_HEIGHT_M
@@ -377,7 +495,25 @@ def generate_robot_mjcf(
 
 @dataclass
 class _CachedIds:
-    """Кэшированные ID для быстрого доступа без mj_name2id."""
+    """Кэш целочисленных ID сущностей MuJoCo для быстрого доступа.
+
+    MuJoCo предоставляет ``mj_name2id()`` для поиска сущностей по имени, однако
+    вызов этой функции на каждом шаге симуляции нецелесообразен. Все ID
+    вычисляются один раз в ``_cache_ids()`` при инициализации контроллера
+    и хранятся в этом объекте.
+
+    Attributes:
+        joint_ids: Индексы суставов joint_0…joint_5 в массиве ``model.jnt_*``.
+        joint_qpos_adr: Адреса обобщённых координат в ``data.qpos``
+            для каждого сустава (результат ``model.jnt_qposadr[jnt_id]``).
+        actuator_ids: Индексы актуаторов act_joint_0…act_joint_5
+            в массиве ``data.ctrl``.
+        ee_site_id: Индекс сайта ``end_effector`` для чтения ``data.site_xpos``.
+        target_mocap_id: Индекс mocap-тела ``target_marker`` в ``data.mocap_pos``;
+            -1 если маркер отсутствует в модели.
+        object_body_ids: Словарь {имя_тела: body_id} для объектов захвата
+            (red_cube, green_cube, blue_cylinder, yellow_cube).
+    """
 
     joint_ids: list[int] = field(default_factory=list)
     joint_qpos_adr: list[int] = field(default_factory=list)
@@ -388,24 +524,53 @@ class _CachedIds:
 
 
 class MuJoCoRobotController:
-    """
-    Управление роботом в MuJoCo симуляции.
+    """Контроллер робота ST3215 6-DOF в симуляции MuJoCo.
 
-    Функции:
-    - Установка углов суставов (градусы → радианы)
-    - IK к целевой точке
-    - Управление гриппером (открыть/закрыть)
-    - Рендеринг RGB/Depth с камерами
-    - Чтение сенсоров
-    - Синхронизация с реальным ST3215 (опционально)
+    Инкапсулирует ``mujoco.MjModel`` и ``mujoco.MjData``, предоставляя
+    высокоуровневый API для управления суставами, вычисления кинематики,
+    рендеринга изображений и опциональной синхронизации с реальным железом.
+
+    Типичный сценарий использования
+    ────────────────────────────────
+    1. Создать экземпляр (загружает MJCF модель).
+    2. Управлять суставами через ``set_joint_angles()`` / ``move_to_point()``.
+    3. Продвигать физику через ``step()`` / ``step_seconds()``.
+    4. Читать состояние через ``get_joint_angles()`` / ``get_ee_position_mm()``.
+    5. Рендерить изображения через ``render_camera()`` / ``get_observation()``.
+    6. При необходимости — подключить реального робота ``connect_real_robot()``.
+    7. Освободить ресурсы через ``close()`` или контекстным менеджером.
+
+    Attributes:
+        model (mujoco.MjModel): Загруженная физическая модель (read-only после init).
+        data  (mujoco.MjData):  Текущее состояние симуляции (позиции, скорости,
+            управляющие сигналы, сенсоры).
+        kinematics (RobotKinematics6DOF): Кинематическая модель для прямой кинематики.
+        ik_solver  (InverseKinematics6DOF): IK-решатель (метод DLS, до 300 итераций).
+        target_angles_deg (list[float]): Последние заданные целевые углы (°).
+        gripper_open (bool): Текущее состояние гриппера.
+        st3215 (ST3215 | None): Объект связи с реальным роботом; None если не подключён.
+        sync_with_real (bool): Флаг автосинхронизации: если True, каждый вызов
+            ``set_joint_angles()`` дополнительно отправляет команды в ST3215.
+
+    Class Attributes:
+        JOINT_NAMES (list[str]): ``["joint_0", …, "joint_5"]``
+        ACTUATOR_NAMES (list[str]): ``["act_joint_0", …, "act_joint_5"]``
+        SAFE_ANGLE_LIMITS_DEG (list[tuple]): Безопасные пределы в градусах для
+            каждого сустава: [(−120,120), (−45,90), (−90,45), (−120,0), (±90), (±90)].
+
+    Example:
+        with MuJoCoRobotController() as ctrl:
+            ctrl.set_joint_angles([0, -30, 60, -30, 0, 0], immediate=True)
+            ctrl.step_seconds(2.0)
+            print(ctrl.get_ee_position_mm())
     """
 
     JOINT_NAMES = [f"joint_{i}" for i in range(6)]
     ACTUATOR_NAMES = [f"act_joint_{i}" for i in range(6)]
 
     SAFE_ANGLE_LIMITS_DEG: list[tuple[float, float]] = [
-        (-120, 120),
-        (-45, 90),
+        (-360, 360),
+        (-360, 360),
         (-90, 45),
         (-120, 0),
         (-90, 90),
@@ -418,7 +583,24 @@ class MuJoCoRobotController:
         camera_width: int = _DEFAULT_CAMERA_WIDTH,
         camera_height: int = _DEFAULT_CAMERA_HEIGHT,
     ):
-        """Инициализация симуляции."""
+        """Инициализирует MuJoCo модель и все вспомогательные структуры.
+
+        Загружает MJCF-строку, кэширует ID сущностей, инициализирует рендерер
+        и кинематический модуль. Вызов ``mj_forward()`` синхронизирует начальное
+        состояние физики.
+
+        Args:
+            xml_string: MJCF XML-строка модели. Если None — вызывается
+                ``generate_robot_mjcf()`` с параметрами по умолчанию
+                (with_gripper=True, with_objects=True, with_table=True).
+            camera_width: Ширина кадра рендерера в пикселях (default: 640).
+            camera_height: Высота кадра рендерера в пикселях (default: 480).
+
+        Raises:
+            SystemExit: Если пакет ``mujoco`` не установлен.
+            ValueError: Если XML-строка содержит некорректную MJCF-модель
+                (пробрасывается из ``mujoco.MjModel.from_xml_string``).
+        """
         if xml_string is None:
             xml_string = generate_robot_mjcf()
 
@@ -526,7 +708,11 @@ class MuJoCoRobotController:
         self.close()
 
     def close(self) -> None:
-        """Освобождение ресурсов."""
+        """Освобождает ресурсы: рендерер и соединение с реальным роботом.
+
+        Безопасно вызывать повторно. Эквивалентен выходу из контекстного
+        менеджера ``with MuJoCoRobotController() as ctrl``.
+        """
         self.disconnect_real_robot()
         if self._renderer is not None:
             self._renderer.close()
@@ -537,13 +723,35 @@ class MuJoCoRobotController:
     # ============================
 
     def set_joint_angles(self, angles_deg: Sequence[float], immediate: bool = False) -> None:
-        """
-        Установка целевых углов суставов.
+        """Устанавливает целевые углы всех шести суставов.
+
+        Записывает значения в ``data.ctrl`` (для позиционных актуаторов).
+        При ``immediate=True`` также мгновенно обновляет ``data.qpos``
+        и вызывает ``mj_forward()`` — полезно для инициализации начальной позы
+        без ожидания сходимости физики.
+
+        Если ``sync_with_real=True`` (флаг устанавливается после успешного
+        ``connect_real_robot()``), дополнительно вызывает ``_sync_to_real()``
+        для отправки команд на ST3215 по UART.
 
         Args:
-            angles_deg: 6 углов в градусах
-            immediate: если True, сразу перемещает (без физики),
-                       если False, через актуаторы (плавно)
+            angles_deg: Последовательность из ровно 6 углов в градусах.
+                Порядок: [joint_0, joint_1, joint_2, joint_3, joint_4, joint_5].
+                Значения не обрезаются — передавать в пределах ``SAFE_ANGLE_LIMITS_DEG``.
+            immediate: Если True — мгновенное позиционирование (телепортация),
+                минуя физику; если False — плавное движение через PD-регуляторы
+                актуаторов (требует последующих вызовов ``step()``).
+
+        Raises:
+            ValueError: Если длина ``angles_deg`` не равна 6.
+
+        Example:
+            # Плавный переход в позу «готов»
+            ctrl.set_joint_angles([0, -30, 60, -30, 0, 0])
+            ctrl.step_seconds(1.5)
+
+            # Мгновенная инициализация начального состояния
+            ctrl.set_joint_angles([0, 0, 0, 0, 0, 0], immediate=True)
         """
         if len(angles_deg) != 6:
             raise ValueError(f"Ожидается 6 углов, получено {len(angles_deg)}")
@@ -565,16 +773,50 @@ class MuJoCoRobotController:
             self._sync_to_real(list(angles_deg))
 
     def get_joint_angles(self) -> list[float]:
-        """Чтение текущих углов суставов из симуляции (градусы)."""
+        """Возвращает текущие углы суставов из состояния симуляции.
+
+        Читает обобщённые координаты ``data.qpos`` по заранее кэшированным
+        адресам ``_ids.joint_qpos_adr`` и конвертирует радианы в градусы.
+
+        Returns:
+            Список из 6 углов в градусах: [joint_0, …, joint_5].
+            Значения отражают фактическое физическое состояние (не целевое).
+
+        Note:
+            Для получения целевых углов (заданных актуаторам) используйте
+            ``target_angles_deg``.
+        """
         return [math.degrees(self.data.qpos[adr]) for adr in self._ids.joint_qpos_adr]
 
     def get_ee_position(self) -> tuple[float, float, float]:
-        """Позиция end-effector из симуляции (метры)."""
+        """Возвращает абсолютную позицию конечного эффектора в мировых координатах.
+
+        Читает позицию сайта ``end_effector`` из ``data.site_xpos``.
+        Начало координат — центр пола MuJoCo (не основание робота).
+
+        Returns:
+            Кортеж (x, y, z) в метрах в системе координат MuJoCo.
+
+        See Also:
+            ``get_ee_position_mm()`` — позиция относительно основания в мм.
+        """
         pos = self.data.site_xpos[self._ids.ee_site_id]
         return (pos[0], pos[1], pos[2])
 
     def get_ee_position_mm(self) -> tuple[float, float, float]:
-        """Позиция end-effector в миллиметрах (относительно базы)."""
+        """Возвращает позицию конечного эффектора в миллиметрах относительно основания.
+
+        Конвертирует метры в мм и вычитает высоту стола ``_TABLE_HEIGHT_M`` из Z,
+        приводя начало координат к верхней плоскости рабочего стола.
+
+        Returns:
+            Кортеж (x_mm, y_mm, z_mm) в миллиметрах:
+            x — вперёд от основания, y — вправо, z — вверх от стола.
+
+        Example:
+            x, y, z = ctrl.get_ee_position_mm()
+            print(f"EE position: ({x:.1f}, {y:.1f}, {z:.1f}) мм")
+        """
         pos = self.get_ee_position()
         return (
             pos[0] * 1000,
@@ -589,15 +831,34 @@ class MuJoCoRobotController:
     def move_to_point(
         self, x_mm: float, y_mm: float, z_mm: float, tolerance: float = 2.0
     ) -> list[float] | None:
-        """
-        Решение IK и отправка углов в симуляцию.
+        """Перемещает конечный эффектор в заданную декартову точку через IK.
+
+        Вызывает ``InverseKinematics6DOF.solve()`` (метод DLS, до 300 итераций),
+        обрезает полученные углы по ``SAFE_ANGLE_LIMITS_DEG`` и передаёт в
+        ``set_joint_angles()``. Визуальный маркер обновляется отдельно через
+        ``set_target_marker()``.
 
         Args:
-            x_mm, y_mm, z_mm: целевая точка в мм
-            tolerance: допуск IK в мм
+            x_mm: Целевая координата X в мм (вперёд от основания).
+            y_mm: Целевая координата Y в мм (вправо от основания).
+            z_mm: Целевая координата Z в мм (вверх от стола).
+            tolerance: Допуск IK-решателя в мм (default: 2.0).
+                Уменьшение ускоряет расчёт, но снижает точность.
 
         Returns:
-            Углы в градусах или None
+            Список из 6 углов в градусах при успехе, None если точка
+            недостижима или IK не сошлась за 300 итераций.
+
+        Note:
+            Для фактического движения необходимо вызвать ``step()`` после
+            этого метода — функция только устанавливает управляющий сигнал.
+
+        Example:
+            angles = ctrl.move_to_point(120, 0, 80)
+            if angles:
+                ctrl.step_seconds(1.5)
+            else:
+                print("Точка недостижима")
         """
         angles = self.ik_solver.solve(x_mm, y_mm, z_mm, max_iterations=300, tolerance=tolerance)
         if angles is None:
@@ -613,7 +874,20 @@ class MuJoCoRobotController:
         return angles
 
     def set_target_marker(self, x_mm: float, y_mm: float, z_mm: float) -> None:
-        """Перемещение визуального маркера цели в MuJoCo."""
+        """Перемещает визуальный маркер цели (полупрозрачная сфера) в viewer.
+
+        Маркер — mocap-тело ``target_marker``: не участвует в физике (contype=0),
+        отображается только визуально. Удобен для отладки IK и демонстрации.
+
+        Args:
+            x_mm: Целевая X в мм (мировая система, вперёд от основания).
+            y_mm: Целевая Y в мм.
+            z_mm: Целевая Z в мм (высота над столом, прибавляется ``_TABLE_HEIGHT_M``).
+
+        Note:
+            Не влияет на физику и не вызывает движения робота.
+            Если модель сгенерирована без маркера, вызов игнорируется.
+        """
         mocap_id = self._ids.target_mocap_id
         if mocap_id < 0:
             return
@@ -628,7 +902,17 @@ class MuJoCoRobotController:
     # ============================
 
     def open_gripper(self) -> None:
-        """Открыть гриппер."""
+        """Разжимает гриппер до максимального раскрытия (20 мм).
+
+        Устанавливает целевые позиции актуаторов ``act_finger_left`` и
+        ``act_finger_right`` в 0.02 м. Гриппер физически раскрывается
+        в течение нескольких шагов симуляции.
+
+        Note:
+            Не выполняет ``step()`` — для анимации движения необходим
+            последующий вызов ``step_seconds(0.3)``.
+            Безопасно вызывать на моделях без гриппера (игнорируется).
+        """
         if not self._has_gripper:
             return
         self.data.ctrl[self._finger_left_id] = 0.02
@@ -636,7 +920,17 @@ class MuJoCoRobotController:
         self.gripper_open = True
 
     def close_gripper(self) -> None:
-        """Закрыть гриппер."""
+        """Сжимает гриппер до полного закрытия (0 мм).
+
+        Устанавливает целевые позиции актуаторов ``act_finger_left`` и
+        ``act_finger_right`` в 0.0 м. При наличии объекта между пальцами
+        физика MuJoCo генерирует контактные силы, удерживающие объект.
+
+        Note:
+            Не выполняет ``step()`` — для физического захвата необходим
+            последующий вызов ``step_seconds(0.3)``.
+            Безопасно вызывать на моделях без гриппера (игнорируется).
+        """
         if not self._has_gripper:
             return
         self.data.ctrl[self._finger_left_id] = 0.0
@@ -654,18 +948,36 @@ class MuJoCoRobotController:
         height: int | None = None,
         depth: bool = False,
     ) -> np.ndarray:
-        """
-        Рендеринг изображения с указанной камеры.
+        """Рендерит кадр с указанной камеры через переиспользуемый рендерер.
 
-        Переиспользует инициализированный рендерер (без аллокаций на каждый вызов).
+        Использует единственный ``mujoco.Renderer``, созданный при инициализации,
+        избегая аллокаций на каждый вызов. Если запрошены иные размеры кадра —
+        рендерер пересоздаётся один раз и кэшируется.
+
+        Доступные камеры (при ``with_cameras=True``)
+        ─────────────────────────────────────────────
+        ``top_down``   — вид сверху, высота 0.6 м, fov=60°
+        ``front``      — вид спереди (0.5, 0, 0.2), fov=60°
+        ``side``       — вид сбоку (0, 0.5, 0.2), fov=60°
+        ``eye_in_hand``— камера на гриппере, fov=90° (только при with_gripper=True)
 
         Args:
-            camera_name: имя камеры
-            width, height: размеры (по умолчанию из __init__)
-            depth: если True, возвращает depth-карту
+            camera_name: Имя камеры в MJCF-модели (default: ``"top_down"``).
+            width:  Ширина выходного изображения в пикселях; None = из __init__.
+            height: Высота выходного изображения в пикселях; None = из __init__.
+            depth:  Если True — возвращает карту глубины вместо RGB.
 
         Returns:
-            RGB array (H, W, 3) uint8 или depth array (H, W) float32
+            RGB: ``np.ndarray`` формы (H, W, 3), dtype uint8, значения 0–255.
+            Depth: ``np.ndarray`` формы (H, W), dtype float32, значения в метрах.
+
+        Raises:
+            RuntimeError: Если рендерер не удалось инициализировать
+                (отсутствует OpenGL/EGL).
+
+        Example:
+            rgb   = ctrl.render_camera("eye_in_hand")           # (480, 640, 3)
+            depth = ctrl.render_camera("top_down", depth=True)  # (480, 640)
         """
         if self._renderer is None:
             self._init_renderer()
@@ -694,18 +1006,32 @@ class MuJoCoRobotController:
         return self._renderer.render()
 
     def get_observation(self, camera_name: str = "eye_in_hand") -> dict[str, Any]:
-        """
-        Полное наблюдение для RL-агента.
+        """Формирует полное наблюдение текущего состояния для RL-агента.
+
+        Собирает проприоцептивные данные (углы суставов, позиция EE) и
+        экстероцептивные (RGB + Depth изображения, позиции объектов) в один словарь.
+
+        Args:
+            camera_name: Имя камеры для RGB/Depth рендеринга (default: ``"eye_in_hand"``).
 
         Returns:
-            {
-                'rgb': np.ndarray (H, W, 3),
-                'depth': np.ndarray (H, W),
-                'joint_angles': np.ndarray (6,),
-                'ee_pos': np.ndarray (3,),
-                'gripper_open': bool,
-                'object_positions': dict
-            }
+            Словарь со следующими ключами:
+
+            ======================= ========================= ===================
+            Ключ                    Тип                       Описание
+            ======================= ========================= ===================
+            ``"rgb"``               ndarray (H, W, 3) uint8   RGB с камеры
+            ``"depth"``             ndarray (H, W) float32    Глубина в метрах
+            ``"joint_angles"``      ndarray (6,) float64      Текущие углы (°)
+            ``"ee_pos"``            ndarray (3,) float64      EE позиция (м)
+            ``"gripper_open"``      bool                      Состояние гриппера
+            ``"object_positions"``  dict[str, ndarray(3)]     Позиции объектов (м)
+            ======================= ========================= ===================
+
+        Note:
+            ``object_positions`` содержит только те объекты, которые присутствуют
+            в модели (зависит от флага ``with_objects`` при генерации MJCF).
+            Ключи: ``"red_cube"``, ``"green_cube"``, ``"blue_cylinder"``, ``"yellow_cube"``.
         """
         rgb = self.render_camera(camera_name, depth=False)
         depth = self.render_camera(camera_name, depth=True)
@@ -733,17 +1059,53 @@ class MuJoCoRobotController:
     # ============================
 
     def step(self, n_steps: int = 1) -> None:
-        """Шаг физической симуляции."""
+        """Выполняет N шагов физической симуляции.
+
+        Каждый шаг продвигает время на ``model.opt.timestep`` (2 мс).
+        Актуаторы PD-регуляторов стремятся к целевым углам, установленным
+        через ``set_joint_angles()``.
+
+        Args:
+            n_steps: Количество шагов (default: 1). Например, 500 шагов = 1 секунда
+                при timestep=0.002.
+
+        Note:
+            Для отображения анимации в viewer необходимо периодически вызывать
+            ``viewer.sync()`` между шагами. Используйте ``step_seconds()`` +
+            собственный цикл с viewer.sync() для интерактивных сценариев.
+        """
         for _ in range(n_steps):
             mujoco.mj_step(self.model, self.data)
 
     def step_seconds(self, seconds: float) -> None:
-        """Симулировать указанное количество секунд."""
+        """Симулирует заданное количество секунд реального времени.
+
+        Вычисляет необходимое количество шагов как ``ceil(seconds / timestep)``
+        и вызывает ``step(n)``. Удобно для задания времени ожидания в секундах
+        без ручного расчёта числа шагов.
+
+        Args:
+            seconds: Длительность симуляции в секундах (вещественное число).
+
+        Example:
+            ctrl.set_joint_angles([0, -45, 90, -45, 0, 0])
+            ctrl.step_seconds(2.0)  # дать роботу 2 с на достижение позы
+        """
         n = max(1, int(seconds / self.model.opt.timestep))
         self.step(n)
 
     def reset(self) -> None:
-        """Сброс симуляции."""
+        """Сбрасывает симуляцию в начальное состояние.
+
+        Вызывает ``mj_resetData()`` (обнуляет qpos, qvel, ctrl) и
+        ``mj_forward()`` (пересчитывает кинематику). Состояние гриппера
+        сбрасывается до ``gripper_open=True``, целевые углы — до нулевых.
+
+        Note:
+            Не переинициализирует модель — все ID и кэши остаются валидны.
+            Для применения нестандартной начальной позы вызовите
+            ``set_joint_angles(..., immediate=True)`` сразу после ``reset()``.
+        """
         mujoco.mj_resetData(self.model, self.data)
         mujoco.mj_forward(self.model, self.data)
         self.target_angles_deg = [0.0] * 6
@@ -754,7 +1116,32 @@ class MuJoCoRobotController:
     # ============================
 
     def connect_real_robot(self, port: str = "COM3") -> bool:
-        """Подключение к реальному роботу ST3215."""
+        """Подключается к физическому роботу ST3215 по UART.
+
+        Создаёт экземпляр ``ST3215(device=port)`` и устанавливает
+        флаг ``sync_with_real=True``, после чего каждый вызов
+        ``set_joint_angles()`` будет дополнительно отправлять команды на
+        реальные серводвигатели.
+
+        Args:
+            port: Серийный порт устройства (default: ``"COM3"``).
+                Linux/Mac: ``"/dev/ttyUSB0"``, ``"/dev/cu.usbserial-0001"``.
+
+        Returns:
+            True если соединение установлено успешно, False при ошибке
+            (порт недоступен, устройство не отвечает, библиотека st3215
+            не установлена).
+
+        Note:
+            Требует установленного пакета ``st3215`` (``pip install st3215``).
+            При отсутствии пакета всегда возвращает False.
+            Скорость порта фиксирована: 1 000 000 бод (RS-485).
+
+        See Also:
+            ``disconnect_real_robot()`` — явное отключение.
+            ``SimToRealMirror`` — для непрерывного зеркалирования с контролем
+            частоты и статистикой.
+        """
         if not ST3215_AVAILABLE:
             logger.error("st3215 не установлен")
             return False
@@ -768,7 +1155,11 @@ class MuJoCoRobotController:
             return False
 
     def disconnect_real_robot(self) -> None:
-        """Отключение реального робота."""
+        """Закрывает соединение с реальным роботом и сбрасывает флаг синхронизации.
+
+        Безопасно вызывать даже если соединение не было установлено.
+        Автоматически вызывается в ``close()``.
+        """
         if self.st3215:
             try:
                 if hasattr(self.st3215, "portHandler"):
@@ -779,7 +1170,19 @@ class MuJoCoRobotController:
         self.sync_with_real = False
 
     def _sync_to_real(self, angles_deg: list[float]) -> None:
-        """Отправка углов из симуляции на реальный робот."""
+        """Отправляет углы симуляции на реальные серводвигатели ST3215.
+
+        Для каждого сустава: конвертирует градусы → позицию 0–4095,
+        применяет инверсию (для суставов с inverted=True в маппинге),
+        отправляет команду ``ST3215.MoveTo(motor_id, position, speed=100, acc)``.
+        Скорость зафиксирована на 100 (медленно, безопасно).
+
+        Для зеркалирования с настраиваемой скоростью используйте
+        ``SimToRealMirror`` (mujoco_robot_sim/sim_to_real.py).
+
+        Args:
+            angles_deg: Список из 6 углов в градусах (joint_0…joint_5).
+        """
         if not self.st3215:
             return
         for i in range(6):
@@ -792,7 +1195,21 @@ class MuJoCoRobotController:
                 logger.warning("Мотор %d: %s", motor_id, e)
 
     def read_real_angles(self) -> list[float] | None:
-        """Чтение углов с реального робота и обновление симуляции."""
+        """Читает текущие углы с реальных серводвигателей и применяет их в симуляции.
+
+        Для каждого мотора вызывает ``ST3215.ReadPosition(motor_id)``,
+        применяет инверсию и конвертирует позицию 0–4095 → градусы.
+        Затем вызывает ``set_joint_angles(angles, immediate=True)``, синхронно
+        телепортируя симуляцию в текущую позу реального робота.
+
+        Returns:
+            Список из 6 углов в градусах при успехе,
+            None если реальный робот не подключён.
+
+        Note:
+            При ошибке чтения отдельного мотора его угол принимается равным 0°.
+            Использование в цикле: см. режим ``real_to_sim`` в ``SimToRealMirror``.
+        """
         if not self.st3215:
             return None
         angles: list[float] = []
@@ -832,14 +1249,33 @@ class MuJoCoRobotController:
         settle_time: float = 1.0,
         viewer: Any = None,
     ) -> None:
-        """
-        Последовательное движение по маршрутным точкам.
+        """Выполняет последовательное движение конечного эффектора по маршрутным точкам.
+
+        Для каждой точки: решает IK, задаёт углы, симулирует ``settle_time`` секунд
+        для достижения позы, затем выполняет действие гриппера (если задано) и
+        добавляет 0.3 с стабилизации гриппера.
+        Точки с нерешаемой IK пропускаются с предупреждением в лог.
 
         Args:
-            points_mm: список точек (x, y, z) в мм
-            grip_actions: True=открыть, False=закрыть, None=не менять
-            settle_time: время ожидания в каждой точке (секунды)
-            viewer: MuJoCo viewer для обновления
+            points_mm: Последовательность точек (x, y, z) в мм. Порядок —
+                это порядок выполнения.
+            grip_actions: Действия гриппера для каждой точки:
+                ``True`` — открыть, ``False`` — закрыть, ``None`` — не менять.
+                Если None — гриппер не трогается ни в одной точке.
+                Длина должна совпадать с ``points_mm``.
+            settle_time: Время симуляции (сек) для достижения каждой точки
+                (default: 1.0). Увеличьте для более плавного движения.
+            viewer: Экземпляр MuJoCo viewer для обновления отображения.
+                Если None — симуляция выполняется в headless режиме.
+
+        Example:
+            # Демонстрация pick & place
+            ctrl.execute_waypoints(
+                points_mm=[(150, 0, 80), (150, 0, 40), (150, 0, 80), (80, 120, 80)],
+                grip_actions=[True, False, None, True],
+                settle_time=1.5,
+                viewer=viewer,
+            )
         """
         if grip_actions is None:
             grip_actions = [None] * len(points_mm)
@@ -1054,15 +1490,49 @@ def run_pick_place_demo(ctrl: MuJoCoRobotController, viewer: Any = None) -> None
 
 
 class RobotEnv:
-    """
-    Gymnasium-совместимая среда для RL-обучения.
+    """Gymnasium-совместимая среда обучения с подкреплением для робота ST3215.
 
-    Наблюдение: RGB изображение + joint angles + ee position
-    Действие: 6 углов суставов + 1 гриппер
-    Награда: -distance_to_target + grasp_bonus
+    Реализует стандартный интерфейс Gymnasium (ранее OpenAI Gym): ``reset()``,
+    ``step()``, ``close()``. Пространство действий — непрерывный вектор из 7
+    значений: 6 углов суставов и команда гриппера.
 
-    Возвращает 5-кортеж (obs, reward, terminated, truncated, info)
-    по стандарту Gymnasium API.
+    Пространство действий
+    ─────────────────────
+    ``action: ndarray(7)``
+        ``action[:6]`` — целевые углы суставов в градусах
+        ``action[6]``  — гриппер: >0 открыть, ≤0 закрыть
+
+    Пространство наблюдений
+    ────────────────────────
+    Словарь (см. ``MuJoCoRobotController.get_observation()``):
+        ``rgb``              — (H, W, 3) uint8, камера eye_in_hand
+        ``depth``            — (H, W) float32, карта глубины
+        ``joint_angles``     — (6,) float64, текущие углы (°)
+        ``ee_pos``           — (3,) float64, позиция EE (м)
+        ``gripper_open``     — bool
+        ``object_positions`` — dict с позициями объектов захвата
+
+    Функция награды
+    ───────────────
+    ``reward = -dist(ee, target_object) + 1.0``  (бонус если объект поднят > 10 см)
+
+    Условие завершения
+    ──────────────────
+    ``truncated = True`` при достижении ``max_steps=1000`` шагов.
+    ``terminated`` всегда False (задача непрерывная).
+
+    Attributes:
+        ctrl (MuJoCoRobotController): Внутренний контроллер симуляции.
+        target_object (str): Имя целевого объекта (default: ``"red_cube"``).
+        target_place (ndarray): Место назначения объекта [x, y, z] в метрах.
+
+    Example:
+        env = RobotEnv()
+        obs, info = env.reset()
+        for _ in range(100):
+            action = np.zeros(7)   # нулевые действия
+            obs, reward, terminated, truncated, info = env.step(action)
+        env.close()
     """
 
     def __init__(
@@ -1070,6 +1540,12 @@ class RobotEnv:
         camera_width: int = _DEFAULT_CAMERA_WIDTH,
         camera_height: int = _DEFAULT_CAMERA_HEIGHT,
     ):
+        """Инициализирует среду.
+
+        Args:
+            camera_width:  Ширина кадра наблюдения (default: 640).
+            camera_height: Высота кадра наблюдения (default: 480).
+        """
         xml = generate_robot_mjcf()
         self.ctrl = MuJoCoRobotController(
             xml, camera_width=camera_width, camera_height=camera_height
@@ -1080,7 +1556,20 @@ class RobotEnv:
         self._max_steps = 1000
 
     def reset(self, *, seed: int | None = None, options: dict | None = None) -> tuple[dict, dict]:
-        """Сброс среды (Gymnasium API)."""
+        """Сбрасывает среду в начальное состояние.
+
+        Вызывает ``ctrl.reset()``, открывает гриппер и устанавливает
+        начальную позу ``[0, −30, 60, −30, 0, 0]°``, симулирует 100 шагов
+        для стабилизации физики.
+
+        Args:
+            seed:    Игнорируется (детерминированная среда). Зарезервирован
+                     для совместимости с Gymnasium API.
+            options: Игнорируется. Зарезервирован для расширений.
+
+        Returns:
+            Кортеж ``(observation, info)`` — словарь наблюдения и пустой info.
+        """
         self.ctrl.reset()
         self.ctrl.open_gripper()
         self.ctrl.set_joint_angles([0, -30, 60, -30, 0, 0], immediate=True)
@@ -1089,15 +1578,24 @@ class RobotEnv:
         return self.ctrl.get_observation(), {}
 
     def step(self, action: np.ndarray) -> tuple[dict, float, bool, bool, dict]:
-        """
-        Шаг среды (Gymnasium API).
+        """Выполняет один шаг среды по заданному действию.
+
+        Применяет угловые команды к суставам и команду гриппера, симулирует
+        100 шагов физики (0.2 с), собирает наблюдение и вычисляет награду.
 
         Args:
-            action: [j0, j1, j2, j3, j4, j5, gripper]
-                    углы в градусах, gripper: >0 = открыть, <=0 = закрыть
+            action: ``ndarray`` формы (7,):
+                ``action[:6]`` — целевые углы суставов в градусах.
+                ``action[6]``  — гриппер: ``>0`` открыть, ``≤0`` закрыть.
 
         Returns:
-            (observation, reward, terminated, truncated, info)
+            Кортеж ``(observation, reward, terminated, truncated, info)``:
+
+            - ``observation`` — словарь (см. ``get_observation()``).
+            - ``reward`` — вещественное число: ``-dist(EE, target) + 1.0`` (бонус).
+            - ``terminated`` — всегда False (задача непрерывная).
+            - ``truncated`` — True при достижении ``_max_steps=1000`` шагов.
+            - ``info`` — ``{"distance": float, "step": int}``.
         """
         self._step_count += 1
 
@@ -1134,7 +1632,10 @@ class RobotEnv:
         return obs, reward, terminated, truncated, info
 
     def close(self) -> None:
-        """Освобождение ресурсов среды."""
+        """Освобождает ресурсы: рендерер и соединение с реальным роботом.
+
+        Эквивалентен выходу из контекстного менеджера.
+        """
         self.ctrl.close()
 
     def __enter__(self) -> RobotEnv:

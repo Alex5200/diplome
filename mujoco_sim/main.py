@@ -1,27 +1,35 @@
 #!/usr/bin/env python3
 """
 MuJoCo Robot Simulation — точка входа.
-
-Режимы:
-    (без флагов)        Интерактивная симуляция с viewer
-    --mirror            Sim-to-real: реальный робот повторяет симуляцию
-    --mirror real_to_sim   Real-to-sim: симуляция отображает реального робота
-    --headless          Без viewer (для RL-обучения)
-
-Примеры:
-    python main.py
-    python main.py --mirror --port COM3
-    python main.py --mirror --port COM3 --speed 400 --rate 25
-    python main.py --mirror real_to_sim --port /dev/ttyUSB0
-    python main.py --mirror --port COM3 --transport ros2
-    python main.py --headless
 """
 
-import sys
+import logging
+import math
 import os
+import sys
+import time
 
-# Добавляем src/ в путь поиска
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+
+
+def _test_serial_port(port: str, baudrate: int) -> bool:
+    """Прямая проверка COM-порта без зависимости от контроллера."""
+    try:
+        import serial
+
+        logger = logging.getLogger("port_test")
+        ser = serial.Serial(port, baudrate, timeout=1.0)
+        ser.reset_input_buffer()
+        # Простой пинг: отправка байта и ожидание ответа
+        ser.write(b"\xff")
+        time.sleep(0.1)
+        data = ser.read(10)
+        ser.close()
+        logger.info("Порт %s доступен. Ответ: %s", port, data.hex())
+        return True
+    except Exception as e:
+        logging.getLogger("port_test").error("Ошибка доступа к %s: %s", port, e)
+        return False
 
 
 def main() -> None:
@@ -40,25 +48,43 @@ def main() -> None:
         metavar="MODE",
         help="Enable mirroring. MODE: sim_to_real (default) | real_to_sim",
     )
-    parser.add_argument("--port",      default="COM3",       help="Serial port for real robot")
-    parser.add_argument("--baudrate",  default=1_000_000, type=int)
+    parser.add_argument("--port", default="COM3", help="Serial port for real robot")
+    parser.add_argument("--baudrate", default=1_000_000, type=int)
     parser.add_argument("--transport", default="serial", choices=["serial", "ros2"])
-    parser.add_argument("--rate",  default=20.0, type=float, help="Mirror rate Hz")
-    parser.add_argument("--speed", default=300,  type=int,   help="Motor speed (50-3400)")
-    parser.add_argument("--no-safety", action="store_true",  help="Disable angle safety clamping")
-    parser.add_argument("--dry-run",   action="store_true",  help="Mirror without real robot")
-    parser.add_argument("--headless",  action="store_true",  help="Run without viewer (RL mode)")
+    parser.add_argument("--rate", default=20.0, type=float, help="Mirror rate Hz")
+    parser.add_argument("--speed", default=300, type=int, help="Motor speed (50-3400)")
+    parser.add_argument("--no-safety", action="store_true", help="Disable angle safety clamping")
+    parser.add_argument("--dry-run", action="store_true", help="Mirror without real robot")
+    parser.add_argument("--headless", action="store_true", help="Run without viewer (RL mode)")
+    parser.add_argument("--test-port", action="store_true", help="Test serial port and exit")
+    parser.add_argument(
+        "--home-pos",
+        type=float,
+        nargs=6,
+        default=[0.0] * 6,
+        help="Physical home position in degrees [J0 J1 J2 J3 J4 J5]",
+    )
+    parser.add_argument(
+        "--offsets",
+        type=float,
+        nargs=6,
+        default=[0.0] * 6,
+        help="Joint calibration offsets in degrees",
+    )
     args = parser.parse_args()
 
+    if args.test_port:
+        ok = _test_serial_port(args.port, args.baudrate)
+        print(f"{'✅' if ok else '❌'} Порт {args.port} {'доступен' if ok else 'недоступен'}")
+        return
+
     if args.mirror is not None:
-        # ── Режим зеркалирования ─────────────────────────────────────
-        # Делегируем в run_mirror.py, передавая уже разобранные аргументы
         _run_mirror_mode(args)
     elif args.headless:
-        # ── Headless режим (RL) ───────────────────────────────────────
         from mujoco_robot_sim import MuJoCoRobotController, generate_robot_mjcf
+
         print("Headless mode (Ctrl+C для остановки)")
-        xml = generate_robot_mjcf()
+        xml = generate_robot_mjcf(with_gripper=True, with_table=True)
         ctrl = MuJoCoRobotController(xml)
         try:
             while True:
@@ -68,17 +94,16 @@ def main() -> None:
         finally:
             ctrl.close()
     else:
-        # ── Интерактивный режим с viewer ─────────────────────────────
         from mujoco_robot_sim import run_interactive
+
         run_interactive()
 
 
 def _run_mirror_mode(args) -> None:
-    """Запуск режима зеркалирования (sim ↔ real)."""
+    import threading
+
     import mujoco
     import mujoco.viewer
-    import threading
-    import logging
 
     logging.basicConfig(
         level=logging.INFO,
@@ -89,17 +114,20 @@ def _run_mirror_mode(args) -> None:
     from mujoco_robot_sim import MuJoCoRobotController, generate_robot_mjcf
     from mujoco_robot_sim.sim_to_real import SimToRealMirror
 
-    mode = args.mirror  # "sim_to_real" | "real_to_sim"
-
+    mode = args.mirror
     print(f"\n  MuJoCo ↔ ST3215 Mirror  [{mode}]")
     print(f"  Port: {args.port}  Rate: {args.rate} Гц  Speed: {args.speed}")
-    print(f"  Transport: {args.transport}  Dry-run: {args.dry_run}\n")
+    print(f"  Transport: {args.transport}  Dry-run: {args.dry_run}")
+    print(f"  Home pos: {args.home_pos}  Offsets: {args.offsets}\n")
 
     xml = generate_robot_mjcf(with_gripper=True, with_table=True)
     ctrl = MuJoCoRobotController(xml)
+
+    # 🔥 КРИТИЧНО: явно задаём начальную позу симуляции под физическое состояние
+    ctrl.data.qpos[:6] = [math.radians(a) for a in args.home_pos]
     ctrl.set_joint_angles([0.0] * 6, immediate=True)
 
-    mirror: SimToRealMirror | None = None
+    mirror = None
     if not args.dry_run:
         mirror = SimToRealMirror(
             ctrl,
@@ -110,10 +138,12 @@ def _run_mirror_mode(args) -> None:
             rate_hz=args.rate,
             motor_speed=args.speed,
             safety_check=not args.no_safety,
+            joint_offsets_deg=args.offsets,
         )
         if not mirror.start():
             print(f"\n  [!] Не удалось подключиться к {args.port}.")
-            print("      Добавьте --dry-run для работы без робота.\n")
+            print("      Проверьте кабель, номер порта и добавьте --test-port для диагностики.")
+            print("      Или используйте --dry-run для работы без робота.\n")
             sys.exit(1)
         print(f"  ✓ Зеркало запущено\n")
 
@@ -142,19 +172,35 @@ def _run_mirror_mode(args) -> None:
                 print(" ", mirror.stats)
             elif cmd.startswith("speed ") and mirror:
                 mirror.set_motor_speed(int(cmd.split()[1]))
+            elif cmd.startswith("offset ") and mirror:
+                try:
+                    idx, val = cmd.split()[1:]
+                    offsets = list(mirror.stats.get("offsets_deg", [0.0] * 6))
+                    offsets[int(idx)] = float(val)
+                    mirror.set_offsets(offsets)
+                except (ValueError, IndexError):
+                    pass
             elif cmd.startswith("goto "):
                 parts = cmd.split()
                 if len(parts) == 4:
                     ctrl.move_to_point(float(parts[1]), float(parts[2]), float(parts[3]))
             elif cmd == "help":
-                print("  angles <j0..j5> | home | goto <x y z> | speed <n> | stats | q")
+                print(
+                    "  angles <j0..j5> | home | goto <x y z> | speed <n> | offset <idx deg> | stats | q"
+                )
 
     threading.Thread(target=cmd_loop, daemon=True).start()
 
     try:
         while running and viewer.is_running():
+            if mirror and mode == "real_to_sim":
+                angles_deg = mirror.poll_real_angles()
+                if angles_deg is not None:
+                    ctrl.data.qpos[:6] = [math.radians(a) for a in angles_deg]
+
             mujoco.mj_step(ctrl.model, ctrl.data)
             viewer.sync()
+
     except KeyboardInterrupt:
         pass
     finally:
@@ -162,6 +208,7 @@ def _run_mirror_mode(args) -> None:
         if mirror:
             mirror.stop()
         viewer.close()
+        ctrl.close()
 
 
 if __name__ == "__main__":
