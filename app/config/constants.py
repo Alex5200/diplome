@@ -108,6 +108,53 @@ PROGRAM_FILE = "robot_program.json"
 DEFAULT_MOTOR_CONFIG = {
     f"motor_{i}": {"min_pos": 0, "max_pos": MAX_POSITION, "name": f"Мотор {i}"} for i in range(1, 7)
 }
+DEFAULT_ACC = 50
+MAX_POSITION = 4095
+
+DEFAULT_MOTOR_MAPPING = {
+    "joint_0": {
+        "motor_id": 1,
+        "name": "База",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": True,
+    },
+    "joint_1": {
+        "motor_id": 2,
+        "name": "Плечо 1",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": False,
+    },
+    "joint_2": {
+        "motor_id": 4,
+        "name": "Плечо 2",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": True,
+    },
+    "joint_3": {
+        "motor_id": 5,
+        "name": "Локоть",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": False,
+    },
+    "joint_4": {
+        "motor_id": 3,
+        "name": "Кисть 1",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": False,
+    },
+    "joint_5": {
+        "motor_id": 6,
+        "name": "Кисть 2",
+        "min_pos": 0,
+        "max_pos": MAX_POSITION,
+        "inverted": False,
+    },
+}
 
 # --- МАСШТАБИРОВАНИЕ ПОД МОНИТОР ---
 # Процент от ширины экрана для определения размера окна
