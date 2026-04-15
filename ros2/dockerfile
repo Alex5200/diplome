@@ -66,3 +66,4 @@ exec "$@"
 EOF
 
 ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/bin/bash"]

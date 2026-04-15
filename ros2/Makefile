@@ -378,6 +378,17 @@ docker-stop:
 docker-clean:
 	docker stop $(CONTAINER_NAME) 2>/dev/null || true
 
+# Stop all containers related to this project
+.PHONY: stop-all
+stop-all:
+	@echo "Stopping all robot_control containers..."
+	@docker ps -a --filter "name=robot_control" --format "{{.Names}}" | while read container; do \
+		echo "Stopping $$container..."; \
+		docker stop $$container 2>/dev/null || true; \
+		docker rm $$container 2>/dev/null || true; \
+	done
+	@echo "Done."
+
 # ============================================
 # INTERACTIVE (TUI)
 # ============================================
