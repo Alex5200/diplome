@@ -430,7 +430,7 @@ def generate_robot_mjcf(
 
               <!-- J5: Кисть 1 — вращение вокруг Z, длина L4 -->
               <body name="link4_wrist1" pos="{L["L3"]} 0 0">
-                <joint name="joint_4" type="hinge" axis="0 0 1"
+                <joint name="joint_4" type="hinge" axis="0 1 0"
                        range="{rad(-90)} {rad(90)}"
                        damping="0.3" armature="0.008"/>
                 <geom name="link4_geom" type="capsule" size="{r_link4}"

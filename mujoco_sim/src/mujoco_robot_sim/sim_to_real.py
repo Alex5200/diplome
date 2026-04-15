@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 SimToRealMirror — непрерывное зеркалирование между MuJoCo и реальным роботом.
+Архитектура: mjData трогается ТОЛЬКО в главном потоке. Фоновый поток работает только с UART/ROS2.
 """
 
 from __future__ import annotations
@@ -105,10 +106,13 @@ class SimToRealMirror:
 
         self._offsets_deg = list(joint_offsets_deg) if joint_offsets_deg else [0.0] * 6
 
+        # Очереди для изоляции mjData от фонового потока
+        self._sim_to_real_queue: queue.Queue[list[float]] = queue.Queue(maxsize=10)
+        self._real_to_sim_queue: queue.Queue[list[float]] = queue.Queue(maxsize=10)
+
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
         self._stats = MirrorStats()
-        self._real_to_sim_queue: queue.Queue[list[float]] = queue.Queue(maxsize=10)
         self._ctrl_lock = threading.Lock()
 
         self._ros2_node = None
@@ -207,14 +211,33 @@ class SimToRealMirror:
             self._ros2_publisher = None
             self._ros2_imports.clear()
 
+    # ── Публичные методы для главного потока ──────────────────────────────
+
+    def push_sim_angles(self, angles_deg: list[float]) -> bool:
+        """Вызывать ТОЛЬКО из главного потока. Отправляет углы симуляции в очередь для робота."""
+        try:
+            self._sim_to_real_queue.put_nowait(angles_deg)
+            return True
+        except queue.Full:
+            return False
+
+    def poll_real_angles(self) -> list[float] | None:
+        """Вызывать ТОЛЬКО из главного потока. Забирает углы робота для симуляции."""
+        try:
+            return self._real_to_sim_queue.get_nowait()
+        except queue.Empty:
+            return None
+
+    # ── Фоновый цикл (работает ТОЛЬКО с железом и очередями) ──────────────
+
     def _mirror_loop(self) -> None:
         while not self._stop_event.is_set():
             t0 = time.monotonic()
             try:
                 if self._mode == "sim_to_real":
-                    self._step_sim_to_real()
+                    self._process_sim_to_real()
                 else:
-                    self._step_real_to_sim()
+                    self._process_real_to_sim()
             except Exception as e:
                 logger.warning("Ошибка в цикле зеркалирования: %s", e)
                 self._stats.record_error()
@@ -227,13 +250,14 @@ class SimToRealMirror:
                 self._stats.record_drop()
                 time.sleep(0.001)
 
-    def _step_sim_to_real(self) -> None:
-        with self._ctrl_lock:
-            angles_deg = list(self._ctrl.get_joint_angles())
+    def _process_sim_to_real(self) -> None:
+        try:
+            angles_deg = self._sim_to_real_queue.get_nowait()
+        except queue.Empty:
+            return  # Нет новых данных из симуляции
 
         # Применяем смещения
         angles_deg = [a + o for a, o in zip(angles_deg, self._offsets_deg)]
-
         if self._safety_check:
             angles_deg = _clamp_angles(angles_deg, self._ctrl.SAFE_ANGLE_LIMITS_DEG)
 
@@ -243,12 +267,12 @@ class SimToRealMirror:
             self._send_ros2(angles_deg)
         self._stats.record_command()
 
-    def _step_real_to_sim(self) -> None:
+    def _process_real_to_sim(self) -> None:
         with self._ctrl_lock:
             raw_angles = list(self._ctrl.read_real_angles())
 
         if raw_angles:
-            # Обратное смещение для корректного отображения в симуляции
+            # Обратное смещение для симуляции
             angles = [a - o for a, o in zip(raw_angles, self._offsets_deg)]
             try:
                 self._real_to_sim_queue.put_nowait(angles)
@@ -257,12 +281,6 @@ class SimToRealMirror:
             self._stats.record_command()
         else:
             self._stats.record_error()
-
-    def poll_real_angles(self) -> list[float] | None:
-        try:
-            return self._real_to_sim_queue.get_nowait()
-        except queue.Empty:
-            return None
 
     def _send_serial(self, angles_deg: list[float]) -> None:
         with self._ctrl_lock:
