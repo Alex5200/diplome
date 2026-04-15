@@ -45,16 +45,16 @@ from app.config.constants import (
 )
 
 # Drop indicator / accent colours
-_DROP_COLOR      = "#7dd3c0"   # teal — drop indicator & hover
-_SELECTED_BORDER = "#8ab4f8"   # blue — selected block border
+_DROP_COLOR = "#7dd3c0"  # teal — drop indicator & hover
+_SELECTED_BORDER = "#8ab4f8"  # blue — selected block border
 
 # Category accent strips
 _CAT_ACCENTS = {
-    "motion":  "#a8e6cf",
+    "motion": "#a8e6cf",
     "control": "#b8d4e3",
-    "wait":    "#f8c471",
-    "logic":   "#f4d03f",
-    "io":      "#d7bde2",
+    "wait": "#f8c471",
+    "logic": "#f4d03f",
+    "io": "#d7bde2",
 }
 
 
@@ -85,14 +85,10 @@ class ProgramBlock:
             ),
             "arc_move": lambda p: f"Arc → ({p.get('x', 0)}, {p.get('y', 0)}, {p.get('z', 0)})",
             "home": lambda p: (
-                "Home All"
-                if p.get("joint") == "all"
-                else f"Home J{int(p.get('joint', 0)) + 1}"
+                "Home All" if p.get("joint") == "all" else f"Home J{int(p.get('joint', 0)) + 1}"
             ),
             "center": lambda p: (
-                "Center All"
-                if p.get("joint") == "all"
-                else f"Center J{int(p.get('joint', 0)) + 1}"
+                "Center All" if p.get("joint") == "all" else f"Center J{int(p.get('joint', 0)) + 1}"
             ),
             "set_speed": lambda p: f"Speed: {p.get('speed', DEFAULT_SPEED)}",
             "set_accel": lambda p: f"Accel: {p.get('accel', DEFAULT_ACC)}",
@@ -374,9 +370,15 @@ class BlockConfigDialog(ctk.CTkToplevel):
                     choices = range_or_choices
 
                 ctk.CTkComboBox(
-                    row, variable=var, values=choices, width=200, state="readonly",
-                    fg_color=FANUC_PANEL, text_color=FANUC_TEXT,
-                    button_color=_DROP_COLOR, button_hover_color="#5bb8a4",
+                    row,
+                    variable=var,
+                    values=choices,
+                    width=200,
+                    state="readonly",
+                    fg_color=FANUC_PANEL,
+                    text_color=FANUC_TEXT,
+                    button_color=_DROP_COLOR,
+                    button_hover_color="#5bb8a4",
                     border_color="#d0ccc8",
                 ).pack(side="left", padx=5)
             elif field_type == "text":
@@ -435,40 +437,96 @@ class BlockPalette(ctk.CTkFrame):
     """Палитра блоков программирования — CTkScrollableFrame edition."""
 
     _CATEGORIES = [
-        ("Motion", "motion", [
-            ("Move Joint",  "move_joint",  {"type": "move_joint",  "joint": 0, "position": 2048, "speed": DEFAULT_SPEED}),
-            ("Move XYZ",   "move_xyz",    {"type": "move_xyz",    "x": 0, "y": 0, "z": 200, "speed": DEFAULT_SPEED}),
-            ("Linear Move","linear_move", {"type": "linear_move", "x": 0, "y": 0, "z": 200, "speed": DEFAULT_SPEED}),
-            ("Rotate",     "rotate",      {"type": "rotate",      "rx": 0, "ry": 0, "rz": 0, "speed": DEFAULT_SPEED}),
-            ("Arc Move",   "arc_move",    {"type": "arc_move",    "x": 0, "y": 0, "z": 200, "via_x": 50, "via_y": 50, "via_z": 200}),
-            ("Home",       "home",        {"type": "home",        "joint": "all"}),
-            ("Center",     "center",      {"type": "center",      "joint": "all"}),
-        ]),
-        ("Settings", "control", [
-            ("Set Speed",  "set_speed",  {"type": "set_speed",  "speed": DEFAULT_SPEED}),
-            ("Set Accel",  "set_accel",  {"type": "set_accel",  "accel": DEFAULT_ACC}),
-            ("Torque On",  "torque_on",  {"type": "torque_on",  "joint": 0}),
-            ("Torque Off", "torque_off", {"type": "torque_off", "joint": 0}),
-            ("Gripper",    "gripper",    {"type": "gripper",    "close": True, "force": 50, "position": 2048}),
-        ]),
-        ("Timing", "wait", [
-            ("Delay",      "wait_time",  {"type": "wait_time",  "seconds": 1.0}),
-            ("Wait Input", "wait_input", {"type": "wait_input", "input": 1, "state": 1, "timeout": 30}),
-        ]),
-        ("Logic", "logic", [
-            ("Loop Start", "loop_start", {"type": "loop_start", "count": 3, "name": "loop_1"}),
-            ("Loop End",   "loop_end",   {"type": "loop_end"}),
-            ("If",         "if",         {"type": "if",         "condition": "true"}),
-            ("Else",       "else",       {"type": "else"}),
-            ("End If",     "endif",      {"type": "endif"}),
-        ]),
-        ("Flow", "io", [
-            ("Label",      "label",      {"type": "label",      "name": "LBL_1"}),
-            ("GoTo",       "goto",       {"type": "goto",       "label": "LBL_1"}),
-            ("Subroutine", "subroutine", {"type": "subroutine", "name": "SUB_1"}),
-            ("Return",     "return",     {"type": "return"}),
-            ("Message",    "message",    {"type": "message",    "text": "Hello!", "msg_type": "info"}),
-        ]),
+        (
+            "Motion",
+            "motion",
+            [
+                (
+                    "Move Joint",
+                    "move_joint",
+                    {"type": "move_joint", "joint": 0, "position": 2048, "speed": DEFAULT_SPEED},
+                ),
+                (
+                    "Move XYZ",
+                    "move_xyz",
+                    {"type": "move_xyz", "x": 0, "y": 0, "z": 200, "speed": DEFAULT_SPEED},
+                ),
+                (
+                    "Linear Move",
+                    "linear_move",
+                    {"type": "linear_move", "x": 0, "y": 0, "z": 200, "speed": DEFAULT_SPEED},
+                ),
+                (
+                    "Rotate",
+                    "rotate",
+                    {"type": "rotate", "rx": 0, "ry": 0, "rz": 0, "speed": DEFAULT_SPEED},
+                ),
+                (
+                    "Arc Move",
+                    "arc_move",
+                    {
+                        "type": "arc_move",
+                        "x": 0,
+                        "y": 0,
+                        "z": 200,
+                        "via_x": 50,
+                        "via_y": 50,
+                        "via_z": 200,
+                    },
+                ),
+                ("Home", "home", {"type": "home", "joint": "all"}),
+                ("Center", "center", {"type": "center", "joint": "all"}),
+            ],
+        ),
+        (
+            "Settings",
+            "control",
+            [
+                ("Set Speed", "set_speed", {"type": "set_speed", "speed": DEFAULT_SPEED}),
+                ("Set Accel", "set_accel", {"type": "set_accel", "accel": DEFAULT_ACC}),
+                ("Torque On", "torque_on", {"type": "torque_on", "joint": 0}),
+                ("Torque Off", "torque_off", {"type": "torque_off", "joint": 0}),
+                (
+                    "Gripper",
+                    "gripper",
+                    {"type": "gripper", "close": True, "force": 50, "position": 2048},
+                ),
+            ],
+        ),
+        (
+            "Timing",
+            "wait",
+            [
+                ("Delay", "wait_time", {"type": "wait_time", "seconds": 1.0}),
+                (
+                    "Wait Input",
+                    "wait_input",
+                    {"type": "wait_input", "input": 1, "state": 1, "timeout": 30},
+                ),
+            ],
+        ),
+        (
+            "Logic",
+            "logic",
+            [
+                ("Loop Start", "loop_start", {"type": "loop_start", "count": 3, "name": "loop_1"}),
+                ("Loop End", "loop_end", {"type": "loop_end"}),
+                ("If", "if", {"type": "if", "condition": "true"}),
+                ("Else", "else", {"type": "else"}),
+                ("End If", "endif", {"type": "endif"}),
+            ],
+        ),
+        (
+            "Flow",
+            "io",
+            [
+                ("Label", "label", {"type": "label", "name": "LBL_1"}),
+                ("GoTo", "goto", {"type": "goto", "label": "LBL_1"}),
+                ("Subroutine", "subroutine", {"type": "subroutine", "name": "SUB_1"}),
+                ("Return", "return", {"type": "return"}),
+                ("Message", "message", {"type": "message", "text": "Hello!", "msg_type": "info"}),
+            ],
+        ),
     ]
 
     def __init__(self, parent: tk.Misc, canvas: "ProgramCanvas"):
@@ -502,8 +560,8 @@ class BlockPalette(ctk.CTkFrame):
         scroll.pack(fill="both", expand=True, padx=0, pady=0)
 
         for cat_name, cat_type, blocks in self._CATEGORIES:
-            accent     = _CAT_ACCENTS.get(cat_type, FANUC_PANEL)
-            block_bg   = BLOCK_COLORS.get(cat_type, FANUC_PANEL)
+            accent = _CAT_ACCENTS.get(cat_type, FANUC_PANEL)
+            block_bg = BLOCK_COLORS.get(cat_type, FANUC_PANEL)
 
             # Category strip
             strip = ctk.CTkFrame(scroll, fg_color=accent, corner_radius=4, height=26)
@@ -520,15 +578,14 @@ class BlockPalette(ctk.CTkFrame):
 
             # Block buttons
             for block_name, block_type, params in blocks:
-<<<<<<< HEAD
                 btn = tk.Button(
-                    frame,
+                    scroll,
                     text=f"  {block_name} + {block_type}",
-                    bg=BLOCK_COLORS.get(category_type, FANUC_PANEL),
+                    bg=BLOCK_COLORS.get(block_type, FANUC_PANEL),
                     fg=FANUC_TEXT,
                     font=("SF Pro", 9),
                     relief="flat",
-=======
+                )
                 ctk.CTkButton(
                     scroll,
                     text=f"+ {block_name}",
@@ -536,7 +593,6 @@ class BlockPalette(ctk.CTkFrame):
                     fg_color=block_bg,
                     text_color=FANUC_TEXT,
                     hover_color=accent,
->>>>>>> 16fe26c4d822f4a59ccb820b05cfe2b2dd75b557
                     anchor="w",
                     height=30,
                     corner_radius=4,
@@ -545,6 +601,7 @@ class BlockPalette(ctk.CTkFrame):
 
     def _add_block(self, params: dict, block_type: str) -> None:
         """Open config dialog then push block to canvas."""
+
         def on_configured(configured_params):
             self.canvas.add_block_from_palette(configured_params, block_type)
 
