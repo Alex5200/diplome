@@ -160,8 +160,8 @@ DEFAULT_MOTOR_MAPPING = {
 # Процент от ширины экрана для определения размера окна
 WINDOW_SCALE_PERCENT = 80  # 80% от ширины экрана
 # Минимальный и максимальный масштаб (процент от базового размера)
-MIN_SCALE_PERCENT = 50
-MAX_SCALE_PERCENT = 150
+MIN_SCALE_PERCENT = 10
+MAX_SCALE_PERCENT = 100
 # Базовый размер окна (при 100% масштабе)
 BASE_WINDOW_WIDTH = 1400
-BASE_WINDOW_HEIGHT = 900
+BASE_WINDOW_HEIGHT = 600
