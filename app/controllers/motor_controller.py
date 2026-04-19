@@ -20,7 +20,6 @@ from ..config.constants import (
     DEFAULT_SPEED,
     MAX_POSITION,
     MIN_POSITION,
-    ROBOT_ORIENTATIONS,
 )
 
 
@@ -61,14 +60,16 @@ class MotorController:
         self.connected = False
         self.motor = None
 
-    def scan_servos(self):
-        if not self.connected:
+    def scan_servos(self) -> list[int]:
+        if not self.connected or self.motor is None:
             print("Не подключено к устройству")
             return []
+
         try:
-            if self.motor is not None:
+            with self._read_lock:
                 self.found_servos = self.motor.ListServos()
-                return self.found_servos
+                # Фильтруем нулевые значения - это могут быть ошибки драйвера
+                return [id for id in self.found_servos if id != 0]
         except Exception as e:
             print(f"❌ Ошибка сканирования: {e}")
             return []
