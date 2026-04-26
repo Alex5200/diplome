@@ -13,18 +13,14 @@ Usage:
 from __future__ import annotations
 
 import json
-import os
-import sys
 
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+from core.motor_data import TEMP_CRITICAL, TEMP_WARNING
 
-from app.config.constants import TEMP_CRITICAL, TEMP_WARNING
-from app.controllers.motor_controller import MotorController
-from app.controllers.motor_monitor import MotorMonitor
+from robot_control.hardware_interface import RobotHWInterface
 
 
 class MonitorNode(Node):
@@ -39,14 +35,11 @@ class MonitorNode(Node):
         baudrate = self.get_parameter("baudrate").value
         rate_hz = self.get_parameter("publish_rate_hz").value
 
-        self._ctrl = MotorController()
-        self._monitor: MotorMonitor | None = None
+        self._hw = RobotHWInterface.get_instance()
+        self._connected = self._hw.initialize(port, baudrate, 10.0)
 
-        if self._ctrl.connect(port, baudrate):
-            motors = self._ctrl.scan_motors()
-            self._monitor = MotorMonitor(self._ctrl, motor_ids=motors, interval=0.5)
-            self._monitor.start()
-            self.get_logger().info(f"MonitorNode connected on {port}, motors: {motors}")
+        if self._connected:
+            self.get_logger().info(f"MonitorNode connected on {port}")
         else:
             self.get_logger().warn(f"Could not connect to {port}")
 
@@ -57,16 +50,15 @@ class MonitorNode(Node):
         self.create_timer(1.0 / rate_hz, self._publish)
 
     def _publish(self) -> None:
-        if not self._ctrl.is_connected:
+        if not self._connected:
             return
 
-        motors = self._ctrl.get_connected_motors()
+        motor_data = self._hw.get_all_motor_data()
         diag: dict = {}
         temps: dict = {}
         alarms: list = []
 
-        for mid in motors:
-            data = self._ctrl.get_motor_data(mid)
+        for mid, data in motor_data.items():
             if not data:
                 continue
             diag[str(mid)] = {

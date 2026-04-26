@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-Robot Hardware Interface - Singleton wrapper for MotorController.
+Robot Hardware Interface - ROS2 Hardware Interface for ST3215 robot.
 
 Provides unified, thread-safe access to ST3215 motors for all ROS 2 nodes.
+Uses core module for data models.
 
 Usage:
-    from hardware_interface import RobotHWInterface
+    from robot_control.hardware_interface import RobotHWInterface
 
     hw = RobotHWInterface.get_instance()
     hw.initialize("COM3", 1000000)
@@ -14,18 +15,19 @@ Usage:
 
 from __future__ import annotations
 
-import os
-import sys
 import threading
 import time
 from dataclasses import dataclass, field
 from typing import ClassVar
 
-# Allow importing from project root
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+try:
+    from st3215 import ST3215
+except ImportError:
+    import sys
+    sys.stderr.write("Warning: st3215 package not installed. Install with: pip install st3215\n")
+    ST3215 = None
 
-from app.controllers.motor_controller import MotorController
-from app.models.motor_data import MotorData
+from core.motor_data import MotorData, JointState as CoreJointState, RobotState
 
 
 @dataclass
@@ -85,7 +87,8 @@ class RobotHWInterface:
         if self._initialized:
             return
 
-        self._ctrl = MotorController()
+        self._motor: ST3215 | None = None
+        self._connected = False
         self._cache: dict[int, MotorCache] = {}
         self._cache_lock = threading.Lock()
         self._running = False
@@ -106,20 +109,26 @@ class RobotHWInterface:
         Returns:
             True if connected successfully
         """
+        if ST3215 is None:
+            return False
+
         self._initialize_internal()
 
-        if self._ctrl.connected:
+        if self._connected:
             return True
 
-        success = self._ctrl.connect(port, baudrate)
-        if success:
-            self._motor_ids = self._ctrl.scan_motors()
+        try:
+            self._motor = ST3215(device=port)
+            self._connected = True
+            self._motor_ids = [1, 2, 3, 4, 5, 6]
             self._start_monitor(monitor_rate_hz)
 
-            # Initialize cache
             with self._cache_lock:
                 for mid in self._motor_ids:
                     self._cache[mid] = MotorCache()
+            return True
+        except Exception:
+            return False
 
         return success
 
@@ -127,7 +136,7 @@ class RobotHWInterface:
         """Check if motors are connected."""
         if not self._initialized:
             return False
-        return self._ctrl.connected
+        return self._connected
 
     def is_initialized(self) -> bool:
         """Check if interface has been initialized."""
@@ -140,17 +149,16 @@ class RobotHWInterface:
         Returns:
             List of 6 JointState objects (one per joint)
         """
-        if not self._initialized or not self._ctrl.connected:
+        if not self._initialized or not self._connected:
             return [JointState() for _ in range(6)]
 
         states = []
         for i in range(6):
-            motor_id = self._ctrl.get_motor_id_for_joint(i)
+            motor_id = i + 1
 
             with self._cache_lock:
                 cache = self._cache.get(motor_id)
                 if cache and cache.data:
-                    # Convert position to radians
                     pos_raw = cache.data.position or 2048
                     pos_rad = self._position_to_rad(pos_raw)
                     states.append(JointState(position_rad=pos_rad, position_raw=pos_raw))
@@ -169,7 +177,7 @@ class RobotHWInterface:
         Returns:
             True if all commands sent successfully
         """
-        if not self._initialized or not self._ctrl.connected:
+        if not self._initialized or not self._connected:
             return False
 
         if len(positions_rad) != 6:
@@ -178,7 +186,11 @@ class RobotHWInterface:
         success = True
         for i, pos_rad in enumerate(positions_rad):
             pos_raw = self._rad_to_position(pos_rad)
-            if not self._ctrl.move_joint(i, pos_raw):
+            motor_id = i + 1
+            try:
+                if self._motor:
+                    self._motor.write(motor_id, pos_raw)
+            except Exception:
                 success = False
 
         return success
@@ -204,8 +216,13 @@ class RobotHWInterface:
 
     def emergency_stop(self) -> None:
         """Emergency stop all motors."""
-        if self._initialized and self._ctrl.connected:
-            self._ctrl.emergency_stop_all()
+        if self._initialized and self._connected:
+            try:
+                for motor_id in self._motor_ids:
+                    if self._motor:
+                        self._motor.torque_disable(motor_id)
+            except Exception:
+                pass
 
     def shutdown(self) -> None:
         """Cleanup and disconnect."""
@@ -214,8 +231,13 @@ class RobotHWInterface:
 
         self._stop_monitor()
 
-        if self._ctrl.connected:
-            self._ctrl.disconnect()
+        if self._connected:
+            try:
+                if hasattr(self._motor, 'portHandler'):
+                    self._motor.portHandler.closePort()
+            except Exception:
+                pass
+            self._connected = False
 
         # Clear singleton
         with self._instance_lock:
@@ -247,24 +269,32 @@ class RobotHWInterface:
         while self._running:
             start = time.time()
 
-            if self._ctrl.connected:
+            if self._connected and self._motor:
                 for motor_id in self._motor_ids:
                     try:
-                        data = self._ctrl.read_motor_data(motor_id)
+                        position = self._motor.read_position(motor_id)
+                        data = {
+                            "position": position if position is not None else 2048,
+                            "temperature": 0.0,
+                            "voltage": 0.0,
+                            "current": 0.0,
+                            "load": 0.0,
+                            "mode": None,
+                            "moving": False,
+                        }
                         with self._cache_lock:
                             if motor_id not in self._cache:
                                 self._cache[motor_id] = MotorCache()
-                            if data:
-                                self._cache[motor_id].data = MotorData(
-                                    motor_id=motor_id,
-                                    position=data.get("position", 2048),
-                                    temperature=data.get("temperature", 0.0),
-                                    voltage=data.get("voltage", 0.0),
-                                    current=data.get("current", 0.0),
-                                    load=data.get("load", 0.0),
-                                    mode=data.get("mode"),
-                                    moving=data.get("moving", False),
-                                )
+                            self._cache[motor_id].data = MotorData(
+                                motor_id=motor_id,
+                                position=data.get("position", 2048),
+                                temperature=data.get("temperature", 0.0),
+                                voltage=data.get("voltage", 0.0),
+                                current=data.get("current", 0.0),
+                                load=data.get("load", 0.0),
+                                mode=data.get("mode"),
+                                moving=data.get("moving", False),
+                            )
                             self._cache[motor_id].timestamp = time.time()
                     except Exception:
                         pass

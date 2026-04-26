@@ -2,6 +2,56 @@
 
 > **Важно:** Пути в примерах замените на свои.
 
+## Сборка пакета (colcon build)
+
+### Требования
+
+- ROS2 Humble (или другой дистрибутив)
+- Python 3.8+
+- st3215 пакет: `pip install st3215`
+
+### Сборка
+
+```bash
+# 1. Перейдите в директорию пакета
+cd ~/Documents/GitHub/diplome/ros2
+
+# 2. Установите зависимости
+rosdep install --from-paths . --ignore-src -r -y
+
+# 3. Сборка через colcon
+colcon build --packages-select robot_control
+
+# 4. Source установочного файла
+source install/setup.bash
+```
+
+### Запуск после сборки
+
+```bash
+# Запуск robot node
+ros2 run robot_control robot_node --ros-args -p port:=/dev/ttyUSB0
+
+# Запуск monitor node (в другом терминале)
+ros2 run robot_control monitor_node --ros-args -p port:=/dev/ttyUSB0
+
+# Проверка топиков
+ros2 topic list
+ros2 topic echo /robot/joint_states
+```
+
+### Альтернативная сборка (без colcon)
+
+```bash
+# Установка в режиме development
+pip install -e .
+
+# Запуск напрямую
+python -m robot_control.robot_node --ros-args -p port:=/dev/ttyUSB0
+```
+
+---
+
 ## Обзор
 
 Robot Control v2 использует **единый Hardware Interface** (singleton pattern) для всех ROS 2 нод. Это решает проблему конфликтов при подключении к моторам ST3215.
