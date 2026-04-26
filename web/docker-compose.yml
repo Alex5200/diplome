@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  robot-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: st3215-robot-api
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - AUTH_ENABLED=true
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - OPERATOR_PASSWORD=${OPERATOR_PASSWORD:-operator}
+      - MOCK_MODE=${MOCK_MODE:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./config:/app/config:ro
+
+  robot-web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: st3215-robot-web
+    ports:
+      - "3000:3000"
+    depends_on:
+      - robot-api
+    environment:
+      - VITE_API_URL=
+    restart: unless-stopped
+
+networks:
+  default:
+    name: st3215-network
