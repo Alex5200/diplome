@@ -1,0 +1,17 @@
+# Exclude build artifacts and cache
+.git
+.venv
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+*.egg-info
+build/
+install/
+log/
+
+# Exclude documentation and scripts
+*.md
+.dockerignore
+build_docker.sh
+test_import.py

@@ -1,0 +1,14 @@
+# MuJoCo Robot Simulation Dependencies
+mujoco>=3.0.0
+numpy>=1.24.0
+st3215>=0.1.0
+pyserial>=3.5
+
+# Optional for RL training
+# gymnasium>=0.28.0
+# stable-baselines3>=2.0.0
+
+# Development
+pytest>=7.0.0
+pytest-cov>=4.0.0
+mypy>=1.0.0
