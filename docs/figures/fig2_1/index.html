@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"></head>
+<body style="margin:0;background:#fff;">
+
+<div data-composition-id="fig2-1" data-width="1600" data-height="800"
+     style="position:relative;width:1600px;height:800px;overflow:hidden;background:#fff;">
+
+<div id="clip0" data-start="0" data-duration="3" data-track-index="1"
+     style="position:absolute;top:0;left:0;width:100%;height:100%;">
+<div style="width:1600px;height:800px;background:#fff;display:flex;flex-direction:column;
+            align-items:center;justify-content:center;padding:44px 72px;gap:10px;
+            font-family:-apple-system,'Segoe UI',Arial,sans-serif;">
+
+  <!-- Title -->
+  <div id="ttl" style="font-size:25px;font-weight:600;color:#1E2B3C;text-align:center;
+                        margin-bottom:12px;letter-spacing:0.01em;">
+    Рисунок 2.1 — Трёхуровневая компонентная архитектура системы управления
+  </div>
+
+  <!-- Layer 1: Presentation -->
+  <div id="lay1"
+       style="width:100%;background:#F5F9FF;border:2px solid #2D6A9F;border-radius:8px;padding:14px 20px;">
+    <div style="font-size:16px;font-weight:700;color:#2D6A9F;margin-bottom:10px;
+                letter-spacing:0.08em;text-transform:uppercase;">Уровень представления</div>
+    <div style="display:flex;gap:14px;justify-content:center;">
+      <div id="b11" style="flex:1;background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:6px;
+                             padding:12px 8px;text-align:center;">
+        <div style="font-size:19px;font-weight:700;color:#1E2B3C;">Desktop GUI</div>
+        <div style="font-size:14px;color:#5A6A7A;margin-top:4px;">Tkinter / CustomTkinter</div>
+      </div>
+      <div id="b12" style="flex:1;background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:6px;
+                             padding:12px 8px;text-align:center;">
+        <div style="font-size:19px;font-weight:700;color:#1E2B3C;">Web FastAPI</div>
+        <div style="font-size:14px;color:#5A6A7A;margin-top:4px;">REST API + WebSocket</div>
+      </div>
+      <div id="b13" style="flex:1;background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:6px;
+                             padding:12px 8px;text-align:center;">
+        <div style="font-size:19px;font-weight:700;color:#1E2B3C;">ROS2 Nodes</div>
+        <div style="font-size:14px;color:#5A6A7A;margin-top:4px;">robot_node, ik_service</div>
+      </div>
+      <div id="b14" style="flex:1;background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:6px;
+                             padding:12px 8px;text-align:center;">
+        <div style="font-size:19px;font-weight:700;color:#1E2B3C;">MuJoCo Sim</div>
+        <div style="font-size:14px;color:#5A6A7A;margin-top:4px;">Digital twin + RobotEnv</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arrow down 1 -->
+  <div id="a1" style="display:flex;align-items:center;justify-content:center;gap:24px;
+                       width:100%;padding:0 60px;">
+    <div style="flex:1;height:1px;background:#CCCCCC;"></div>
+    <div style="font-size:24px;color:#2965B5;font-weight:300;">↕</div>
+    <div style="font-size:16px;color:#5A6A7A;white-space:nowrap;">Общий слой (app/)</div>
+    <div style="font-size:24px;color:#2965B5;font-weight:300;">↕</div>
+    <div style="flex:1;height:1px;background:#CCCCCC;"></div>
+  </div>
+
+  <!-- Layer 2: Application -->
+  <div id="lay2"
+       style="width:100%;background:#F5F9FF;border:2px solid #2D6A9F;border-radius:8px;padding:14px 20px;">
+    <div style="font-size:16px;font-weight:700;color:#2D6A9F;margin-bottom:10px;
+                letter-spacing:0.08em;text-transform:uppercase;">Уровень приложения</div>
+    <div style="display:flex;gap:14px;justify-content:center;">
+      <div id="b21" style="flex:1;background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:6px;
+                             padding:12px 8px;text-align:center;">
+        <div style="font-size:19px;font-weight:700;color:#1E2B3C;">MotorController</div>
+        <div style="font-size:14px;color:#5A6A7A;margin-top:4px;">Управление приводами</div>
+      </div>
+      <div id="b22" style="flex:1;background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:6px;
+                             padding:12px 8px;text-align:center;">
+        <div style="font-size:19px;font-weight:700;color:#1E2B3C;">KinematicsService</div>
+        <div style="font-size:14px;color:#5A6A7A;margin-top:4px;">FK / IK (DLS), кэш</div>
+      </div>
+      <div id="b23" style="flex:1;background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:6px;
+                             padding:12px 8px;text-align:center;">
+        <div style="font-size:19px;font-weight:700;color:#1E2B3C;">EventBus</div>
+        <div style="font-size:14px;color:#5A6A7A;margin-top:4px;">publish / subscribe</div>
+      </div>
+      <div id="b24" style="flex:1;background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:6px;
+                             padding:12px 8px;text-align:center;">
+        <div style="font-size:19px;font-weight:700;color:#1E2B3C;">Programs</div>
+        <div style="font-size:14px;color:#5A6A7A;margin-top:4px;">BaseProgram + задачи</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arrow down 2 -->
+  <div id="a2" style="display:flex;align-items:center;justify-content:center;gap:24px;
+                       width:100%;padding:0 60px;">
+    <div style="flex:1;height:1px;background:#CCCCCC;"></div>
+    <div style="font-size:24px;color:#2965B5;font-weight:300;">↕</div>
+    <div style="font-size:16px;color:#5A6A7A;white-space:nowrap;">Serial TTL / RS-485</div>
+    <div style="font-size:24px;color:#2965B5;font-weight:300;">↕</div>
+    <div style="flex:1;height:1px;background:#CCCCCC;"></div>
+  </div>
+
+  <!-- Layer 3: Hardware -->
+  <div id="lay3"
+       style="width:100%;background:#1E3A5F;border-radius:8px;padding:16px 20px;text-align:center;">
+    <div style="font-size:16px;font-weight:700;color:#AEC8E0;margin-bottom:8px;
+                letter-spacing:0.08em;text-transform:uppercase;">Уровень оборудования</div>
+    <div style="font-size:22px;font-weight:700;color:#fff;">
+      ST3215 × 6 — Серводвигатели (протокол SCServo, 1 000 000 бод)
+    </div>
+    <div style="font-size:15px;color:#AEC8E0;margin-top:6px;">
+      ID: 1–6 &nbsp;|&nbsp; Позиция: 0–4095 &nbsp;|&nbsp; Момент: 0–1000 &nbsp;|&nbsp; Датчики: температура, напряжение, ток
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+
+  tl.from("#ttl",           { opacity:0, y:-20, duration:0.5, ease:"power2.out" }, 0.1);
+  tl.from("#lay1",          { opacity:0, y:16,  duration:0.45,ease:"expo.out"   }, 0.25);
+  tl.from("#b11,#b12,#b13,#b14",
+                            { opacity:0, y:10,  duration:0.35,ease:"power3.out",stagger:0.06 }, 0.35);
+  tl.from("#a1",            { opacity:0,        duration:0.3, ease:"sine.out"   }, 0.55);
+  tl.from("#lay2",          { opacity:0, y:16,  duration:0.45,ease:"expo.out"   }, 0.6);
+  tl.from("#b21,#b22,#b23,#b24",
+                            { opacity:0, y:10,  duration:0.35,ease:"power3.out",stagger:0.06 }, 0.7);
+  tl.from("#a2",            { opacity:0,        duration:0.3, ease:"sine.out"   }, 0.9);
+  tl.from("#lay3",          { opacity:0, y:16,  duration:0.45,ease:"power2.out" }, 0.95);
+
+  window.__timelines["fig2-1"] = tl;
+</script>
+</div>
+
+</body>
+</html>

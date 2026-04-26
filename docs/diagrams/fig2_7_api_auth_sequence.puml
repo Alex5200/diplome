@@ -1,0 +1,96 @@
+@startuml fig2_7_api_auth_sequence
+' Рисунок 2.7 — Диаграмма последовательности аутентификации Web API
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #FFFFFF
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EEF4FB
+skinparam ParticipantBorderColor #336699
+skinparam NoteBackgroundColor #FFFBE6
+skinparam NoteBorderColor #CC9900
+
+title Рисунок 2.7 — Диаграмма последовательности аутентификации Web API
+
+actor "Пользователь\n(браузер)" as USER
+actor "Внешний сервис\n(M2M)" as M2M
+participant "FastAPI\n(web/main.py)" as APP
+participant "AuthRouter\n(api/auth.py)" as AUTH
+participant "JWTHandler" as JWT
+participant "APITokenStore\n(in-memory)" as STORE
+participant "RobotRouter\n(api/routes.py)" as ROUTER
+
+== Сценарий 1: Аутентификация пользователя (JWT) ==
+
+USER -> APP : POST /auth/login\n{username, password}
+APP -> AUTH : login(username, password)
+activate AUTH
+AUTH -> AUTH : validate_credentials(username, password)
+note right of AUTH
+  Проверка по хэшу пароля
+  (bcrypt в production)
+end note
+AUTH -> JWT : create_access_token(sub=username,\nexp=now + TOKEN_EXP_H)
+activate JWT
+JWT -> JWT : sign(payload, JWT_SECRET, HS256)
+JWT --> AUTH : jwt_token (строка)
+deactivate JWT
+AUTH --> APP : {access_token, token_type: "bearer"}
+deactivate AUTH
+APP --> USER : 200 OK\n{access_token: "eyJ...", token_type: "bearer"}
+
+USER -> APP : GET /api/status\n(публичный — без токена)
+APP -> ROUTER : get_status()
+ROUTER --> APP : {connected, motors, found_servos}
+APP --> USER : 200 OK {connected: false, motors: {}}
+
+USER -> APP : POST /api/connect\nAuthorization: Bearer eyJ...
+APP -> AUTH : require_token(credentials)
+activate AUTH
+AUTH -> JWT : decode(token, JWT_SECRET, HS256)
+activate JWT
+JWT --> AUTH : payload {sub: "username", exp: ...}
+deactivate JWT
+AUTH -> AUTH : check exp > now
+AUTH --> APP : payload (валиден)
+deactivate AUTH
+APP -> ROUTER : connect(port, baudrate)
+ROUTER --> APP : {connected: true, motors_found: [1,2,3,4,5,6]}
+APP --> USER : 200 OK {connected: true, port: "COM3", motors_found: [1,2,3,4,5,6]}
+
+== Сценарий 2: Отказ — истёкший токен ==
+
+USER -> APP : POST /api/move\nAuthorization: Bearer eyJ... (истёк)
+APP -> AUTH : require_token(credentials)
+activate AUTH
+AUTH -> JWT : decode(token, ...)
+activate JWT
+JWT --> AUTH : ExpiredSignatureError
+deactivate JWT
+AUTH --> APP : HTTPException 401\n"Token expired"
+deactivate AUTH
+APP --> USER : 401 Unauthorized\n{detail: "Token expired"}
+
+== Сценарий 3: Machine-to-Machine (API-токен) ==
+
+M2M -> APP : POST /auth/token/generate\n{owner: "ros2_node", description: "..."}
+APP -> AUTH : generate_api_token(owner, description)
+activate AUTH
+AUTH -> STORE : APIToken(token=secrets.token_hex(32), owner, ...)
+STORE --> AUTH : saved
+AUTH --> APP : {token: "a3f8...b2c1"}
+deactivate AUTH
+APP --> M2M : 200 OK {token: "a3f8...b2c1"}
+
+M2M -> APP : POST /api/move\nAuthorization: Bearer a3f8...b2c1
+APP -> AUTH : require_token(credentials)
+activate AUTH
+AUTH -> STORE : lookup(token)
+STORE --> AUTH : APIToken (найден)
+AUTH --> APP : payload {sub: "ros2_node"}
+deactivate AUTH
+APP -> ROUTER : move(joint=2, position=2048, speed=1000)
+ROUTER --> APP : {joint: 2, position: 2048, speed: 1000}
+APP --> M2M : 200 OK
+
+@enduml

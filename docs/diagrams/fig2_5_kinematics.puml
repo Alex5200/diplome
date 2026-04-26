@@ -1,0 +1,71 @@
+@startuml fig2_5_kinematics
+' Рисунок 2.5 — Архитектура кинематического модуля
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam backgroundColor #FFFFFF
+skinparam class {
+  BackgroundColor #EEF4FB
+  BorderColor #336699
+}
+
+title Рисунок 2.5 — Архитектура кинематического модуля
+
+class RobotKinematics6DOF {
+  ' DH-параметры звеньев
+  +L0 = 19.0 мм  (база)
+  +L1 = 134.0 мм (плечо 1)
+  +L2 = 95.0 мм  (плечо 2)
+  +L3 = 34.0 мм  (локоть)
+  +L4 = 35.0 мм  (кисть 1)
+  +L5 = 0.0 мм   (кисть 2)
+  +max_reach = 298 мм
+  --
+  +forward_kinematics(angles[6]): list[pos]
+  -_dh_matrix(θ, d, a, α): ndarray[4×4]
+  -_multiply_chain(matrices): ndarray[4×4]
+}
+
+class InverseKinematics6DOF {
+  -_fk: RobotKinematics6DOF
+  -_max_iter: int = 100
+  -_tolerance: float = 1.0 мм
+  -_lambda: float = 0.5  (DLS демпфирование)
+  --
+  +solve(target_pos): list[6] | None
+  -_jacobian(angles): ndarray[3×6]
+  -_dls_step(J, error): ndarray[6]
+}
+
+class KinematicsService {
+  -_fk: RobotKinematics6DOF
+  -_ik: InverseKinematics6DOF
+  -_fk_cache: dict
+  -_max_reach: float
+  --
+  +initialize(container): void
+  +solve_fk(angles): list[pos]
+  +solve_ik(x, y, z): list[6] | None
+  +is_reachable(x, y, z): bool
+  -_check_cache(angles): list | None
+  -_store_cache(angles, result): void
+}
+
+note right of InverseKinematics6DOF
+  Метод DLS (Damped Least Squares):
+  Δθ = Jᵀ(JJᵀ + λ²I)⁻¹ · Δp
+  Итерации до ||Δp|| < tolerance
+  или max_iter шагов
+end note
+
+note right of KinematicsService
+  Предварительная проверка:
+  r = √(x²+y²+z²)
+  is_reachable = r ≤ max_reach
+end note
+
+KinematicsService o-- RobotKinematics6DOF
+KinematicsService o-- InverseKinematics6DOF
+InverseKinematics6DOF o-- RobotKinematics6DOF
+
+@enduml

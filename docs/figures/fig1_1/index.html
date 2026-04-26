@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#fff;}
+</style>
+</head>
+<body style="margin:0;background:#fff;">
+
+<div data-composition-id="fig1-1" data-width="1600" data-height="800"
+     style="position:relative;width:1600px;height:800px;overflow:hidden;background:#fff;">
+
+<div id="clip0" data-start="0" data-duration="3" data-track-index="1"
+     style="position:absolute;top:0;left:0;width:100%;height:100%;">
+<div id="scene"
+     style="width:1600px;height:800px;background:#fff;display:flex;flex-direction:column;
+            align-items:center;justify-content:center;padding:48px 64px;gap:36px;
+            font-family:-apple-system,'Segoe UI',Arial,sans-serif;">
+
+  <!-- Title -->
+  <div id="ttl" style="font-size:26px;font-weight:600;color:#1E2B3C;text-align:center;
+                        letter-spacing:0.02em;line-height:1.3;">
+    Рисунок 1.1 — Топология подключения приводов ST3215 (daisy-chain)
+  </div>
+
+  <!-- Chain row -->
+  <div id="chain" style="display:flex;align-items:center;justify-content:center;
+                          gap:0;width:100%;">
+
+    <!-- Controller -->
+    <div id="n0" style="background:#1E3A5F;border-radius:8px;padding:18px 20px;
+                         text-align:center;flex-shrink:0;width:172px;">
+      <div style="font-size:20px;font-weight:700;color:#fff;">Raspberry Pi 4</div>
+      <div style="font-size:16px;color:#AEC8E0;margin-top:6px;">USB → TTL адаптер</div>
+      <div style="font-size:15px;color:#AEC8E0;margin-top:3px;">1 Мбод</div>
+    </div>
+
+    <!-- Connector 0 -->
+    <div id="c0" style="display:flex;flex-direction:column;align-items:center;
+                         flex-shrink:0;width:56px;">
+      <div style="font-size:13px;color:#5A6A7A;margin-bottom:5px;white-space:nowrap;">USB-TTL</div>
+      <div style="display:flex;align-items:center;width:100%;">
+        <div style="flex:1;height:2px;background:#2965B5;"></div>
+        <span style="color:#2965B5;font-size:14px;margin-top:-1px;flex-shrink:0;">▶</span>
+      </div>
+    </div>
+
+    <!-- Motor 1 -->
+    <div id="m1" style="background:#EEF4FB;border:2px solid #2D6A9F;border-radius:8px;
+                          padding:14px 10px;text-align:center;flex-shrink:0;width:142px;">
+      <div style="font-size:20px;font-weight:700;color:#1E2B3C;">ST3215 #1</div>
+      <div style="font-size:15px;color:#5A6A7A;margin-top:5px;">Основание</div>
+      <div style="font-size:13px;color:#8AAABB;margin-top:3px;">ID: 1</div>
+    </div>
+
+    <!-- Connector 1 -->
+    <div id="c1" style="display:flex;flex-direction:column;align-items:center;
+                          flex-shrink:0;width:44px;">
+      <div style="font-size:13px;color:#5A6A7A;margin-bottom:5px;">TTL</div>
+      <div style="display:flex;align-items:center;width:100%;">
+        <div style="flex:1;height:2px;background:#2965B5;"></div>
+        <span style="color:#2965B5;font-size:14px;margin-top:-1px;flex-shrink:0;">▶</span>
+      </div>
+    </div>
+
+    <!-- Motor 2 -->
+    <div id="m2" style="background:#EEF4FB;border:2px solid #2D6A9F;border-radius:8px;
+                          padding:14px 10px;text-align:center;flex-shrink:0;width:142px;">
+      <div style="font-size:20px;font-weight:700;color:#1E2B3C;">ST3215 #2</div>
+      <div style="font-size:15px;color:#5A6A7A;margin-top:5px;">Плечо 1</div>
+      <div style="font-size:13px;color:#8AAABB;margin-top:3px;">ID: 2</div>
+    </div>
+
+    <!-- Connector 2 -->
+    <div id="c2" style="display:flex;flex-direction:column;align-items:center;
+                          flex-shrink:0;width:44px;">
+      <div style="font-size:13px;color:#5A6A7A;margin-bottom:5px;">TTL</div>
+      <div style="display:flex;align-items:center;width:100%;">
+        <div style="flex:1;height:2px;background:#2965B5;"></div>
+        <span style="color:#2965B5;font-size:14px;margin-top:-1px;flex-shrink:0;">▶</span>
+      </div>
+    </div>
+
+    <!-- Motor 3 -->
+    <div id="m3" style="background:#EEF4FB;border:2px solid #2D6A9F;border-radius:8px;
+                          padding:14px 10px;text-align:center;flex-shrink:0;width:142px;">
+      <div style="font-size:20px;font-weight:700;color:#1E2B3C;">ST3215 #3</div>
+      <div style="font-size:15px;color:#5A6A7A;margin-top:5px;">Плечо 2</div>
+      <div style="font-size:13px;color:#8AAABB;margin-top:3px;">ID: 3</div>
+    </div>
+
+    <!-- Connector 3 -->
+    <div id="c3" style="display:flex;flex-direction:column;align-items:center;
+                          flex-shrink:0;width:44px;">
+      <div style="font-size:13px;color:#5A6A7A;margin-bottom:5px;">TTL</div>
+      <div style="display:flex;align-items:center;width:100%;">
+        <div style="flex:1;height:2px;background:#2965B5;"></div>
+        <span style="color:#2965B5;font-size:14px;margin-top:-1px;flex-shrink:0;">▶</span>
+      </div>
+    </div>
+
+    <!-- Motor 4 -->
+    <div id="m4" style="background:#EEF4FB;border:2px solid #2D6A9F;border-radius:8px;
+                          padding:14px 10px;text-align:center;flex-shrink:0;width:142px;">
+      <div style="font-size:20px;font-weight:700;color:#1E2B3C;">ST3215 #4</div>
+      <div style="font-size:15px;color:#5A6A7A;margin-top:5px;">Локоть</div>
+      <div style="font-size:13px;color:#8AAABB;margin-top:3px;">ID: 4</div>
+    </div>
+
+    <!-- Connector 4 -->
+    <div id="c4" style="display:flex;flex-direction:column;align-items:center;
+                          flex-shrink:0;width:44px;">
+      <div style="font-size:13px;color:#5A6A7A;margin-bottom:5px;">TTL</div>
+      <div style="display:flex;align-items:center;width:100%;">
+        <div style="flex:1;height:2px;background:#2965B5;"></div>
+        <span style="color:#2965B5;font-size:14px;margin-top:-1px;flex-shrink:0;">▶</span>
+      </div>
+    </div>
+
+    <!-- Motor 5 -->
+    <div id="m5" style="background:#EEF4FB;border:2px solid #2D6A9F;border-radius:8px;
+                          padding:14px 10px;text-align:center;flex-shrink:0;width:142px;">
+      <div style="font-size:20px;font-weight:700;color:#1E2B3C;">ST3215 #5</div>
+      <div style="font-size:15px;color:#5A6A7A;margin-top:5px;">Кисть 1</div>
+      <div style="font-size:13px;color:#8AAABB;margin-top:3px;">ID: 5</div>
+    </div>
+
+    <!-- Connector 5 -->
+    <div id="c5" style="display:flex;flex-direction:column;align-items:center;
+                          flex-shrink:0;width:44px;">
+      <div style="font-size:13px;color:#5A6A7A;margin-bottom:5px;">TTL</div>
+      <div style="display:flex;align-items:center;width:100%;">
+        <div style="flex:1;height:2px;background:#2965B5;"></div>
+        <span style="color:#2965B5;font-size:14px;margin-top:-1px;flex-shrink:0;">▶</span>
+      </div>
+    </div>
+
+    <!-- Motor 6 -->
+    <div id="m6" style="background:#EEF4FB;border:2px solid #2D6A9F;border-radius:8px;
+                          padding:14px 10px;text-align:center;flex-shrink:0;width:142px;">
+      <div style="font-size:20px;font-weight:700;color:#1E2B3C;">ST3215 #6</div>
+      <div style="font-size:15px;color:#5A6A7A;margin-top:5px;">Кисть 2</div>
+      <div style="font-size:13px;color:#8AAABB;margin-top:3px;">ID: 6</div>
+    </div>
+  </div>
+
+  <!-- Note -->
+  <div id="note"
+       style="font-size:18px;color:#5A6A7A;text-align:center;max-width:900px;line-height:1.5;">
+    Все 6 приводов подключены последовательно (daisy-chain) по шине TTL/RS-485.
+    Скорость обмена: 1 000 000 бод. Диапазон позиции: 0–4095 (12 бит, 0.088°/шаг).
+  </div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+
+  tl.from("#ttl",          { opacity:0, y:-24, duration:0.5, ease:"power2.out" }, 0.1);
+  tl.from("#n0",           { opacity:0, x:-30, duration:0.5, ease:"expo.out"   }, 0.2);
+  tl.from("#m1,#m2,#m3,#m4,#m5,#m6",
+                           { opacity:0, y:22,  duration:0.4, ease:"power3.out", stagger:0.07 }, 0.28);
+  tl.from("#c0,#c1,#c2,#c3,#c4,#c5",
+                           { opacity:0,        duration:0.3, ease:"sine.out",   stagger:0.05 }, 0.35);
+  tl.from("#note",         { opacity:0, y:12,  duration:0.4, ease:"power1.out" }, 0.85);
+
+  window.__timelines["fig1-1"] = tl;
+</script>
+</div>
+
+</body>
+</html>

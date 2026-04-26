@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "ros2-robotics": {
+      "source": "omer-metin/skills-for-antigravity",
+      "sourceType": "github",
+      "computedHash": "1538202a07efdc14482af45531f891cec5b29784d902f1b31075196e3953c694"
+    }
+  }
+}

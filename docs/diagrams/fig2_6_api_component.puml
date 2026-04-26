@@ -1,0 +1,111 @@
+@startuml fig2_6_api_component
+' Рисунок 2.6 — Компонентная диаграмма Web API
+skinparam componentStyle rectangle
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #FFFFFF
+skinparam ArrowColor #333333
+
+skinparam component {
+  BackgroundColor #EEF4FB
+  BorderColor #336699
+  FontColor #000000
+}
+skinparam package {
+  BackgroundColor #F5F5F5
+  BorderColor #888888
+}
+skinparam interface {
+  BackgroundColor #FFFBE6
+  BorderColor #CC9900
+}
+
+title Рисунок 2.6 — Компонентная диаграмма Web API
+
+package "Клиенты" {
+  [Браузер / HTML-клиент] as BROWSER
+  [Внешнее приложение\n(machine-to-machine)] as M2M
+}
+
+package "web/ — FastAPI-приложение" {
+  package "Аутентификация (api/auth.py)" {
+    [AuthRouter] as AUTH
+    [JWTHandler] as JWT
+    [APITokenStore] as TOKENS
+    AUTH --> JWT
+    AUTH --> TOKENS
+  }
+
+  package "REST-маршруты (api/routes.py)" {
+    [RobotRouter] as ROUTER
+    component "Эндпоинты" {
+      [GET  /api/status] as EP_STATUS
+      [POST /api/connect] as EP_CONNECT
+      [POST /api/disconnect] as EP_DISCONNECT
+      [POST /api/move] as EP_MOVE
+      [POST /api/move_all] as EP_MOVE_ALL
+      [POST /api/stop] as EP_STOP
+      [POST /api/torque] as EP_TORQUE
+      [POST /api/ik] as EP_IK
+      [GET  /api/motor/{id}] as EP_MOTOR
+      [GET  /api/config] as EP_CONFIG
+      [POST /api/config/speed] as EP_SPEED
+    }
+    ROUTER --> EP_STATUS
+    ROUTER --> EP_CONNECT
+    ROUTER --> EP_DISCONNECT
+    ROUTER --> EP_MOVE
+    ROUTER --> EP_MOVE_ALL
+    ROUTER --> EP_STOP
+    ROUTER --> EP_TORQUE
+    ROUTER --> EP_IK
+    ROUTER --> EP_MOTOR
+    ROUTER --> EP_CONFIG
+    ROUTER --> EP_SPEED
+  }
+
+  package "WebSocket (api/websocket.py)" {
+    [WebSocketRouter] as WS
+    [BroadcastManager\n_clients: Set[WebSocket]] as BROADCAST
+    WS --> BROADCAST
+  }
+}
+
+package "app/ — Ядро приложения" {
+  [MotorController] as MC
+  [InverseKinematics6DOF] as IK
+  [RobotKinematics6DOF] as FK
+  [ConfigManager] as CFG
+}
+
+' Клиенты → Auth
+BROWSER --> AUTH : POST /auth/login\n(username/password)
+M2M --> AUTH : POST /auth/token/generate
+
+' Клиенты → REST (с токеном)
+BROWSER --> ROUTER : HTTP + Bearer Token
+M2M --> ROUTER : HTTP + API Token
+
+' Клиенты → WebSocket
+BROWSER --> WS : ws://host/ws
+
+' Middleware авторизации
+ROUTER ..> AUTH : require_token (Depends)
+
+' REST → Ядро
+EP_CONNECT --> MC : MotorController(device)
+EP_MOVE --> MC : move_joint(joint, pos, speed)
+EP_MOVE_ALL --> MC : move_all_joints(positions, speed)
+EP_STOP --> MC : emergency_stop_all()
+EP_TORQUE --> MC : toggle_torque(motor_id, enable)
+EP_MOTOR --> MC : read_motor_data(motor_id)
+EP_CONFIG --> MC : get_motor_mapping()
+EP_SPEED --> MC : set_manual_speed(speed)
+EP_IK --> IK : solve(x, y, z)
+IK --> FK : forward_kinematics(angles)
+EP_STATUS --> MC : connected / found_servos
+
+' WebSocket → Broadcast
+BROADCAST ..> BROWSER : push_telemetry(motors)\n~5 Гц (JSON)
+
+@enduml

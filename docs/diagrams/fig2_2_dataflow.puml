@@ -1,0 +1,38 @@
+@startuml fig2_2_dataflow
+' Рисунок 2.2 — Диаграмма потоков данных
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #FFFFFF
+skinparam ArrowColor #333333
+skinparam sequenceArrowThickness 1.5
+skinparam ParticipantPadding 10
+
+title Рисунок 2.2 — Диаграмма потоков данных
+
+participant "Пользователь\n(GUI / Web / ROS2)" as USER
+participant "Платформенный\nслой" as PLATFORM
+participant "RobotService" as RS
+participant "MotorController" as MC
+participant "ST3215\nСервопривод" as HW
+participant "MotorMonitor" as MM
+participant "EventBus" as EB
+participant "Подписчики\n(GUI / WS / ROS2)" as SUBS
+
+== Командный поток ==
+USER -> PLATFORM : Действие пользователя\n(кнопка / REST запрос / ROS2 топик)
+PLATFORM -> RS : вызов метода сервиса\n(move_joint / solve_ik)
+RS -> MC : move_joint(joint, angle, speed)
+MC -> MC : angle_to_position()\n+ threading.Lock
+MC -> HW : UART пакет (0xFF 0xFF id len cmd ... cs)
+HW --> MC : ACK
+
+== Обратный поток (телеметрия) ==
+MM -> MM : _monitor_loop()\n[каждые 0.5 с]
+MM -> HW : read_position / read_temperature\nread_voltage / read_current / read_load
+HW --> MM : данные сервопривода
+MM -> MM : MotorData(position, temp,\nvoltage, current, load)
+MM -> EB : publish('motor_update', motor_data)
+EB -> SUBS : уведомление всех подписчиков\n(GUI панели / WebSocket / ROS2 monitor_node)
+SUBS -> SUBS : обновление отображения
+
+@enduml

@@ -1,0 +1,12 @@
+[project]
+name = "mujoco-sim"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.10.8",
+    "mujoco>=3.6.0",
+    "numpy>=2.4.3",
+    "pyserial>=3.5",
+]

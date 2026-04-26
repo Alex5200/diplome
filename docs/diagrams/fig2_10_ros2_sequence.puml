@@ -1,0 +1,44 @@
+@startuml fig2_10_ros2_sequence
+' Рисунок 2.10 — Взаимодействие ROS2-нод
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #FFFFFF
+skinparam sequenceArrowThickness 1.5
+
+title Рисунок 2.10 — Последовательность взаимодействия ROS2-нод
+
+participant "Внешний\nROS2 узел" as EXT
+participant "robot_node\n[10 Гц]" as RN
+participant "ik_service_node" as IK
+participant "monitor_node\n[1 Гц]" as MON
+participant "RobotService" as RS
+participant "KinematicsService" as KS
+participant "EventBus" as EB
+
+== Запрос движения по углам ==
+EXT -> RN : /robot/joint_cmd\n(JointTrajectoryPoint: angles=[0,45,90,0,0,0])
+RN -> RS : move_all(angles, speed)
+RS --> RN : ok
+RN -> EXT : /robot/joint_states\n(JointState: position=[0,45,90,0,0,0])
+
+== Запрос обратной кинематики ==
+EXT -> IK : /robot/solve_ik (srv)\nrequest: {x:100, y:50, z:150}
+IK -> KS : solve_ik(100, 50, 150)
+KS --> IK : angles=[12.3, -34.5, 67.8, 5.2, -11.0, 0.0]
+IK --> EXT : response: {success: true,\nangles: [...], iterations: 23}
+
+EXT -> RN : /robot/joint_cmd (полученные углы)
+RN -> RS : move_all(angles, speed)
+
+== Мониторинг диагностики ==
+loop каждые 1 с
+  MON -> EB : получение motor_update событий
+  EB --> MON : MotorData × 6 моторов
+  MON -> EXT : /robot/diagnostics\n(DiagnosticArray: OK/WARN/ERROR)
+end
+
+alt температура > 70°C или ток > 1200 мА
+  MON -> EXT : /robot/alarms\n("MOTOR_3_TEMP_ERROR: 72.5°C")
+end
+
+@enduml

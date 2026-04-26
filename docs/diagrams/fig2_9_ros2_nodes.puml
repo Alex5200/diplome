@@ -1,0 +1,76 @@
+@startuml fig2_9_ros2_nodes
+' Рисунок 2.9 — Архитектура ROS2-нод пакета robot_control
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam component {
+  BackgroundColor #EEF4FB
+  BorderColor #336699
+}
+skinparam ArrowColor #333333
+
+title Рисунок 2.9 — Архитектура ROS2-нод пакета robot_control
+
+package "ROS2 пакет robot_control" {
+
+  component "robot_node\n[10 Гц]" as RN {
+    port "/robot/joint_cmd" as CMD_IN
+    port "/robot/joint_states" as JS_OUT
+  }
+
+  component "monitor_node\n[1 Гц]" as MN {
+    port "/robot/diagnostics" as DIAG_OUT
+    port "/robot/alarms" as ALARMS_OUT
+  }
+
+  component "ik_service_node\n[по запросу]" as IK {
+    port "/robot/solve_ik" as IK_SRV
+  }
+}
+
+package "Общий слой (app/)" {
+  component "RobotService" as RS
+  component "KinematicsService" as KS
+  component "EventBus" as EB
+  component "MotorController" as MC
+}
+
+package "Внешние узлы ROS2" {
+  component "Клиент управления\n(любой ROS2 узел)" as CLIENT
+  component "RViz2 / rqt" as RVIZ
+  component "Навигационный стек" as NAV
+}
+
+' Внешние → ноды
+CLIENT --> CMD_IN : trajectory_msgs/\nJointTrajectoryPoint
+IK_SRV <-- NAV : srv запрос IK\n(x, y, z)
+
+' Ноды → внешние
+JS_OUT --> RVIZ : sensor_msgs/JointState
+DIAG_OUT --> RVIZ : diagnostic_msgs/\nDiagnosticArray
+ALARMS_OUT --> CLIENT : std_msgs/String
+IK_SRV --> NAV : ответ (angles[6])
+
+' Ноды → общий слой
+RN --> RS
+MN --> EB : subscribe('motor_update')
+IK --> KS
+
+' Общий слой
+RS --> MC
+RS --> EB
+
+note bottom of RN
+  Подписывается на /robot/joint_cmd
+  Публикует /robot/joint_states
+  каждые 100 мс
+end note
+
+note bottom of MN
+  Подписывается на EventBus
+  Публикует диагностику каждые 1 с
+  При ERROR → /robot/alarms
+end note
+
+@enduml

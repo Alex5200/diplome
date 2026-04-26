@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  servo_driver:
+    build: .
+    container_name: servo_driver_node
+    restart: unless-stopped
+    
+    # Сеть хоста критически важна для ROS2 (DDS discovery)
+    network_mode: "host"
+    
+    # Пробрасываем устройство (порт)
+    # Для Linux: обычно /dev/ttyUSB0 или /dev/ttyACM0
+    # Для Windows: поддержка проброса портов в Docker Desktop ограничена, см. примечания ниже
+    devices:
+      - "COM3"
+    
+    # Переменные среды
+    environment:
+      - ROS_DOMAIN_ID=10  # Чтобы не конфликтовать с другими ROS2 нодами на ПК
+      - PYTHONUNBUFFERED=1 # Чтобы видеть логи сразу
+    
+    # Права (иногда требуется для доступа к железу)
+    privileged: true

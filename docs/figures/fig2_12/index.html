@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"></head>
+<body style="margin:0;background:#fff;">
+
+<div data-composition-id="fig2-12" data-width="1600" data-height="800"
+     style="position:relative;width:1600px;height:800px;overflow:hidden;background:#fff;">
+
+<div id="clip0" data-start="0" data-duration="3" data-track-index="1"
+     style="position:absolute;top:0;left:0;width:100%;height:100%;">
+<div style="width:1600px;height:800px;background:#fff;display:flex;flex-direction:column;
+            align-items:center;justify-content:flex-start;padding:44px 72px 36px;gap:0;
+            font-family:-apple-system,'Segoe UI',Arial,sans-serif;">
+
+  <!-- Title -->
+  <div id="ttl" style="font-size:25px;font-weight:600;color:#1E2B3C;text-align:center;
+                        margin-bottom:28px;">
+    Рисунок 2.12 — Схема взаимодействия компонентов SimToRealMirror
+  </div>
+
+  <!-- Top row: MuJoCo ↔ Mirror ↔ (implied) -->
+  <div id="toprow" style="display:flex;align-items:center;justify-content:center;
+                            gap:0;width:100%;">
+
+    <!-- MuJoCo box -->
+    <div id="mujoco"
+         style="background:#EEF4FB;border:2px solid #2D6A9F;border-radius:10px;
+                padding:22px 28px;text-align:center;width:280px;flex-shrink:0;">
+      <div style="font-size:22px;font-weight:700;color:#1E2B3C;">MuJoCo</div>
+      <div style="font-size:16px;color:#5A6A7A;margin-top:6px;">Физическая симуляция</div>
+      <div style="font-size:14px;color:#8AAABB;margin-top:4px;">get_joint_angles()</div>
+      <div style="font-size:14px;color:#8AAABB;">set_joint_angles()</div>
+    </div>
+
+    <!-- Bidirectional arrows -->
+    <div id="arr-mid"
+         style="display:flex;flex-direction:column;align-items:center;width:180px;flex-shrink:0;
+                gap:8px;padding:0 10px;">
+      <!-- sim_to_real -->
+      <div style="display:flex;align-items:center;gap:6px;width:100%;">
+        <div style="flex:1;height:2px;background:#2965B5;"></div>
+        <span style="color:#2965B5;font-size:16px;flex-shrink:0;">▶</span>
+      </div>
+      <div style="font-size:14px;color:#2965B5;text-align:center;font-weight:600;
+                   white-space:nowrap;">sim_to_real</div>
+      <!-- real_to_sim -->
+      <div style="font-size:14px;color:#5A6A7A;text-align:center;font-weight:600;
+                   white-space:nowrap;">real_to_sim</div>
+      <div style="display:flex;align-items:center;gap:6px;width:100%;">
+        <span style="color:#5A6A7A;font-size:16px;flex-shrink:0;">◀</span>
+        <div style="flex:1;height:2px;background:#5A6A7A;"></div>
+      </div>
+    </div>
+
+    <!-- Mirror box -->
+    <div id="mirror"
+         style="background:#1E3A5F;border-radius:10px;padding:22px 28px;text-align:center;
+                width:320px;flex-shrink:0;">
+      <div style="font-size:22px;font-weight:700;color:#fff;">SimToRealMirror</div>
+      <div style="font-size:15px;color:#AEC8E0;margin-top:6px;">daemon thread</div>
+      <div style="font-size:14px;color:#AEC8E0;margin-top:8px;font-family:monospace;">
+        rate: 20–30 Гц
+      </div>
+      <div style="font-size:14px;color:#AEC8E0;margin-top:3px;font-family:monospace;">
+        safety_check: True
+      </div>
+      <div style="font-size:14px;color:#AEC8E0;margin-top:3px;font-family:monospace;">
+        MirrorStats
+      </div>
+    </div>
+
+    <!-- Transport arrows down -->
+    <div id="arr-right"
+         style="display:flex;flex-direction:column;align-items:center;width:100px;flex-shrink:0;">
+      <div style="font-size:22px;color:#2965B5;font-weight:300;">↓</div>
+      <div style="font-size:14px;color:#5A6A7A;white-space:nowrap;">транспорт</div>
+    </div>
+
+    <!-- Transport options -->
+    <div id="transports"
+         style="display:flex;flex-direction:column;gap:12px;flex:1;">
+      <div id="tr1"
+           style="background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:8px;
+                  padding:12px 18px;">
+        <div style="font-size:18px;font-weight:700;color:#1E2B3C;">Serial (UART)</div>
+        <div style="font-size:14px;color:#5A6A7A;margin-top:4px;font-family:monospace;">
+          ST3215.MoveTo(id, pos, speed, acc) · задержка ~2 мс
+        </div>
+      </div>
+      <div id="tr2"
+           style="background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:8px;
+                  padding:12px 18px;">
+        <div style="font-size:18px;font-weight:700;color:#1E2B3C;">ROS2 Topic</div>
+        <div style="font-size:14px;color:#5A6A7A;margin-top:4px;font-family:monospace;">
+          /robot/joint_cmd (JointTrajectoryPoint) · радианы
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arrow down to hardware -->
+  <div id="arr-hw"
+       style="display:flex;flex-direction:column;align-items:center;margin:6px 0;">
+    <div style="width:2px;height:14px;background:#2965B5;"></div>
+    <div style="font-size:20px;color:#2965B5;line-height:1;">↓</div>
+  </div>
+
+  <!-- Hardware box -->
+  <div id="hw"
+       style="width:100%;background:#1E3A5F;border-radius:10px;padding:16px 28px;
+              text-align:center;">
+    <div style="font-size:21px;font-weight:700;color:#fff;">
+      Реальный робот: 6 × ST3215 (позиция 0–4095, угловой диапазон ±120°–±179°)
+    </div>
+    <div style="font-size:15px;color:#AEC8E0;margin-top:6px;">
+      SAFE_ANGLE_LIMITS_DEG: J0 ±120° · J1 −45°/+90° · J2 −90°/+45° · J3 −120°/0° · J4 ±90° · J5 ±90°
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+
+  tl.from("#ttl",         { opacity:0, y:-20, duration:0.5, ease:"power2.out" }, 0.1);
+  tl.from("#mujoco",      { opacity:0, x:-30, duration:0.45,ease:"expo.out"   }, 0.25);
+  tl.from("#mirror",      { opacity:0, scale:0.9,duration:0.4,ease:"power3.out"},0.3 );
+  tl.from("#arr-mid",     { opacity:0,        duration:0.35,ease:"sine.out"   }, 0.45);
+  tl.from("#arr-right",   { opacity:0,        duration:0.3, ease:"sine.out"   }, 0.5);
+  tl.from("#transports",  { opacity:0, x:20,  duration:0.4, ease:"power2.out" }, 0.52);
+  tl.from("#tr1,#tr2",    { opacity:0, y:8,   duration:0.3, ease:"power1.out",stagger:0.1 }, 0.6);
+  tl.from("#arr-hw",      { opacity:0,        duration:0.3, ease:"sine.out"   }, 0.8);
+  tl.from("#hw",          { opacity:0, y:16,  duration:0.45,ease:"power2.out" }, 0.85);
+
+  window.__timelines["fig2-12"] = tl;
+</script>
+</div>
+
+</body>
+</html>

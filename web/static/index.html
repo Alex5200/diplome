@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ST3215 Robot Control</title>
+  <style>
+    :root { --bg: #1a1a2e; --panel: #16213e; --accent: #e94560; --text: #eaeaea; --muted: #888; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; }
+    header { background: var(--panel); padding: 12px 24px; display: flex; align-items: center; gap: 16px; border-bottom: 2px solid var(--accent); }
+    header h1 { font-size: 1.2rem; color: var(--accent); }
+    #status-dot { width: 12px; height: 12px; border-radius: 50%; background: #555; }
+    #status-dot.connected { background: #00e676; }
+    main { display: grid; grid-template-columns: 280px 1fr; gap: 16px; padding: 16px; }
+    .card { background: var(--panel); border-radius: 8px; padding: 16px; }
+    h2 { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    input, select { width: 100%; background: #0f3460; color: var(--text); border: 1px solid #333; border-radius: 4px; padding: 6px 10px; margin-bottom: 8px; font-family: inherit; }
+    button { width: 100%; padding: 8px; border-radius: 4px; border: none; cursor: pointer; font-family: inherit; font-size: 0.9rem; margin-bottom: 6px; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-danger  { background: #b71c1c; color: #fff; }
+    .btn-neutral { background: #333; color: var(--text); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #222; }
+    th { color: var(--muted); font-weight: normal; }
+    #log { height: 140px; overflow-y: auto; background: #111; border-radius: 4px; padding: 8px; font-size: 0.78rem; color: #aaa; }
+    .log-ok { color: #00e676; } .log-err { color: var(--accent); }
+  </style>
+</head>
+<body>
+<header>
+  <div id="status-dot"></div>
+  <h1>ST3215 Robot Control — Web Interface</h1>
+  <span id="status-label" style="color:var(--muted);font-size:0.85rem;">Disconnected</span>
+</header>
+
+<main>
+  <!-- Left panel -->
+  <div>
+    <div class="card" style="margin-bottom:12px">
+      <h2>Connection</h2>
+      <input id="port" value="COM3" placeholder="Port (COM3 / /dev/ttyUSB0)" />
+      <button class="btn-primary" onclick="connect()">Connect</button>
+      <button class="btn-neutral" onclick="disconnect()">Disconnect</button>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <h2>Manual Move</h2>
+      <label style="font-size:0.82rem;color:var(--muted)">Joint (1–6)</label>
+      <input id="mv-joint" type="number" min="1" max="6" value="1" />
+      <label style="font-size:0.82rem;color:var(--muted)">Position (0–4095)</label>
+      <input id="mv-pos" type="number" min="0" max="4095" value="2048" />
+      <label style="font-size:0.82rem;color:var(--muted)">Speed</label>
+      <input id="mv-speed" type="number" min="100" max="3400" value="2400" />
+      <button class="btn-primary" onclick="moveJoint()">Move</button>
+      <button class="btn-danger" onclick="stop()">EMERGENCY STOP</button>
+    </div>
+
+    <div class="card">
+      <h2>Inverse Kinematics</h2>
+      <label style="font-size:0.82rem;color:var(--muted)">X (mm)</label>
+      <input id="ik-x" type="number" value="150" />
+      <label style="font-size:0.82rem;color:var(--muted)">Y (mm)</label>
+      <input id="ik-y" type="number" value="0" />
+      <label style="font-size:0.82rem;color:var(--muted)">Z (mm)</label>
+      <input id="ik-z" type="number" value="100" />
+      <button class="btn-neutral" onclick="solveIK()">Solve IK</button>
+      <div id="ik-result" style="font-size:0.78rem;color:var(--muted);margin-top:6px"></div>
+    </div>
+  </div>
+
+  <!-- Right panel -->
+  <div>
+    <div class="card" style="margin-bottom:12px">
+      <h2>Motor Telemetry</h2>
+      <table>
+        <thead><tr><th>Motor</th><th>Position</th><th>Temp °C</th><th>Volt V</th><th>Current mA</th><th>Load %</th><th>Status</th></tr></thead>
+        <tbody id="tele-body"><tr><td colspan="7" style="color:var(--muted)">No data</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Event Log</h2>
+      <div id="log"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const API = "";  // same origin
+  let ws = null;
+
+  function log(msg, type = "") {
+    const el = document.getElementById("log");
+    const line = document.createElement("div");
+    line.className = type ? `log-${type}` : "";
+    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function setConnected(ok) {
+    document.getElementById("status-dot").className = ok ? "connected" : "";
+    document.getElementById("status-label").textContent = ok ? "Connected" : "Disconnected";
+  }
+
+  async function apiFetch(path, opts = {}) {
+    try {
+      const res = await fetch(API + path, { headers: { "Content-Type": "application/json" }, ...opts });
+      return await res.json();
+    } catch (e) { log(e.message, "err"); return null; }
+  }
+
+  async function connect() {
+    const port = document.getElementById("port").value;
+    log(`Connecting to ${port}…`);
+    const data = await apiFetch("/api/connect", { method: "POST", body: JSON.stringify({ port }) });
+    if (data?.connected) {
+      log(`Connected. Motors: ${data.motors_found?.join(", ")}`, "ok");
+      setConnected(true);
+      startWS();
+    } else {
+      log("Connection failed", "err");
+    }
+  }
+
+  async function disconnect() {
+    await apiFetch("/api/disconnect", { method: "POST" });
+    setConnected(false);
+    if (ws) ws.close();
+    log("Disconnected");
+  }
+
+  async function moveJoint() {
+    const joint = +document.getElementById("mv-joint").value;
+    const position = +document.getElementById("mv-pos").value;
+    const speed = +document.getElementById("mv-speed").value;
+    const r = await apiFetch("/api/move", { method: "POST", body: JSON.stringify({ joint, position, speed }) });
+    if (r?.joint) log(`Moved J${r.joint} → ${r.position}`, "ok");
+    else log("Move failed", "err");
+  }
+
+  async function stop() {
+    await apiFetch("/api/stop", { method: "POST" });
+    log("EMERGENCY STOP", "err");
+  }
+
+  async function solveIK() {
+    const x = +document.getElementById("ik-x").value;
+    const y = +document.getElementById("ik-y").value;
+    const z = +document.getElementById("ik-z").value;
+    const r = await apiFetch("/api/ik", { method: "POST", body: JSON.stringify({ x, y, z }) });
+    const el = document.getElementById("ik-result");
+    if (r?.angles_deg) {
+      el.textContent = `Angles: [${r.angles_deg.map(a => a.toFixed(1)).join("°, ")}°]  err=${r.error_mm}mm`;
+      log(`IK solved, error=${r.error_mm}mm`, "ok");
+    } else {
+      el.textContent = "Unreachable";
+      log("IK: unreachable", "err");
+    }
+  }
+
+  function startWS() {
+    const proto = location.protocol === "https:" ? "wss" : "ws";
+    ws = new WebSocket(`${proto}://${location.host}/ws`);
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.type === "telemetry") updateTable(msg.motors);
+    };
+    ws.onclose = () => log("WebSocket closed");
+  }
+
+  function updateTable(motors) {
+    const tbody = document.getElementById("tele-body");
+    if (!Object.keys(motors).length) return;
+    tbody.innerHTML = Object.entries(motors).map(([id, m]) => `
+      <tr>
+        <td>M${id}</td>
+        <td>${m.position}</td>
+        <td>${m.temperature?.toFixed(1) ?? "—"}</td>
+        <td>${m.voltage?.toFixed(2) ?? "—"}</td>
+        <td>${m.current ?? "—"}</td>
+        <td>${m.load ?? "—"}</td>
+        <td>${m.status ?? "—"}</td>
+      </tr>`).join("");
+  }
+</script>
+</body>
+</html>

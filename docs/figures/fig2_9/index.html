@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"></head>
+<body style="margin:0;background:#fff;">
+
+<div data-composition-id="fig2-9" data-width="1600" data-height="800"
+     style="position:relative;width:1600px;height:800px;overflow:hidden;background:#fff;">
+
+<div id="clip0" data-start="0" data-duration="3" data-track-index="1"
+     style="position:absolute;top:0;left:0;width:100%;height:100%;">
+<div style="width:1600px;height:800px;background:#fff;display:flex;flex-direction:column;
+            align-items:center;justify-content:flex-start;padding:44px 72px 32px;gap:0;
+            font-family:-apple-system,'Segoe UI',Arial,sans-serif;">
+
+  <!-- Title -->
+  <div id="ttl" style="font-size:25px;font-weight:600;color:#1E2B3C;text-align:center;
+                        margin-bottom:24px;">
+    Рисунок 2.9 — Граф ROS2-нод и топиков пакета robot_control
+  </div>
+
+  <!-- Package box -->
+  <div id="pkg"
+       style="width:100%;border:2px solid #2D6A9F;border-radius:10px;padding:20px 28px;
+              background:#F5F9FF;position:relative;">
+    <div style="position:absolute;top:-14px;left:24px;background:#F5F9FF;
+                padding:0 10px;font-size:16px;font-weight:700;color:#2D6A9F;
+                letter-spacing:0.06em;">
+      ROS2 ПАКЕТ robot_control
+    </div>
+
+    <!-- Grid: nodes (left) | topics/services (right) -->
+    <div style="display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start;">
+
+      <!-- Nodes column -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div id="nd1" style="background:#1E3A5F;border-radius:8px;padding:14px 16px;">
+          <div style="font-size:19px;font-weight:700;color:#fff;">robot_node</div>
+          <div style="font-size:14px;color:#AEC8E0;margin-top:4px;">10 Гц · управление</div>
+        </div>
+        <div id="nd2" style="background:#1E3A5F;border-radius:8px;padding:14px 16px;">
+          <div style="font-size:19px;font-weight:700;color:#fff;">monitor_node</div>
+          <div style="font-size:14px;color:#AEC8E0;margin-top:4px;">1 Гц · диагностика</div>
+        </div>
+        <div id="nd3" style="background:#1E3A5F;border-radius:8px;padding:14px 16px;">
+          <div style="font-size:19px;font-weight:700;color:#fff;">ik_service_node</div>
+          <div style="font-size:14px;color:#AEC8E0;margin-top:4px;">по запросу · IK</div>
+        </div>
+      </div>
+
+      <!-- Topics/services column -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+
+        <!-- robot_node topics -->
+        <div id="t1" style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:20px;color:#2965B5;font-weight:300;width:24px;text-align:center;">→</div>
+          <div style="background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:6px;
+                       padding:9px 14px;flex:1;">
+            <span style="font-size:16px;font-weight:700;color:#1E2B3C;font-family:monospace;">
+              /robot/joint_states</span>
+            <span style="font-size:14px;color:#5A6A7A;margin-left:10px;">
+              sensor_msgs/JointState · 10 Гц</span>
+          </div>
+        </div>
+
+        <div id="t2" style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:20px;color:#5A6A7A;font-weight:300;width:24px;text-align:center;">←</div>
+          <div style="background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:6px;
+                       padding:9px 14px;flex:1;">
+            <span style="font-size:16px;font-weight:700;color:#1E2B3C;font-family:monospace;">
+              /robot/joint_cmd</span>
+            <span style="font-size:14px;color:#5A6A7A;margin-left:10px;">
+              trajectory_msgs/JointTrajectoryPoint</span>
+          </div>
+        </div>
+
+        <div id="t3" style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:20px;color:#5A6A7A;font-weight:300;width:24px;text-align:center;">←</div>
+          <div style="background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:6px;
+                       padding:9px 14px;flex:1;">
+            <span style="font-size:16px;font-weight:700;color:#1E2B3C;font-family:monospace;">
+              /robot/stop</span>
+            <span style="font-size:14px;color:#5A6A7A;margin-left:10px;">
+              std_msgs/Empty · аварийная остановка</span>
+          </div>
+        </div>
+
+        <!-- Separator -->
+        <div style="height:6px;"></div>
+
+        <!-- monitor_node topics -->
+        <div id="t4" style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:20px;color:#2965B5;font-weight:300;width:24px;text-align:center;">→</div>
+          <div style="background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:6px;
+                       padding:9px 14px;flex:1;">
+            <span style="font-size:16px;font-weight:700;color:#1E2B3C;font-family:monospace;">
+              /robot/diagnostics</span>
+            <span style="font-size:14px;color:#5A6A7A;margin-left:10px;">
+              diagnostic_msgs/DiagnosticArray · 1 Гц</span>
+          </div>
+        </div>
+
+        <div id="t5" style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:20px;color:#2965B5;font-weight:300;width:24px;text-align:center;">→</div>
+          <div style="background:#EEF4FB;border:1.5px solid #2D6A9F;border-radius:6px;
+                       padding:9px 14px;flex:1;">
+            <span style="font-size:16px;font-weight:700;color:#1E2B3C;font-family:monospace;">
+              /robot/alarms</span>
+            <span style="font-size:14px;color:#5A6A7A;margin-left:10px;">
+              std_msgs/String · по событию</span>
+          </div>
+        </div>
+
+        <!-- Separator -->
+        <div style="height:6px;"></div>
+
+        <!-- ik service -->
+        <div id="t6" style="display:flex;align-items:center;gap:10px;">
+          <div style="font-size:20px;color:#5A6A7A;font-weight:300;width:24px;text-align:center;">⇌</div>
+          <div style="background:#EEF4FB;border:2px solid #1E3A5F;border-radius:6px;
+                       padding:9px 14px;flex:1;">
+            <span style="font-size:16px;font-weight:700;color:#1E2B3C;font-family:monospace;">
+              /robot/ik/solve</span>
+            <span style="font-size:14px;color:#5A6A7A;margin-left:10px;">
+              robot_control/SolveIK · сервис (запрос–ответ)</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div id="legend" style="display:flex;gap:32px;margin-top:16px;font-size:15px;color:#5A6A7A;">
+    <span><span style="color:#2965B5;font-size:18px;">→</span> публикация (Publisher)</span>
+    <span><span style="color:#5A6A7A;font-size:18px;">←</span> подписка (Subscriber)</span>
+    <span><span style="color:#5A6A7A;font-size:18px;">⇌</span> сервис (Server/Client)</span>
+  </div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+
+  tl.from("#ttl",            { opacity:0, y:-20, duration:0.5, ease:"power2.out" }, 0.1);
+  tl.from("#pkg",            { opacity:0, y:18,  duration:0.5, ease:"expo.out"   }, 0.2);
+  tl.from("#nd1,#nd2,#nd3", { opacity:0, x:-20, duration:0.4, ease:"power3.out", stagger:0.08 }, 0.35);
+  tl.from("#t1,#t2,#t3,#t4,#t5,#t6",
+                             { opacity:0, x:20,  duration:0.35,ease:"sine.out",  stagger:0.06 }, 0.4);
+  tl.from("#legend",         { opacity:0, y:10,  duration:0.35,ease:"power1.out" }, 0.85);
+
+  window.__timelines["fig2-9"] = tl;
+</script>
+</div>
+
+</body>
+</html>

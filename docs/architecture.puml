@@ -1,0 +1,142 @@
+@startuml ST3215 Sequence
+!theme plain
+skinparam style square
+
+skinparam sequence {
+  ActorBackgroundColor #e3f2fd
+  ActorBorderColor #1976d2
+  ActorFontName Consolas
+  
+  ParticipantBackgroundColor #fff3e0
+  ParticipantBorderColor #f57c00
+  ParticipantFontName Consolas
+  
+  BoxBackgroundColor #f5f5f5
+  BoxBorderColor #404040
+}
+
+title ST3215 Robot Control System — Flow Sequence
+
+== UI Layer ==
+
+actor "User" as User
+
+box "UI Layer"
+  participant "Desktop\n(Tkinter)" as Desktop
+  participant "Web API\n(Fastapi)" as WebAPI
+  participant "ROS2\n(rclpy)" as ROS2
+end box
+
+box "Service Layer"  
+  participant "MotorController" as MotorCtrl
+  participant "Kinematics" as Kinematics
+  participant "Programs" as Programs
+  participant "EventBus" as EventBus
+end box
+
+box "Data Layer"
+  participant "Config" as Config
+end box
+
+box "Hardware / Sim"
+  participant "ST3215\n(UART)" as Hardware
+  participant "MuJoCo\n(Physics)" as MuJoCo
+end box
+
+== Direct Control Flow ==
+
+User -> Desktop : move(joint, angle)
+activate Desktop
+
+Desktop -> MotorCtrl : move_to(id, pos, speed)
+activate MotorCtrl
+
+MotorCtrl -> Hardware : UART Write
+activate Hardware
+Hardware --> MotorCtrl : ACK
+deactivate Hardware
+
+MotorCtrl --> Desktop : done
+deactivate MotorCtrl
+
+Desktop --> User : confirm
+
+== FK/IK Flow ==
+
+User -> Desktop : calculate(x, y, z)
+activate Desktop
+
+Desktop -> Kinematics : ik(x, y, z, angles)
+activate Kinematics
+
+Kinematics -> Kinematics : compute_DLS()
+Kinematics -> MotorCtrl : verify(solution)
+activate MotorCtrl
+
+MotorCtrl -> Hardware : read_positions()
+activate Hardware
+Hardware --> MotorCtrl : current_angles
+deactivate Hardware
+
+MotorCtrl --> Kinematics : positions_ok
+deactivate MotorCtrl
+
+Kinematics --> Desktop : solution
+deactivate Kinematics
+
+Desktop --> User : result(j1..j6)
+
+== Task Program Flow ==
+
+User -> Programs : load("pick_place.json")
+activate Programs
+
+Programs -> Config : load()
+activate Config
+Config --> Programs : tasks[]
+deactivate Config
+
+Programs -> Programs : execute()
+activate Programs
+
+ Programs -> MotorCtrl : move_to(p1)
+ activate MotorCtrl
+ MotorCtrl -> Hardware : move()
+ deactivate MotorCtrl
+
+ Programs -> MotorCtrl : move_to(p2)
+ activate MotorCtrl
+ MotorCtrl -> Hardware : move()
+ deactivate MotorCtrl
+
+ Programs -> Programs : complete()
+deactivate Programs
+
+Programs --> User : done
+
+== Sim-to-Real Flow ==
+
+Programs -> MuJoCo : simulate(step)
+activate MuJoCo
+
+MuJoCo -> MuJoCo : mj_step()
+
+MuJoCo -> Hardware : sync_motion()
+activate Hardware
+Hardware --> MuJoCo : current_state
+deactivate Hardware
+
+MuJoCo --> Programs : sim_done
+deactivate MuJoCo
+
+== EventBus Flow ==
+
+MotorCtrl -> EventBus : publish(motor_moved)
+activate EventBus
+EventBus -> Desktop : on_motor_moved()
+deactivate EventBus
+
+EventBus -> Kinematics : on_motor_moved()
+EventBus -> Programs : on_motor_moved()
+
+@enduml

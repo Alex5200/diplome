@@ -1,0 +1,61 @@
+@startuml fig2_4_motor_sequence
+' Рисунок 2.4 — Последовательность операций управления сервоприводом
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #FFFFFF
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceMessageAlign center
+
+title Рисунок 2.4 — Последовательность операций управления сервоприводом
+
+actor Пользователь as USER
+participant "GUI / Web API" as UI
+participant "RobotService" as RS
+participant "MotorController\n[threading.Lock]" as MC
+participant "ST3215\n(UART)" as HW
+
+== Подключение ==
+USER -> UI : connect(port=/dev/ttyUSB0)
+UI -> RS : connect(port, baudrate=1_000_000)
+RS -> MC : connect(port, baudrate)
+activate MC
+MC -> MC : acquire Lock
+MC -> HW : ListServos()
+HW --> MC : [id1, id2, id3, id4, id5, id6]
+MC -> MC : release Lock
+MC --> RS : True (connected)
+deactivate MC
+RS --> UI : {status: "connected", motors: 6}
+UI --> USER : Подключено (6 моторов)
+
+== Движение одного сустава ==
+USER -> UI : move_joint(joint=2, angle=45.0°, speed=300)
+UI -> RS : move_joint(2, 45.0, 300)
+RS -> MC : move_joint(2, 45.0, 300)
+activate MC
+MC -> MC : acquire Lock
+MC -> MC : motor_id = joint_mapping[2]['motor_id']  → 4
+MC -> MC : inverted = joint_mapping[2]['inverted']  → True
+MC -> MC : position = angle_to_position(45.0)\n= ((45+180)/360) × 4095 = 2560
+MC -> MC : position' = 4095 - 2560 = 1535  (инверсия)
+MC -> HW : MoveTo(motor_id=4, position=1535, speed=300)
+HW --> MC : ACK
+MC -> MC : release Lock
+deactivate MC
+RS --> UI : {status: "ok"}
+
+== Аварийная остановка ==
+USER -> UI : emergency_stop()
+UI -> RS : emergency_stop()
+RS -> MC : emergency_stop()
+activate MC
+MC -> MC : acquire Lock
+loop для каждого мотора J0..J5
+  MC -> HW : StopServo(motor_id)
+end
+MC -> MC : release Lock
+deactivate MC
+RS --> UI : {status: "stopped"}
+UI --> USER : Все моторы остановлены
+
+@enduml
