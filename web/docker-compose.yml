@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   robot-api:
@@ -11,7 +11,7 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=8000
-      - AUTH_ENABLED=true
+      - AUTH_ENABLED=false
       - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
       - OPERATOR_PASSWORD=${OPERATOR_PASSWORD:-operator}
