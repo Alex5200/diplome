@@ -41,7 +41,7 @@ def main():
     print("=" * 60)
 
     app = RobotControlGUI()
-    config_styles(app)   # configure ttk styles for Treeview / Spinbox etc.
+    config_styles(app)  # configure ttk styles for Treeview / Spinbox etc.
     app.mainloop()
 
 
