@@ -1194,7 +1194,7 @@ class MuJoCoRobotController:
             except Exception as e:
                 logger.warning("Мотор %d: %s", motor_id, e)
 
-    def read_real_angles(self) -> list[float] | None:
+    def read_real_angles(self) -> list[float]:
         """Читает текущие углы с реальных серводвигателей и применяет их в симуляции.
 
         Для каждого мотора вызывает ``ST3215.ReadPosition(motor_id)``,
@@ -1211,7 +1211,7 @@ class MuJoCoRobotController:
             Использование в цикле: см. режим ``real_to_sim`` в ``SimToRealMirror``.
         """
         if not self.st3215:
-            return None
+            return []
         angles: list[float] = []
         for i in range(6):
             motor_id = self._get_motor_id(i)
