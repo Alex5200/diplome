@@ -1,53 +1,37 @@
-version: '3.8'
+version: "3.8"
 
 services:
   mujoco-sim:
     build: .
     container_name: mujoco_robot_sim
-    
-    # GUI support via X11
+
+    # GUI support via X11 (may not work in Docker)
     environment:
       - DISPLAY=${DISPLAY:-:0}
       - QT_X11_NO_MITSHM=1
       - _X11_NO_MITSHM=1
       - _MITSHM=0
-    
+
     # X11 socket mount for GUI
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ./src:/app/src:ro  # Dev: live reload source
+      - ./src:/app/src:ro
       - ./config:/app/config:ro
-      - ./data:/app/data  # Persistent data
-    
-    # Network (optional - for web APIs)
+      - ./data:/app/data
+
+    # Network
     network_mode: host
-    
+
     # Keep container running for interactive use
     stdin_open: true
     tty: true
-    
+
     # Resource limits
     deploy:
       resources:
         limits:
-          cpus: '4'
+          cpus: "4"
           memory: 4G
-    
-    # Command override via environment
-    command: ${MUJOCO_MODE:---headless}
 
-  # GUI mode service
-  mujoco-gui:
-    extends: mujoco-sim
-    container_name: mujoco_robot_sim_gui
-    command: []
-    profiles:
-      - gui
-
-  # Headless mode service
-  mujoco-headless:
-    extends: mujoco-sim
-    container_name: mujoco_robot_sim_headless
-    command: ["--headless"]
-    profiles:
-      - headless
+    # Default: simulation without GUI (works in Docker)
+    command: ["python", "main.py", "-sim", "--no-gui"]
