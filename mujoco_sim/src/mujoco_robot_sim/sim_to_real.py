@@ -152,7 +152,7 @@ class SimToRealMirror:
         self.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
         self.stop()
         return False
 
