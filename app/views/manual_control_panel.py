@@ -21,22 +21,25 @@ from app.config.constants import (
 from app.controllers.motor_controller import MotorController
 
 # ── Colour aliases ────────────────────────────────────────────────────────────
-_ACCENT      = "#7dd3c0"   # teal accent
-_ACCENT_H    = "#5bb8a4"   # teal hover
-_JOINT_ACT   = "#7dd3c0"   # selected joint bg
-_JOINT_IDLE  = FANUC_PANEL
-_STEP_ACT    = FANUC_BLUE
-_STEP_IDLE   = FANUC_PANEL
+_ACCENT = "#7dd3c0"  # teal accent
+_ACCENT_H = "#5bb8a4"  # teal hover
+_JOINT_ACT = "#7dd3c0"  # selected joint bg
+_JOINT_IDLE = FANUC_PANEL
+_STEP_ACT = FANUC_BLUE
+_STEP_IDLE = FANUC_PANEL
 
 
 def _card(parent, title: str, title_color: str = _ACCENT, **kw) -> ctk.CTkFrame:
     """Convenience: returns a titled card frame (CTkFrame + label inside)."""
-    card = ctk.CTkFrame(parent, fg_color=FANUC_PANEL, corner_radius=10,
-                        border_width=1, border_color="#e8e4e0", **kw)
+    card = ctk.CTkFrame(
+        parent, fg_color=FANUC_PANEL, corner_radius=10, border_width=1, border_color="#e8e4e0", **kw
+    )
     ctk.CTkLabel(
-        card, text=title,
+        card,
+        text=title,
         font=ctk.CTkFont("Segoe UI", 9, "bold"),
-        text_color=title_color, anchor="w",
+        text_color=title_color,
+        anchor="w",
     ).pack(anchor="w", padx=12, pady=(8, 2))
     return card
 
@@ -52,25 +55,25 @@ class ManualControlPanel(ctk.CTkFrame):
         update_callback: Callable | None = None,
     ):
         super().__init__(parent, fg_color=FANUC_BG, corner_radius=0)
-        self.controller       = controller
-        self.log              = log_callback
-        self.update_callback  = update_callback
+        self.controller = controller
+        self.log = log_callback
+        self.update_callback = update_callback
 
-        self.selected_joint   = 0
-        self.jog_step         = 100
+        self.selected_joint = 0
+        self.jog_step = 100
 
-        self.joint_var   = tk.IntVar(value=0)
-        self.speed_var   = tk.IntVar(value=DEFAULT_SPEED)
-        self.pos_var     = tk.IntVar(value=0)
-        self.target_var  = tk.IntVar(value=2048)
+        self.joint_var = tk.IntVar(value=0)
+        self.speed_var = tk.IntVar(value=DEFAULT_SPEED)
+        self.pos_var = tk.IntVar(value=0)
+        self.target_var = tk.IntVar(value=2048)
 
-        self.joint_buttons:      dict[int, ctk.CTkButton] = {}
-        self.joint_pos_labels:   dict[int, ctk.CTkLabel]  = {}
-        self.joint_angle_labels: dict[int, ctk.CTkLabel]  = {}
-        self.step_btns:          dict[int, ctk.CTkButton] = {}
-        self.speed_label:  ctk.CTkLabel | None = None
+        self.joint_buttons: dict[int, ctk.CTkButton] = {}
+        self.joint_pos_labels: dict[int, ctk.CTkLabel] = {}
+        self.joint_angle_labels: dict[int, ctk.CTkLabel] = {}
+        self.step_btns: dict[int, ctk.CTkButton] = {}
+        self.speed_label: ctk.CTkLabel | None = None
         self.status_label: ctk.CTkLabel | None = None
-        self.jog_ind:      ctk.CTkLabel | None = None
+        self.jog_ind: ctk.CTkLabel | None = None
 
         self._create_widgets()
         self._update_all_positions()
@@ -98,7 +101,8 @@ class ManualControlPanel(ctk.CTkFrame):
             btn = ctk.CTkButton(
                 row,
                 text=f"J{i + 1}",
-                width=38, height=28,
+                width=38,
+                height=28,
                 font=ctk.CTkFont("Segoe UI", 10, "bold"),
                 fg_color=_JOINT_IDLE,
                 text_color=FANUC_TEXT,
@@ -112,25 +116,30 @@ class ManualControlPanel(ctk.CTkFrame):
             self.joint_buttons[i] = btn
 
             ctk.CTkLabel(
-                row, text=name,
+                row,
+                text=name,
                 font=ctk.CTkFont("Segoe UI", 9),
                 text_color=FANUC_TEXT2,
-                width=80, anchor="w",
+                width=80,
+                anchor="w",
             ).pack(side="left", padx=2)
 
             pos_lbl = ctk.CTkLabel(
-                row, text="----",
+                row,
+                text="----",
                 font=ctk.CTkFont("Consolas", 10),
                 text_color=FANUC_TEXT,
                 fg_color="#f0ece8",
                 corner_radius=4,
-                width=50, height=22,
+                width=50,
+                height=22,
             )
             pos_lbl.pack(side="left", padx=2)
             self.joint_pos_labels[i] = pos_lbl
 
             ang_lbl = ctk.CTkLabel(
-                row, text="0.0°",
+                row,
+                text="0.0°",
                 font=ctk.CTkFont("Consolas", 9),
                 text_color=FANUC_ORANGE,
                 width=50,
@@ -151,8 +160,10 @@ class ManualControlPanel(ctk.CTkFrame):
         btn_row.pack(pady=12)
 
         ctk.CTkButton(
-            btn_row, text="−",
-            width=80, height=60,
+            btn_row,
+            text="−",
+            width=80,
+            height=60,
             font=ctk.CTkFont("Segoe UI", 24, "bold"),
             fg_color=FANUC_ORANGE,
             text_color=FANUC_TEXT,
@@ -162,7 +173,8 @@ class ManualControlPanel(ctk.CTkFrame):
         ).grid(row=0, column=0, padx=12)
 
         self.jog_ind = ctk.CTkLabel(
-            btn_row, text="J1",
+            btn_row,
+            text="J1",
             width=64,
             font=ctk.CTkFont("Consolas", 26, "bold"),
             text_color=_ACCENT,
@@ -171,8 +183,10 @@ class ManualControlPanel(ctk.CTkFrame):
         self.jog_ind.grid(row=0, column=1, padx=16)
 
         ctk.CTkButton(
-            btn_row, text="+",
-            width=80, height=60,
+            btn_row,
+            text="+",
+            width=80,
+            height=60,
             font=ctk.CTkFont("Segoe UI", 24, "bold"),
             fg_color=_ACCENT,
             text_color=FANUC_TEXT,
@@ -186,7 +200,8 @@ class ManualControlPanel(ctk.CTkFrame):
         step_row.pack(fill="x", padx=10, pady=(0, 10))
 
         ctk.CTkLabel(
-            step_row, text="STEP",
+            step_row,
+            text="STEP",
             font=ctk.CTkFont("Segoe UI", 9, "bold"),
             text_color=FANUC_TEXT2,
         ).pack(side="left", padx=6)
@@ -196,7 +211,8 @@ class ManualControlPanel(ctk.CTkFrame):
             b = ctk.CTkButton(
                 step_row,
                 text=str(step),
-                width=44, height=28,
+                width=44,
+                height=28,
                 font=ctk.CTkFont("Segoe UI", 9),
                 fg_color=_STEP_ACT if is_default else _STEP_IDLE,
                 text_color=FANUC_TEXT,
@@ -217,25 +233,31 @@ class ManualControlPanel(ctk.CTkFrame):
         goto_row.pack(fill="x", padx=10, pady=8)
 
         ttk.Spinbox(
-            goto_row, from_=0, to=MAX_POSITION,
+            goto_row,
+            from_=0,
+            to=MAX_POSITION,
             textvariable=self.target_var,
-            width=10, font=("Consolas", 13),
+            width=10,
+            font=("Consolas", 13),
         ).pack(side="left", padx=6)
 
         ctk.CTkButton(
-            goto_row, text="MOVE",
+            goto_row,
+            text="MOVE",
             font=ctk.CTkFont("Segoe UI", 10, "bold"),
             fg_color=FANUC_BLUE,
             text_color=FANUC_TEXT,
             hover_color="#6a94d8",
-            width=80, height=34,
+            width=80,
+            height=34,
             corner_radius=8,
             command=self._move_to_target,
         ).pack(side="left", padx=8)
 
         # Status bar
         self.status_label = ctk.CTkLabel(
-            center, text="J1 | POS: 0 | 0.0°",
+            center,
+            text="J1 | POS: 0 | 0.0°",
             font=ctk.CTkFont("Consolas", 11, "bold"),
             text_color=_ACCENT,
             fg_color=FANUC_PANEL,
@@ -256,10 +278,12 @@ class ManualControlPanel(ctk.CTkFrame):
 
         ctk.CTkSlider(
             spd_inner,
-            from_=100, to=10000,
+            from_=100,
+            to=10000,
             variable=self.speed_var,
             orientation="horizontal",
-            width=160, height=18,
+            width=160,
+            height=18,
             button_color=FANUC_ORANGE,
             button_hover_color="#d4995a",
             progress_color=FANUC_ORANGE,
@@ -268,7 +292,8 @@ class ManualControlPanel(ctk.CTkFrame):
         ).pack(fill="x", padx=6, pady=4)
 
         self.speed_label = ctk.CTkLabel(
-            spd_inner, text=f"{DEFAULT_SPEED}",
+            spd_inner,
+            text=f"{DEFAULT_SPEED}",
             font=ctk.CTkFont("Consolas", 13, "bold"),
             text_color=_ACCENT,
         )
@@ -278,17 +303,20 @@ class ManualControlPanel(ctk.CTkFrame):
         quick_card.pack(fill="x")
 
         for txt, cmd, fg, hov in [
-            ("HOME",    self._go_home,    FANUC_BLUE,   "#6a94d8"),
-            ("CENTER",  self._go_center,  _ACCENT,      _ACCENT_H),
-            ("TRQ ON",  self._torque_on,  _ACCENT,      _ACCENT_H),
+            ("HOME", self._go_home, FANUC_BLUE, "#6a94d8"),
+            ("CENTER", self._go_center, _ACCENT, _ACCENT_H),
+            ("TRQ ON", self._torque_on, _ACCENT, _ACCENT_H),
             ("TRQ OFF", self._torque_off, FANUC_ORANGE, "#d4995a"),
         ]:
             ctk.CTkButton(
-                quick_card, text=txt,
+                quick_card,
+                text=txt,
                 font=ctk.CTkFont("Segoe UI", 9, "bold"),
-                fg_color=fg, text_color=FANUC_TEXT,
+                fg_color=fg,
+                text_color=FANUC_TEXT,
                 hover_color=hov,
-                height=34, corner_radius=8,
+                height=34,
+                corner_radius=8,
                 command=cmd,
             ).pack(fill="x", padx=8, pady=3)
 
@@ -307,11 +335,9 @@ class ManualControlPanel(ctk.CTkFrame):
     def _update_joint_highlight(self):
         for i, btn in self.joint_buttons.items():
             if i == self.selected_joint:
-                btn.configure(fg_color=_JOINT_ACT, text_color=FANUC_TEXT,
-                               border_color=_ACCENT_H)
+                btn.configure(fg_color=_JOINT_ACT, text_color=FANUC_TEXT, border_color=_ACCENT_H)
             else:
-                btn.configure(fg_color=_JOINT_IDLE, text_color=FANUC_TEXT,
-                               border_color="#d0ccc8")
+                btn.configure(fg_color=_JOINT_IDLE, text_color=FANUC_TEXT, border_color="#d0ccc8")
 
     def _set_step(self, step: int):
         self.jog_step = step
@@ -366,9 +392,9 @@ class ManualControlPanel(ctk.CTkFrame):
         self.log(f"J{self.selected_joint + 1} Torque OFF", "warning")
 
     def _update_status(self):
-        mid  = self.controller.get_motor_id_for_joint(self.selected_joint)
-        pos  = self.controller.joint_positions.get(mid, 2048)
-        ang  = (pos / MAX_POSITION) * 360 - 180
+        mid = self.controller.get_motor_id_for_joint(self.selected_joint)
+        pos = self.controller.joint_positions.get(mid, 2048)
+        ang = (pos / MAX_POSITION) * 360 - 180
         name = self.controller.get_joint_name(self.selected_joint)
         self.pos_var.set(int(pos))
         if self.status_label:
