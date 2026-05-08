@@ -37,8 +37,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
-COPY src/ ./src/
-COPY config/ ./config/
+COPY . .
 
 # Set Python path
 ENV PYTHONPATH=/app:/app/src
@@ -47,6 +46,5 @@ ENV PYTHONPATH=/app:/app/src
 RUN useradd -m -u 1000 mujoco && chown -R mujoco:mujoco /app
 USER mujoco
 
-# Default command - headless mode
-ENTRYPOINT ["python", "-m", "src.mujoco_robot_sim"]
-CMD ["--headless"]
+# Default command - simulation without GUI
+CMD ["python", "main.py", "-sim", "--no-gui"]
