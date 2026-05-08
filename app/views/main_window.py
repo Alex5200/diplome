@@ -1044,7 +1044,13 @@ class RobotControlGUI(ctk.CTk):
             ("CTR", "#b8a8f8", "#8878d8", self._go_all_center, "All joints → 2048"),
             ("TRQ", _ACCENT, _ACCENT_H, self._torque_all_on, "Torque ON"),
             ("FRE", FANUC_ORANGE, "#d4995a", self._torque_all_off, "Torque OFF"),
-            ("ZRO", "#3a8a6a", "#2a7a5a", self._zero_and_release, "All joints → 0°  then Torque OFF"),
+            (
+                "ZRO",
+                "#3a8a6a",
+                "#2a7a5a",
+                self._zero_and_release,
+                "All joints → 0°  then Torque OFF",
+            ),
         ]:
             b = ctk.CTkButton(
                 sidebar,
@@ -1651,7 +1657,9 @@ class RobotControlGUI(ctk.CTk):
         if messagebox.askyesno("Confirm", "Move all joints to home position (0°)?"):
             threading.Thread(
                 target=lambda: [
-                    self.controller.move_to_position(self.controller.get_motor_id_for_joint(j), 2048)
+                    self.controller.move_to_position(
+                        self.controller.get_motor_id_for_joint(j), 2048
+                    )
                     for j in range(6)
                 ],
                 daemon=True,
@@ -1703,15 +1711,12 @@ class RobotControlGUI(ctk.CTk):
 
         def _do():
             for j in range(6):
-                self.controller.move_to_position(
-                    self.controller.get_motor_id_for_joint(j), 2048
-                )
+                self.controller.move_to_position(self.controller.get_motor_id_for_joint(j), 2048)
             import time as _t
+
             _t.sleep(1.5)  # wait for motors to reach position
             for j in range(6):
-                self.controller.toggle_torque(
-                    self.controller.get_motor_id_for_joint(j), False
-                )
+                self.controller.toggle_torque(self.controller.get_motor_id_for_joint(j), False)
 
         threading.Thread(target=_do, daemon=True).start()
         self._log("Joints → 0° · torque OFF", "warning")
