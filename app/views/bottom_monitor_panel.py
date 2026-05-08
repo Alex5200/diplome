@@ -26,11 +26,11 @@ from app.config.constants import (
 from app.controllers.motor_controller import MotorController
 from app.models.motor_data import MotorData
 
-_ACCENT   = "#7dd3c0"
-_GOOD     = _ACCENT
-_WARN     = FANUC_ORANGE
-_CRIT     = FANUC_RED
-_IDLE     = FANUC_GRAY
+_ACCENT = "#7dd3c0"
+_GOOD = _ACCENT
+_WARN = FANUC_ORANGE
+_CRIT = FANUC_RED
+_IDLE = FANUC_GRAY
 
 
 class BottomMonitorPanel(ctk.CTkFrame):
@@ -38,11 +38,11 @@ class BottomMonitorPanel(ctk.CTkFrame):
 
     def __init__(self, parent: tk.Misc, controller: MotorController):
         super().__init__(parent, fg_color=FANUC_BG, corner_radius=0)
-        self.controller     = controller
+        self.controller = controller
         self.motor_widgets: dict[int, dict[str, Any]] = {}
         # Fonts must be created after the root window exists
         self._f_mono_sm = ctk.CTkFont("Consolas", 8)
-        self._f_bold_sm = ctk.CTkFont("Segoe UI",  8, "bold")
+        self._f_bold_sm = ctk.CTkFont("Segoe UI", 8, "bold")
         self._create_widgets()
 
     # ── Build UI ──────────────────────────────────────────────────────────────
@@ -70,8 +70,11 @@ class BottomMonitorPanel(ctk.CTkFrame):
 
         # Status dot (tiny canvas, kept as tk.Canvas for pixel precision)
         dot_canvas = tk.Canvas(
-            row, width=8, height=8,
-            bg=FANUC_PANEL, highlightthickness=0,
+            row,
+            width=8,
+            height=8,
+            bg=FANUC_PANEL,
+            highlightthickness=0,
         )
         dot_canvas.pack(side="left", padx=(0, 3))
         dot_canvas.create_oval(0, 0, 8, 8, fill=_IDLE, outline="", tags="dot")
@@ -84,7 +87,7 @@ class BottomMonitorPanel(ctk.CTkFrame):
         ).pack(side="left")
 
         # Data labels
-        pos_lbl  = self._mini_label(row, "-- (--)")
+        pos_lbl = self._mini_label(row, "-- (--)")
         self._sep(row)
         temp_lbl = self._mini_label(row)
         self._sep(row)
@@ -93,9 +96,9 @@ class BottomMonitorPanel(ctk.CTkFrame):
         volt_lbl = self._mini_label(row, fg=FANUC_TEXT2)
 
         self.motor_widgets[joint_idx] = {
-            "card":       card,
+            "card": card,
             "dot_canvas": dot_canvas,
-            "pos_label":  pos_lbl,
+            "pos_label": pos_lbl,
             "temp_label": temp_lbl,
             "load_label": load_lbl,
             "volt_label": volt_lbl,
@@ -108,7 +111,9 @@ class BottomMonitorPanel(ctk.CTkFrame):
         return lbl
 
     def _sep(self, parent):
-        ctk.CTkLabel(parent, text=" | ", font=self._f_mono_sm, text_color=FANUC_TEXT2).pack(side="left")
+        ctk.CTkLabel(parent, text=" | ", font=self._f_mono_sm, text_color=FANUC_TEXT2).pack(
+            side="left"
+        )
 
     # ── Data update ───────────────────────────────────────────────────────────
     def update_data(self, motor_data_dict: dict[int, MotorData]):
@@ -118,7 +123,7 @@ class BottomMonitorPanel(ctk.CTkFrame):
                 continue
 
             data = motor_data_dict[motor_id]
-            w    = self.motor_widgets[joint_idx]
+            w = self.motor_widgets[joint_idx]
 
             # Status dot colour
             dot_color = _IDLE
@@ -136,7 +141,7 @@ class BottomMonitorPanel(ctk.CTkFrame):
             c.create_oval(0, 0, 8, 8, fill=dot_color, outline="", tags="dot")
 
             # Position + angle
-            pos   = data.position if data.position is not None else 0
+            pos = data.position if data.position is not None else 0
             angle = (pos / MAX_POSITION) * 360 - 180
             w["pos_label"].configure(text=f"{pos} ({angle:.0f}\u00b0)")
 
@@ -144,7 +149,11 @@ class BottomMonitorPanel(ctk.CTkFrame):
             temp = data.temperature or 0
             w["temp_label"].configure(
                 text=f"{temp}\u00b0C",
-                text_color=_CRIT if temp >= TEMP_CRITICAL else _WARN if temp >= TEMP_WARNING else _GOOD,
+                text_color=_CRIT
+                if temp >= TEMP_CRITICAL
+                else _WARN
+                if temp >= TEMP_WARNING
+                else _GOOD,
             )
 
             # Load
@@ -162,7 +171,7 @@ class BottomMonitorPanel(ctk.CTkFrame):
         for joint_idx, w in self.motor_widgets.items():
             w["pos_label"].configure(text="-- (--)")
             w["temp_label"].configure(text="--\u00b0C", text_color=FANUC_TEXT)
-            w["load_label"].configure(text="--%",       text_color=FANUC_TEXT)
+            w["load_label"].configure(text="--%", text_color=FANUC_TEXT)
             w["volt_label"].configure(text="--V")
             c = w["dot_canvas"]
             c.delete("dot")
