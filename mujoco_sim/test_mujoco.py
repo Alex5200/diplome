@@ -6,7 +6,7 @@
 Переключение режима: клавиша 'T' в консоли или фокусе окна.
 """
 
-import msvcrt  # Windows-only, для неблокирующего чтения клавиш
+# import msvcrt  # Windows-only, для неблокирующего чтения клавиш
 import sys
 import time
 from pathlib import Path
