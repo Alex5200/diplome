@@ -42,6 +42,7 @@ from typing import Any
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -332,10 +333,10 @@ async def _shutdown():
 
 if __name__ == "__main__":
     import argparse
+
     import uvicorn
 
     try:
-        from dotenv import load_dotenv
         load_dotenv()
     except ImportError:
         pass
@@ -343,14 +344,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Robot Control API")
     parser.add_argument("--no-auth", action="store_true", help="Disable authentication")
     parser.add_argument("--no-auth-secret", type=str, default="", help="Secret for no-auth mode")
-    parser.add_argument("--mock", action="store_true", help="Use mock motor controller (for development)")
+    parser.add_argument(
+        "--mock", action="store_true", help="Use mock motor controller (for development)"
+    )
     parser.add_argument("--host", type=str, default="", help="Host to bind to")
     parser.add_argument("--port", type=int, default=0, help="Port to bind to")
     args, _ = parser.parse_known_args()
 
     if args.no_auth:
         os.environ["AUTH_ENABLED"] = "false"
-        os.environ["NO_AUTH_SECRET"] = args.no_auth_secret or os.environ.get("NO_AUTH_SECRET", "dev-secret")
+        os.environ["NO_AUTH_SECRET"] = args.no_auth_secret or os.environ.get(
+            "NO_AUTH_SECRET", "dev-secret"
+        )
         logging.info("🔓 Auth disabled (--no-auth)")
 
     no_auth_secret = os.environ.get("NO_AUTH_SECRET", "")
