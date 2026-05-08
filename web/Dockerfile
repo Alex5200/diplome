@@ -1,7 +1,7 @@
 # ST3215 Robot Control - Production Dockerfile
 # Multi-stage build for optimized image
 
-FROM python:3.11-slim AS builder
+FROM python:3.13-alpine
 
 WORKDIR /app
 
@@ -33,7 +33,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     HOST=0.0.0.0 \
     PORT=8000 \
-    AUTH_ENABLED=true \
+    AUTH_ENABLED=false \
     MOCK_MODE=false \
     LOG_LEVEL=INFO
 
