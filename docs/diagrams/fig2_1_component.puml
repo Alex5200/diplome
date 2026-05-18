@@ -1,5 +1,12 @@
-@startuml fig2_1_component
+@startuml
 ' Рисунок 2.1 — Компонентная диаграмма системы (UML)
+' Цвета связей:
+' Синий - внешние клиенты → сервисы
+' Зелёный - внутренние зависимости
+' Оранжевый - реализация интерфейсов
+' Фиолетовый - особые внутренние связи (ProgramService)
+' Красный - внедрение зависимостей (DependencyContainer)
+
 skinparam componentStyle rectangle
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
@@ -18,87 +25,110 @@ skinparam package {
 
 title Рисунок 2.1 — Компонентная диаграмма системы
 
-package "Общий слой (app/)" {
-  package "core/" {
-    [DependencyContainer]
-    [EventBus]
-    [BaseService]
-    [IMotorController]
-    [IMotorMonitor]
+package "Общий слой (app)" {
+  package "core" {
+    component DependencyContainer
+    component EventBus
+    component BaseService
+    interface IMotorController
+    interface IMotorMonitor
   }
-  package "models/" {
-    [RobotKinematics6DOF]
-    [InverseKinematics6DOF]
-    [MotorData]
-    [JointState]
-    [RobotState]
+  package "models" {
+    component RobotKinematics6DOF
+    component InverseKinematics6DOF
+    component MotorData
+    component JointState
+    component RobotState
   }
-  package "controllers/" {
-    [MotorController]
-    [MotorMonitor]
+  package "controllers" {
+    component MotorController
+    component MotorMonitor
   }
-  package "services/" {
-    [RobotService]
-    [KinematicsService]
-    [ProgramService]
+  package "services" {
+    component RobotService
+    component KinematicsService
+    component ProgramService
   }
-  package "utils/" {
-    [ConfigManager]
-    [Logger]
-    [ProgramExecutor]
+  package "utils" {
+    component ConfigManager
+    component Logger
+    component ProgramExecutor
   }
 }
 
-package "Desktop (desktop/)" {
-  [Tkinter GUI]
-  [Matplotlib 3D View]
+package "Desktop" {
+  component "Tkinter GUI" as TkGUI
+  component "Matplotlib 3D View" as MatplotView
 }
 
-package "Web (web/)" {
-  [FastAPI Server]
-  [WebSocket Handler]
-  [HTML/JS Client]
+package "Web" {
+  component "FastAPI Server" as FastAPI
+  component "WebSocket Handler" as WSHandler
+  component "HTML/JS Client" as WebClient
 }
 
-package "ROS2 (ros2/)" {
-  [robot_node]
-  [monitor_node]
-  [ik_service_node]
+package "ROS2" {
+  component robot_node
+  component monitor_node
+  component ik_service_node
 }
 
-package "Программы (programs/)" {
-  [GraspProgram]
-  [DrawProgram]
-  [CalibrationProgram]
+package "Программы" {
+  component GraspProgram
+  component DrawProgram
+  component CalibrationProgram
 }
 
-' Клиентские слои → общий слой
-[Tkinter GUI] --> [RobotService]
-[Tkinter GUI] --> [KinematicsService]
-[FastAPI Server] --> [RobotService]
-[FastAPI Server] --> [KinematicsService]
-[WebSocket Handler] --> [EventBus]
-[robot_node] --> [RobotService]
-[monitor_node] --> [EventBus]
-[ik_service_node] --> [KinematicsService]
-[GraspProgram] --> [RobotService]
-[DrawProgram] --> [KinematicsService]
+' === Синие связи: внешние клиенты → общий слой ===
+TkGUI -[#2288FF]-> RobotService
+TkGUI -[#2288FF]-> KinematicsService
+MatplotView -[#2288FF]-> KinematicsService
 
-' Внутри общего слоя
-[RobotService] --> [MotorController]
-[RobotService] --> [KinematicsService]
-[RobotService] --> [EventBus]
-[MotorMonitor] --> [EventBus]
-[MotorController] ..|> [IMotorController]
-[MotorMonitor] ..|> [IMotorMonitor]
-[RobotService] --> [BaseService]
-[KinematicsService] --> [BaseService]
-[ProgramService] --> [BaseService]
-[DependencyContainer] --> [RobotService]
-[DependencyContainer] --> [KinematicsService]
-[DependencyContainer] --> [ProgramService]
-[DependencyContainer] --> [MotorController]
-[KinematicsService] --> [RobotKinematics6DOF]
-[KinematicsService] --> [InverseKinematics6DOF]
+FastAPI -[#2288FF]-> RobotService
+FastAPI -[#2288FF]-> KinematicsService
+FastAPI -[#2288FF]-> WSHandler
+WSHandler -[#2288FF]-> EventBus
+WebClient -[#2288FF]-> FastAPI
+WebClient -[#2288FF]-> WSHandler
 
+robot_node -[#2288FF]-> RobotService
+monitor_node -[#2288FF]-> EventBus
+ik_service_node -[#2288FF]-> KinematicsService
+
+GraspProgram -[#2288FF]-> ProgramService
+DrawProgram -[#2288FF]-> ProgramService
+CalibrationProgram -[#2288FF]-> ProgramService
+
+' === Зелёные связи: внутренние зависимости ===
+RobotService -[#88AA44]-> MotorController
+RobotService -[#88AA44]-> KinematicsService
+RobotService -[#88AA44]-> EventBus
+RobotService -[#88AA44]-> ConfigManager
+RobotService -[#88AA44]-> Logger
+
+MotorMonitor -[#88AA44]-> EventBus
+
+RobotService -[#88AA44]-> BaseService
+KinematicsService -[#88AA44]-> BaseService
+ProgramService -[#88AA44]-> BaseService
+
+KinematicsService -[#88AA44]-> RobotKinematics6DOF
+KinematicsService -[#88AA44]-> InverseKinematics6DOF
+
+' === Фиолетовые связи: ProgramService с сервисами ===
+ProgramService -[#AA44AA]-> ProgramExecutor
+ProgramService -[#AA44AA]-> RobotService
+ProgramService -[#AA44AA]-> KinematicsService
+
+' === Красные связи: DependencyContainer (внедрение) ===
+DependencyContainer -[#FF4444]-> RobotService
+DependencyContainer -[#FF4444]-> KinematicsService
+DependencyContainer -[#FF4444]-> ProgramService
+DependencyContainer -[#FF4444]-> MotorController
+DependencyContainer -[#FF4444]-> ConfigManager
+DependencyContainer -[#FF4444]-> Logger
+
+' === Оранжевые связи: реализация интерфейсов ===
+MotorController ..|> IMotorController
+MotorMonitor ..|> IMotorMonitor
 @enduml
