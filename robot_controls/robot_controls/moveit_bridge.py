@@ -4,54 +4,30 @@ from typing import Optional
 
 import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionClient
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import String
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+from control_msgs.action import FollowJointTrajectory
+from sensor_msgs.msg import JointState
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 
-try:
-    from moveit_commander import MoveGroupInterface, PlanningSceneInterface, RobotCommander
-    from moveit_commander.exception import MoveItCommanderException
-    _HAS_MOVEIT = True
-except ImportError:
-    _HAS_MOVEIT = False
+JOINT_NAMES = ["joint_0", "joint_1", "joint_2", "joint_3", "joint_4", "joint_5"]
 
 
 class MoveItBridge(Node):
     def __init__(self):
         super().__init__("moveit_bridge")
 
-        self.declare_parameter("move_group_name", "arm")
-        self.declare_parameter("planning_frame", "base_link")
-        self.declare_parameter("max_planning_attempts", 10)
+        self.declare_parameter("action_server_name", "/follow_joint_trajectory")
+        self.declare_parameter("joint_tolerance", 0.05)
+        self.declare_parameter("goal_time_seconds", 2.0)
 
-        move_group_name = self.get_parameter("move_group_name").value
-        self._planning_frame = self.get_parameter("planning_frame").value
-        max_attempts = self.get_parameter("max_planning_attempts").value
+        action_name = self.get_parameter("action_server_name").value
+        self._joint_tolerance = self.get_parameter("joint_tolerance").value
+        self._goal_time = self.get_parameter("goal_time_seconds").value
 
-        self._move_group: Optional[MoveGroupInterface] = None
-        self._connected = False
-
-        if not _HAS_MOVEIT:
-            self.get_logger().error(
-                "moveit_commander not available. Install: sudo apt install ros-humble-moveit-commander"
-            )
-        else:
-            try:
-                self._move_group = MoveGroupInterface(move_group_name)
-                self._move_group.set_planning_time(5.0)
-                self._move_group.set_num_planning_attempts(max_attempts)
-                self._move_group.set_pose_reference_frame(self._planning_frame)
-                self._connected = True
-                self.get_logger().info(
-                    f"Connected to MoveGroup '{move_group_name}' | "
-                    f"frame: {self._planning_frame}"
-                )
-            except MoveItCommanderException as e:
-                self.get_logger().error(f"Failed to connect to MoveGroup: {e}")
-            except RuntimeError as e:
-                self.get_logger().error(
-                    f"Cannot connect to move_group. Is it running? {e}"
-                )
+        self._current_joint_positions: list[float] = [0.0] * 6
 
         reliable = QoSProfile(
             reliability=QoSReliabilityPolicy.RELIABLE,
@@ -67,68 +43,88 @@ class MoveItBridge(Node):
         )
 
         self.create_subscription(
-            PoseStamped, "/robot_controls/moveit/goal", self._on_goal, reliable
+            PoseStamped, "/robot_controls/moveit/goal", self._on_pose_goal, reliable
         )
+        self.create_subscription(
+            JointState, "/joint_states", self._on_joint_state, 10
+        )
+
+        self._action_client = ActionClient(
+            self, FollowJointTrajectory, action_name
+        )
+
+        if not self._action_client.wait_for_server(timeout_sec=2.0):
+            self.get_logger().warn(
+                f"Action server '{action_name}' not found. "
+                "MoveIt trajectory execution disabled. "
+                "Pose goals will be forwarded directly to /robot_controls/target_pose."
+            )
+        else:
+            self.get_logger().info(
+                f"Connected to action server '{action_name}'"
+            )
 
         self.create_timer(5.0, self._publish_status)
 
         self.get_logger().info("MoveItBridge ready")
         self.get_logger().info("  Sub: /robot_controls/moveit/goal")
-        self.get_logger().info("  Pub: /robot_controls/target_pose")
+        self.get_logger().info("  Pub: /robot_controls/target_pose, /robot_controls/moveit/status")
 
-    def _on_goal(self, msg: PoseStamped):
-        if not self._connected or self._move_group is None:
-            self.get_logger().warn("MoveGroup not connected — skipping goal")
+    def _on_joint_state(self, msg: JointState):
+        positions = list(msg.position)
+        if len(positions) >= 6:
+            self._current_joint_positions = positions[:6]
+
+    def _on_pose_goal(self, msg: PoseStamped):
+        x = msg.pose.position.x
+        y = msg.pose.position.y
+        z = msg.pose.position.z
+
+        self.get_logger().info(
+            f"Goal: ({x:.3f}, {y:.3f}, {z:.3f}) — "
+            f"publishing to /robot_controls/target_pose"
+        )
+
+        self._pub_target.publish(msg)
+
+        self._pub_status.publish(String(data=json.dumps({
+            "success": True,
+            "mode": "direct_forward",
+            "goal": {"x": x, "y": y, "z": z},
+        })))
+
+    def send_joint_trajectory(self, positions_rad: list[float]):
+        if not self._action_client.server_is_ready():
+            self.get_logger().warn("Action server not ready, skipping trajectory")
+            return False
+
+        goal_msg = FollowJointTrajectory.Goal()
+        goal_msg.trajectory.joint_names = JOINT_NAMES
+
+        point = JointTrajectoryPoint()
+        point.positions = positions_rad
+        point.velocities = [0.0] * 6
+        point.time_from_start.sec = int(self._goal_time)
+        point.time_from_start.nanosec = int((self._goal_time % 1) * 1e9)
+        goal_msg.trajectory.points = [point]
+
+        send_goal_future = self._action_client.send_goal_async(goal_msg)
+        send_goal_future.add_done_callback(self._goal_response_callback)
+        return True
+
+    def _goal_response_callback(self, future):
+        goal_handle = future.result()
+        if not goal_handle.accepted:
+            self.get_logger().error("Trajectory goal rejected by MoveIt")
             return
-
-        try:
-            self._move_group.set_pose_target(msg)
-
-            plan = self._move_group.plan()
-
-            if not plan or (isinstance(plan, tuple) and not plan[0]):
-                self.get_logger().error("MoveIt planning failed — unreachable goal")
-                self._pub_status.publish(String(data=json.dumps({
-                    "success": False,
-                    "error": "planning_failed",
-                    "goal": {
-                        "x": msg.pose.position.x,
-                        "y": msg.pose.position.y,
-                        "z": msg.pose.position.z,
-                    }
-                })))
-                return
-
-            self.get_logger().info(
-                f"MoveIt plan success — forwarding to hardware: "
-                f"({msg.pose.position.x:.3f}, {msg.pose.position.y:.3f}, {msg.pose.position.z:.3f})"
-            )
-
-            self._pub_target.publish(msg)
-
-            self._move_group.stop()
-            self._move_group.clear_pose_targets()
-
-            self._pub_status.publish(String(data=json.dumps({
-                "success": True,
-                "goal": {
-                    "x": msg.pose.position.x,
-                    "y": msg.pose.position.y,
-                    "z": msg.pose.position.z,
-                }
-            })))
-
-        except MoveItCommanderException as e:
-            self.get_logger().error(f"MoveIt error: {e}")
-        except Exception as e:
-            self.get_logger().error(f"Unexpected error: {e}")
+        self.get_logger().info("Trajectory goal accepted by MoveIt")
 
     def _publish_status(self):
         status = String()
         status.data = json.dumps({
-            "connected": self._connected,
-            "move_group": self.get_parameter("move_group_name").value if self._connected else None,
-            "planning_frame": self._planning_frame if self._connected else None,
+            "action_server_connected": self._action_client.server_is_ready(),
+            "action_server": self.get_parameter("action_server_name").value,
+            "current_joint_positions": [round(p, 4) for p in self._current_joint_positions],
         })
         self._pub_status.publish(status)
 
