@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  robot_controls:
+    build: .
+    container_name: robot_controls_node
+    restart: unless-stopped
+
+    # Host network — обязателен для ROS2 DDS
+    network_mode: "host"
+
+    # Проброс USB (для WSL2 — ttyACM0, для Linux — ttyUSB0)
+    devices:
+      - "/dev/ttyACM0:/dev/ttyACM0"
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+
+    environment:
+      - ROS_DOMAIN_ID=42
+      - PYTHONUNBUFFERED=1
+
+    privileged: true
+
+    # Команда по умолчанию — запустить ноду
+    command: >
+      ros2 run robot_controls robot_controls_node
+      --ros-args -p port:=/dev/ttyACM0 -p offline_mode:=false

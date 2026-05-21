@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+*.pyo
+*.swp
+*.swo
+build/
+install/
+log/
+.venv/
+.git/
+*.md
+venv/
