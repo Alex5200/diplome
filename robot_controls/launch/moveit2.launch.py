@@ -97,6 +97,9 @@ def generate_launch_description():
             executable="rviz2",
             name="rviz2",
             condition=IfCondition(LaunchConfiguration("use_rviz")),
+            arguments=["-d", PathJoinSubstitution([
+                pkg_rct, "config", "moveit.rviz"
+            ])],
             output="screen",
         ),
 

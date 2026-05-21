@@ -1,0 +1,74 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+  - Class: rviz_common/Selection
+    Name: Selection
+  - Class: rviz_common/Tool Properties
+    Name: Tool Properties
+  - Class: moveit2_ros_visualization/MotionPlanning
+    Name: MotionPlanning
+
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Frame: base_link
+      Marker Scale: 1
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Robot Description: robot_description
+      Visual Enabled: true
+      Planning Frame: base_link
+    - Class: moveit2_ros_visualization/MotionPlanning
+      Name: MotionPlanning
+      Enabled: true
+      Planning Scene Topic: /monitored_planning_scene
+      Robot Description: robot_description
+      Planning Group: arm
+      Display Robot Visual: true
+      Display Robot State: true
+      Display Planning Scene: false
+      Display Links: false
+      Display Constraints: false
+      Show Axes: true
+      Show Trail: false
+      State Display Time: 0.5
+      Frame Timeout: 30
+      Planning Frame: base_link
+      Interactive Marker Size: 0.15
+      Interactive Marker Topic: /move_group/fake_execution/current_state
+      Planned Path:
+        Color: 0.0, 0.8, 0.0
+        Linestyle: Lines
+        Loop Animation: false
+        Shaft Radius: 0.005
+        Show Idle: false
+        Show Path: true
+        Width: 0.005
+      Trajectory Topic: /display_planned_path
+  Global Options:
+    Fixed Frame: base_link
+    Frame Rate: 30
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/SetInitialPose
+    - Class: rviz_default_plugins/SetGoal
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 1
+      Focal Point: 0, 0, 0.15
+      Name: Current View
+      Pitch: 0.3
+      Yaw: 0.8
