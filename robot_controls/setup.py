@@ -35,6 +35,7 @@ setup(
             'bag_recorder        = robot_controls.bag_recorder:main',
             'moveit_bridge       = robot_controls.moveit_bridge:main',
             'teleop_node         = robot_controls.teleop_node:main',
+            'rviz_bridge         = robot_controls.rviz_bridge:main',
         ],
     },
 )

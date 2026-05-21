@@ -7,8 +7,6 @@ Panels:
     Name: Selection
   - Class: rviz_common/Tool Properties
     Name: Tool Properties
-  - Class: moveit_rviz_plugin/MotionPlanning
-    Name: MotionPlanning
 
 Visualization Manager:
   Class: ""
@@ -20,40 +18,18 @@ Visualization Manager:
       Marker Scale: 1
       Show Arrows: true
       Show Axes: true
-      Show Names: true
+      Show Names: false
     - Class: rviz_default_plugins/RobotModel
       Name: RobotModel
       Enabled: true
       Robot Description: robot_description
       Visual Enabled: true
       Planning Frame: base_link
-    - Class: moveit_rviz_plugin/MotionPlanning
-      Name: MotionPlanning
+    - Class: rviz_default_plugins/MarkerArray
+      Name: TargetMarker
       Enabled: true
-      Planning Scene Topic: /monitored_planning_scene
-      Robot Description: robot_description
-      Planning Group: arm
-      Display Robot Visual: true
-      Display Robot State: true
-      Display Planning Scene: false
-      Display Links: false
-      Display Constraints: false
-      Show Axes: true
-      Show Trail: false
-      State Display Time: 0.5
-      Frame Timeout: 30
-      Planning Frame: base_link
-      Interactive Marker Size: 0.15
-      Interactive Marker Topic: /move_group/fake_execution/current_state
-      Planned Path:
-        Color: 0.0, 0.8, 0.0
-        Linestyle: Lines
-        Loop Animation: false
-        Shaft Radius: 0.005
-        Show Idle: false
-        Show Path: true
-        Width: 0.005
-      Trajectory Topic: /display_planned_path
+      Marker Topic: /robot_controls/target_marker
+      Queue Size: 1
   Global Options:
     Fixed Frame: base_link
     Frame Rate: 30
@@ -63,12 +39,13 @@ Visualization Manager:
     - Class: rviz_default_plugins/Interact
     - Class: rviz_default_plugins/SetInitialPose
     - Class: rviz_default_plugins/SetGoal
+    - Class: rviz_default_plugins/PublishPoint
   Value: true
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1
-      Focal Point: 0, 0, 0.15
+      Distance: 0.5
+      Focal Point: 0.15, 0, 0.15
       Name: Current View
       Pitch: 0.3
       Yaw: 0.8
