@@ -65,6 +65,10 @@ class RobotControlsNode(Node):
                     sys.path.insert(0, ws_root)
             except Exception:
                 pass
+            for p in ["/usr/local/lib/python3.10/dist-packages",
+                       "/usr/lib/python3/dist-packages"]:
+                if os.path.isdir(p) and p not in sys.path:
+                    sys.path.insert(0, p)
             try:
                 from robot_control.hardware_interface import RobotHWInterface
                 self._hw = RobotHWInterface.get_instance()
