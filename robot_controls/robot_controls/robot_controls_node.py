@@ -1,5 +1,7 @@
 import math
 import json
+import os
+import sys
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -10,6 +12,7 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import String, Empty
 from trajectory_msgs.msg import JointTrajectoryPoint
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+from ament_index_python.packages import get_package_prefix
 
 JOINT_NAMES = ["joint_0", "joint_1", "joint_2", "joint_3", "joint_4", "joint_5"]
 
@@ -56,6 +59,13 @@ class RobotControlsNode(Node):
 
         if not offline:
             try:
+                pkg_prefix = get_package_prefix("robot_control")
+                ws_root = os.path.dirname(os.path.dirname(pkg_prefix))
+                if ws_root not in sys.path:
+                    sys.path.insert(0, ws_root)
+            except Exception:
+                pass
+            try:
                 from robot_control.hardware_interface import RobotHWInterface
                 self._hw = RobotHWInterface.get_instance()
                 ok = self._hw.initialize(port, baudrate, publish_rate)
@@ -64,9 +74,9 @@ class RobotControlsNode(Node):
                     self.get_logger().info(f"Hardware connected: port={port}")
                 else:
                     self.get_logger().warn(f"Could not connect to {port} — running in offline mode")
-            except ImportError:
+            except ImportError as e:
                 self.get_logger().warn(
-                    "robot_control package not found — running in offline mode"
+                    f"robot_control package not found ({e}) — running in offline mode"
                 )
         else:
             self.get_logger().info("Offline mode — no hardware connection")
