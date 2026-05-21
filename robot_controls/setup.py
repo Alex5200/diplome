@@ -34,6 +34,7 @@ setup(
             'robot_controls_node = robot_controls.robot_controls_node:main',
             'bag_recorder        = robot_controls.bag_recorder:main',
             'moveit_bridge       = robot_controls.moveit_bridge:main',
+            'teleop_node         = robot_controls.teleop_node:main',
         ],
     },
 )
