@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
   robot-api:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: web/Dockerfile
     container_name: st3215-robot-api
     ports:
       - "8000:8000"
@@ -17,6 +15,7 @@ services:
       - OPERATOR_PASSWORD=${OPERATOR_PASSWORD:-operator}
       - MOCK_MODE=${MOCK_MODE:-false}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - PYTHONPATH=/app
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/status"]
@@ -33,11 +32,12 @@ services:
     container_name: st3215-robot-web
     ports:
       - "3000:3000"
-    depends_on:
-      - robot-api
     environment:
-      - VITE_API_URL=
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
     restart: unless-stopped
+    depends_on:
+      robot-api:
+        condition: service_healthy
 
 networks:
   default:

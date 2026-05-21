@@ -32,7 +32,7 @@ clean:
 	docker-compose down -v
 
 dev:
-	cd .. && python main.py --no-auth --mock
+	python main.py --no-auth --mock
 
 dev-web:
-	cd frontend && npm run dev
+	cd frontend && npm run dev -- --port 5173
