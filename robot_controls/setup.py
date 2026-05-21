@@ -30,7 +30,8 @@ setup(
     entry_points={
         'console_scripts': [
             'robot_controls_node = robot_controls.robot_controls_node:main',
-            'bag_recorder       = robot_controls.bag_recorder:main',
+            'bag_recorder        = robot_controls.bag_recorder:main',
+            'moveit_bridge       = robot_controls.moveit_bridge:main',
         ],
     },
 )
