@@ -1,15 +1,6 @@
-import os
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import (
-    DeclareLaunchArgument,
-    IncludeLaunchDescription,
-    RegisterEventHandler,
-    TimerAction,
-)
+from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
-from launch.event_handlers import OnProcessStart
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import (
     Command,
     FindExecutable,
@@ -17,27 +8,32 @@ from launch.substitutions import (
     PathJoinSubstitution,
 )
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    pkg_robot_control = FindPackageShare("robot_control")
-    pkg_robot_controls = FindPackageShare("robot_controls")
+    pkg_rc = FindPackageShare("robot_control")
+    pkg_rct = FindPackageShare("robot_controls")
 
-    robot_description_content = Command([
-        FindExecutable(name="xacro"), " ",
-        PathJoinSubstitution([pkg_robot_control, "urdf", "robot.urdf.xacro"]),
-    ])
-    robot_description = {"robot_description": robot_description_content}
+    robot_description = ParameterValue(
+        Command([
+            FindExecutable(name="xacro"), " ",
+            PathJoinSubstitution([pkg_rc, "urdf", "robot.urdf.xacro"]),
+        ]),
+        value_type=str,
+    )
 
-    srdf_path = PathJoinSubstitution([pkg_robot_controls, "config", "st3215.srdf"])
-    robot_description_semantic = Command([
-        FindExecutable(name="xacro"), " ", srdf_path,
-    ])
-    robot_description_semantic_config = {"robot_description_semantic": robot_description_semantic}
+    robot_description_semantic = ParameterValue(
+        Command([
+            FindExecutable(name="cat"), " ",
+            PathJoinSubstitution([pkg_rct, "config", "st3215.srdf"]),
+        ]),
+        value_type=str,
+    )
 
-    kinematics_path = PathJoinSubstitution([pkg_robot_controls, "config", "kinematics.yaml"])
-    ompl_path = PathJoinSubstitution([pkg_robot_controls, "config", "ompl_planning.yaml"])
+    kinematics_path = PathJoinSubstitution([pkg_rct, "config", "kinematics.yaml"])
+    ompl_path = PathJoinSubstitution([pkg_rct, "config", "ompl_planning.yaml"])
 
     return LaunchDescription([
         DeclareLaunchArgument("port", default_value="COM3"),
@@ -50,7 +46,7 @@ def generate_launch_description():
             package="robot_state_publisher",
             executable="robot_state_publisher",
             name="robot_state_publisher",
-            parameters=[robot_description],
+            parameters=[{"robot_description": robot_description}],
             output="screen",
         ),
 
@@ -60,18 +56,18 @@ def generate_launch_description():
             executable="move_group",
             name="move_group",
             output="screen",
-            parameters=[
-                robot_description,
-                robot_description_semantic_config,
-                {"robot_description_kinematics": kinematics_path},
-                {"planning_pipelines": ["ompl"]},
-                {"ompl": {"arm": {"planner_configs": ["RRTConnect", "RRTstar"]}}},
-                {"use_sim_time": False},
-                {"publish_robot_description_semantic": True},
-                {"allow_trajectory_execution": True},
-                {"max_safe_path_cost": 1.0},
-                {"jiggle_fraction": 0.05},
-            ],
+            parameters=[{
+                "robot_description": robot_description,
+                "robot_description_semantic": robot_description_semantic,
+                "robot_description_kinematics": kinematics_path,
+                "planning_pipelines": ["ompl"],
+                "ompl": {"arm": {"planner_configs": ["RRTConnect", "RRTstar"]}},
+                "use_sim_time": False,
+                "publish_robot_description_semantic": True,
+                "allow_trajectory_execution": True,
+                "max_safe_path_cost": 1.0,
+                "jiggle_fraction": 0.05,
+            }],
         ),
 
         # ── 3. robot_controls_node ──
@@ -101,11 +97,6 @@ def generate_launch_description():
             executable="rviz2",
             name="rviz2",
             condition=IfCondition(LaunchConfiguration("use_rviz")),
-            arguments=["-d", PathJoinSubstitution([
-                pkg_robot_controls, "config", "moveit.rviz"
-            ])] if os.path.exists(os.path.join(
-                get_package_share_directory("robot_controls"), "config", "moveit.rviz"
-            )) else [],
             output="screen",
         ),
 
