@@ -17,6 +17,7 @@ export function ConnectionPanel() {
     setAllAngles,
     freeMode,
     setFreeMode,
+    speed,
   } = useRobotStore();
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingMove, setPendingMove] = useState<(() => void) | null>(null);

@@ -8,6 +8,8 @@ import { DocsPanel } from "./components/docs/DocsPanel";
 import { useRobotStore } from "./stores/robotStore";
 import { api } from "./services/api";
 
+const API_BASE = import.meta.env.VITE_API_URL || window.location.origin;
+
 export default function App() {
   const [splitPercent, setSplitPercent] = useState(65);
   const [isDragging, setIsDragging] = useState(false);
@@ -142,6 +144,11 @@ export default function App() {
             >
               Ограниченный доступ (ключ)
             </button>
+          </div>
+          <div className="mt-4 pt-3 border-t border-gray-300 text-center">
+            <span className="text-xs text-gray-500 font-mono">
+              API: {API_BASE}
+            </span>
           </div>
         </div>
       </div>
