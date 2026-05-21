@@ -7,7 +7,7 @@ Panels:
     Name: Selection
   - Class: rviz_common/Tool Properties
     Name: Tool Properties
-  - Class: moveit2_ros_visualization/MotionPlanning
+  - Class: moveit_rviz_plugin/MotionPlanning
     Name: MotionPlanning
 
 Visualization Manager:
@@ -27,7 +27,7 @@ Visualization Manager:
       Robot Description: robot_description
       Visual Enabled: true
       Planning Frame: base_link
-    - Class: moveit2_ros_visualization/MotionPlanning
+    - Class: moveit_rviz_plugin/MotionPlanning
       Name: MotionPlanning
       Enabled: true
       Planning Scene Topic: /monitored_planning_scene
