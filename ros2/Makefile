@@ -187,6 +187,47 @@ run-all:
 	@ros2 launch $(PACKAGE) robot_v2.launch.py port:=$(PORT)
 
 # ============================================
+# SIMPLE LAUNCH (make run)
+# ============================================
+.PHONY: run
+run:
+	@echo "Launching robot_node_v2 and kinematics_node..."
+	@export PYTHONPATH=../core:$$PYTHONPATH && \
+	ros2 run robot_control robot_node_v2 --ros-args -p port:=$(PORT) & \
+	sleep 2 && \
+	ros2 run robot_control kinematics_node & \
+	sleep 1 && \
+	echo "Nodes started. Use 'make control' to interact or 'make check' to verify."
+
+# ============================================
+# CHECK TOPICS (make check)
+# ============================================
+.PHONY: check
+check:
+	@echo "=== Active Nodes ==="
+	ros2 node list
+	@echo "\n=== Active Topics ==="
+	ros2 topic list
+	@echo "\n=== Topic Rates (3s) ==="
+	timeout 3 ros2 topic hz /robot/joint_states || true
+	@echo "\n=== Kinematics Pose Topic ==="
+	ros2 topic info /robot/target_pose 2>/dev/null || echo "Start kinematics_node to see /robot/target_pose"
+
+# ============================================
+# CONTROL VIA TOPICS (make control)
+# ============================================
+.PHONY: control
+control:
+	@echo "Starting TUI for control..."
+	python3 $(CURDIR)/robot_tui.py
+
+.PHONY: pub-pose
+pub-pose:
+	@echo "Publishing target pose (0.2m, 0.0, 0.3m)..."
+	ros2 topic pub --once /robot/target_pose geometry_msgs/PoseStamped \
+		"{header: {frame_id: 'base_link'}, pose: {position: {x: 0.2, y: 0.0, z: 0.3}, orientation: {w: 1.0}}"
+
+# ============================================
 # BUILD & INSTALL
 # ============================================
 .PHONY: build
@@ -414,11 +455,12 @@ docker-all:
 		--network host \
 		--privileged \
 		-v /dev/bus/usb:/dev/bus/usb \
+		-v $(CURDIR)/../core:/ws/core \
 		-e ROS_DOMAIN_ID=42 \
+		-e PYTHONPATH=/ws/core:/ws/app:$$PYTHONPATH \
 		$(IMAGE_NAME) bash -c "\
 			source /opt/ros/humble/setup.bash && \
 			source /ws/install/setup.bash && \
-			export PYTHONPATH=/ws/app:\$$PYTHONPATH && \
 			ros2 run robot_control robot_node_v2 \
 			    --ros-args -p port:=$(USB_DEVICE) & \
 			sleep 2 && \

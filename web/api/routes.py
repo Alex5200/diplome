@@ -90,8 +90,8 @@ class MockMotorController:
 # ---------------------------------------------------------------------------
 try:
     from app.controllers.motor_controller import MotorController
-    from app.models.kinematics import InverseKinematics6DOF, RobotKinematics6DOF
     from app.utils.config_manager import ConfigManager
+    from web.core.kinematics import InverseKinematics6DOF, RobotKinematics6DOF
 
     _USE_MOCK = os.environ.get("MOCK_MODE", "false").lower() == "true"
 except ImportError:
@@ -106,8 +106,8 @@ _ik = None
 _cfg = None
 
 try:
-    from app.models.kinematics import InverseKinematics6DOF, RobotKinematics6DOF
     from app.utils.config_manager import ConfigManager
+    from web.core.kinematics import InverseKinematics6DOF, RobotKinematics6DOF
     _ik = InverseKinematics6DOF(RobotKinematics6DOF())
     _cfg = ConfigManager()
 except ImportError:

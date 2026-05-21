@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<robot name="st3215_robot">
+  <group name="arm">
+    <chain base_link="base_link" tip_link="tool_link" />
+  </group>
+  <group name="endeffector">
+    <link name="tool_link" />
+  </group>
+  <group_state name="home" group="arm">
+    <joint name="joint_0" value="0" />
+    <joint name="joint_1" value="0" />
+    <joint name="joint_2" value="0" />
+    <joint name="joint_3" value="0" />
+    <joint name="joint_4" value="0" />
+    <joint name="joint_5" value="0" />
+  </group_state>
+  <group_state name="ready" group="arm">
+    <joint name="joint_0" value="0" />
+    <joint name="joint_1" value="-0.5" />
+    <joint name="joint_2" value="0.8" />
+    <joint name="joint_3" value="0" />
+    <joint name="joint_4" value="0" />
+    <joint name="joint_5" value="0" />
+  </group_state>
+  <disable_default_planning_scene_monitor />
+</robot>

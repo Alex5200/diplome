@@ -1,0 +1,30 @@
+solid base_link
+  facet normal 0.000000 0.000000 -1.000000
+    outer loop
+      vertex  0.030  0.000  0.000
+      vertex -0.015  0.026  0.000
+      vertex -0.015 -0.026  0.000
+    endloop
+  endfacet
+  facet normal  0.942809  0.000000  0.333333
+    outer loop
+      vertex  0.030  0.000  0.000
+      vertex -0.015  0.026  0.000
+      vertex  0.000  0.000  0.019
+    endloop
+  endfacet
+  facet normal -0.471405  0.816497  0.333333
+    outer loop
+      vertex -0.015  0.026  0.000
+      vertex -0.015 -0.026  0.000
+      vertex  0.000  0.000  0.019
+    endloop
+  endfacet
+  facet normal -0.471405 -0.816497  0.333333
+    outer loop
+      vertex -0.015 -0.026  0.000
+      vertex  0.030  0.000  0.000
+      vertex  0.000  0.000  0.019
+    endloop
+  endfacet
+endsolid base_link

@@ -31,6 +31,7 @@ setup(
             "monitor_node_v2      = robot_control.monitor_node_v2:main",
             "bag_recorder         = robot_control.bag_recorder:main",
             "ros2_control_bridge  = robot_control.ros2_control_bridge:main",
+            "kinematics_node      = robot_control.kinematics_node:main",
         ],
     },
 )

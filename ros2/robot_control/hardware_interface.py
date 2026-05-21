@@ -111,9 +111,9 @@ class RobotHWInterface:
         if self._ctrl.connected:
             return True
 
-        success = self._ctrl.connect(port, baudrate)
+        success = self._ctrl.connect(port)
         if success:
-            self._motor_ids = self._ctrl.scan_motors()
+            self._motor_ids = self._ctrl.scan_servos()
             self._start_monitor(monitor_rate_hz)
 
             # Initialize cache
