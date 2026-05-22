@@ -1,20 +1,9 @@
 # ST3215 Robot Control - Production Dockerfile
 # Multi-stage build for optimized image
 
-FROM python:3.13-alpine
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
-WORKDIR /app
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY pyproject.toml ./
-RUN pip install --no-cache-dir -e .
-
-FROM python:3.11-slim
-
-WORKDIR /app
+WORKDIR /web
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
@@ -22,8 +11,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && useradd -m -u 1000 appuser
 
+COPY pyproject.toml ./
+RUN uv sync
+
 COPY --chown=appuser:appuser . .
-RUN chown -R appuser:appuser /app
+RUN chown -R appuser:appuser /web
 
 USER appuser
 
@@ -40,4 +32,4 @@ ENV PYTHONUNBUFFERED=1 \
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/api/status || exit 1
 
-CMD ["python", "main.py"]
+CMD ["uv", "run", "main.py"]
