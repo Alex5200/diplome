@@ -1,0 +1,124 @@
+=== ОПИСАНИЕ МЕТОДОВ И КЛАССОВ ===
+
+  --- Frontend (React 19 + TypeScript) ---
+  App.tsx:
+    useEffect() - инициализация при загрузке
+    handleLogin(username, password) - JWT аутентификация
+
+  robotStore.ts (Zustand):
+    status: ConnectionStatus - disconnected | connecting | connected | error
+    jointAngles: number[6] - текущие углы суставов
+    motors: Record<string, MotorData> - телеметрия моторов
+    ikTarget: [number,number,number] | null - целевая точка IK
+    freeMode: boolean - режим свободных моторов
+    setJointAngle(idx, deg) - обновление угла сустава
+    setMotors(data) - обновление телеметрии
+    setStatus(status) - обновление статуса подключения
+
+  ConnectionPanel:
+    onConnect(port: string) - POST /api/connect
+    onDisconnect() - POST /api/disconnect
+    onScan() - POST /api/scan
+
+  JointSliders:
+    onJointChange(idx: number, deg: number) - POST /api/move
+    onMoveAll(angles: number[6]) - POST /api/move_all
+
+  PosePresets:
+    onSelectPreset(name: string) - установка предустановленной позы
+    onSavePreset(name: string) - сохранение текущей позы
+
+  EmergencyStop:
+    onEmergencyStop() - POST /api/stop
+    onRelease() - сброс аварийной остановки
+
+  RobotScene (Three.js / @react-three/fiber):
+    setJointAngles(angles: number[6]) - обновление 3D модели
+    onIkTargetChange(x, y, z) - установка цели IK
+
+  MotorTable: отображение телеметрии (position, temp, load, voltage)
+  BlocklyEditor: визуальное программирование Blockly 12
+  EventLog: лог событий и ошибок
+
+  api.ts (REST клиент):
+    fetchStatus() -> RobotStatus - GET /api/status
+    connect(port) -> bool - POST /api/connect
+    moveJoint(joint, pos) -> bool - POST /api/move {joint,position,speed}
+    moveAll(positions) -> bool - POST /api/move_all {positions,speed}
+    solveIK(x,y,z) -> IKResult - POST /api/ik {x,y,z}
+    emergencyStop() - POST /api/stop
+
+  websocket.ts (WS клиент):
+    connect() - new WebSocket('ws://host/ws')
+    disconnect() - ws.close()
+    onTelemetry(callback) - обработка сообщений {type:"telemetry",motors:{}}
+
+  kinematics.ts:
+    forwardKinematics(angles) -> positions[] - FK на клиенте
+
+  constants.ts:
+    DH_PARAMS: {L0=19, L1=104, L2=95, L3=34, L4=35, L5=0}
+    JOINT_NAMES: string[6]
+    SAFE_ANGLE_LIMITS: [[-180,180],...]
+
+  --- Backend (FastAPI + Python) ---
+  main.py:
+    --no-auth - отключить JWT авторизацию
+    --mock - использовать MockMotorController
+    --host / --port - настройки сервера
+
+  routes.py (REST API эндпоинты):
+    Все эндпоинты возвращают JSON.
+    GET  /api/status - {connected, motors_found, joint_angles, ...}
+    POST /api/connect - {port, baudrate} -> {connected, port, motors_found}
+    POST /api/disconnect - отключение
+    POST /api/scan - поиск моторов
+    POST /api/move - {joint, position, speed} -> {joint, position, speed}
+    POST /api/move_all - {positions[6], speed} -> {positions, speed}
+    POST /api/stop - аварийная остановка
+    POST /api/torque - {motor_id, enable} -> {motor_id, torque_enabled}
+    POST /api/ik - {x, y, z} -> {angles_deg[6], error_mm}
+    GET  /api/config - конфигурация робота
+
+  auth.py (JWT аутентификация):
+    POST /auth/login - {username, password} -> JWT token (24h)
+    POST /auth/token/generate - создание API токена
+    require_token() - FastAPI Depends() защита эндпоинтов
+    Поддержка: admin/operator роли
+
+  websocket.py:
+    GET /ws - WebSocket endpoint
+    push_telemetry(data) - broadcast {type:"telemetry", motors:{id:{pos,temp,...}}}
+    Телеметрия обновляется ~2 Hz
+
+  MotorController (UART реальный):
+    connect() -> bool - serial open
+    scan_servos() -> list[int]
+    move_joint(idx, pos) -> bool
+    move_all(positions) -> bool
+    read_motor_data(id) -> dict
+    emergency_stop_all()
+
+  MockMotorController (для разработки):
+    connect() -> True (всегда)
+    scan_servos() -> [1,2,3,4,5,6]
+    _positions: dict = {1:2048, 2:2048, ...}
+    move_joint() -> True (симуляция)
+
+  --- Аппаратура ---
+  ST3215 Robot Arm:
+    6 DOF, UART/RS-485 @ 1 Mbps
+    Position: 0-4095 (0.088 deg/step)
+
+  === АББРЕВИАТУРЫ ===
+  DH = Denavit-Hartenberg
+  DOF = Degrees of Freedom
+  FK = Forward Kinematics
+  IK = Inverse Kinematics
+  JWT = JSON Web Token
+  REST = Representational State Transfer
+  UI = User Interface
+  URI = Uniform Resource Identifier
+  WS = WebSocket
+  UART = Universal Asynchronous Receiver/Transmitter
+  RS-485 = Recommended Standard 485

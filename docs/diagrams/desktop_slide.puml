@@ -1,0 +1,63 @@
+@startuml desktop_slide
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+skinparam packageBorderColor #333333
+skinparam packageFontColor #000000
+skinparam rectangleBorderColor #333333
+skinparam rectangleFontColor #000000
+skinparam arrowColor #333333
+skinparam arrowThickness 2
+skinparam noteFontSize 8
+
+title "Desktop — архитектура приложения"
+
+package "Views (CustomTkinter)" as VIEWS #F5F5FF {
+  rectangle "MainWindow" as MAIN
+  rectangle "ManualControl" as MANUAL
+  rectangle "3D Kinematics" as KIN3D
+  rectangle "BlockProgramming" as BLOCKS
+  rectangle "TeachPendant" as TEACH
+  rectangle "Telemetry" as MONITOR
+  rectangle "AI / Vision" as AI_VIS
+}
+
+package "Services (EventBus)" as SVCS #F5FFF5 {
+  rectangle "RobotService" as RSVC
+  rectangle "KinematicsService" as KSVC
+  rectangle "ProgramService" as PSVC
+  rectangle "AI / Vision / RL" as AISVC
+  rectangle "CameraService" as CSVC
+}
+
+package "Hardware / ML" as HW #FFF5F0 {
+  rectangle "MotorController" as MC
+  rectangle "Dynamixel\n(6 DOF)" as DXL
+  rectangle "USB Camera" as CAM
+}
+
+MAIN --> MANUAL : switch panels
+MAIN --> KIN3D
+MAIN --> BLOCKS
+MAIN --> TEACH
+MAIN --> MONITOR
+MAIN --> AI_VIS
+
+MANUAL --> RSVC : move_joint
+KIN3D --> KSVC : FK / IK
+BLOCKS --> PSVC : execute program
+TEACH --> RSVC : teach mode
+AI_VIS --> AISVC : inference
+MONITOR --> RSVC : telemetry
+
+RSVC --> MC : Protocol 2.0
+MC --> DXL : 1 Mbps UART
+CSVC --> CAM : cv2.VideoCapture
+PSVC --> RSVC : motor control
+
+note right of AISVC : VLM 2-5 Hz loop\nPID tracking\nRL MuJoCo sim
+
+@enduml

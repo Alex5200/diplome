@@ -1,0 +1,155 @@
+@startuml desktop_architecture
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+skinparam packageBorderColor #083D77
+skinparam packageFontColor #083D77
+skinparam rectangleBorderColor #083D77
+skinparam arrowColor #083D77
+skinparam arrowThickness 2
+skinparam noteFontSize 9
+
+title "Архитектура Desktop-приложения (CustomTkinter)"
+
+' === Views Layer ===
+package "Views\n(CustomTkinter)" as VIEWS #E8F0FE {
+  class "MainWindow\n(главное окно)" as MAIN
+  class "ManualControlPanel\n(ручное управление)" as MANUAL
+  class "MotorMappingPanel\n(настройка моторов)" as MAPPING
+  class "Kinematics3DPanel\n(3D визуализация)" as KIN3D
+  class "BottomMonitorPanel\n(телеметрия)" as MONITOR
+  class "BlockProgramming\n(блочное программирование)" as BLOCKS
+  class "TeachPendantPanel\n(пульт обучения)" as TEACH
+  class "PositionRegisterPanel\n(регистры)" as REGS
+  class "AIControlPanel\n(AI-управление)" as AI_PNL
+  class "VisionTrackerPanel\n(трекинг)" as VIS_PNL
+  class "AlarmHistoryPanel\n(аварии)" as ALARM
+  class "FANUCStatusBar\n(строка состояния)" as STATUSBAR
+}
+
+' === Services Layer ===
+package "Services" as SVCS #E6F2E6 {
+  class "RobotService\n(extends BaseService)" as ROBOT_SVC
+  class "KinematicsService\n(extends BaseService)" as KIN_SVC
+  class "ProgramService\n(extends BaseService)" as PROG_SVC
+  class "AIRobotControllerService\n(extends BaseService)" as AI_SVC
+  class "VisionTrackerService\n(extends BaseService)" as VIS_SVC
+  class "RLTrainingService\n(extends BaseService)" as RL_SVC
+  class "CameraService\n(extends BaseService)" as CAM_SVC
+  class "AIProvider\n(Strategy Pattern)" as AI_PROV
+  class "MLTrackingService\n(extends BaseService)" as ML_SVC
+}
+
+' === Core ===
+package "Core" as CORE #FFF3E0 {
+  class "BaseService\n(Template Method)" as BSVC
+  class "Container\n(DI)" as DI
+  class "EventBus\n(Pub-Sub Singleton)" as EVT
+  class "IMotorController\n(Interface)" as IFACE
+  class "RobotKinematics6DOF" as FK
+  class "InverseKinematics6DOF" as IK
+}
+
+' === Config ===
+package "Config" as CFG #F0F8E8 {
+  class "Constants\n(JOINT_NAMES, COLORS, LIMITS)" as CONST
+  class "MotorConfig\n(dataclass)" as MCFG
+}
+
+' === Models ===
+package "Models" as MODS #F5F0FF {
+  class "MotorData / JointState" as DATA
+  class "ProgramBlock" as PROG
+  class "RL Environment\n(Gymnasium)" as RL_ENV
+  class "RL Agents\n(DQN / PPO)" as RL_AGENTS
+}
+
+' === Factories ===
+package "Factories" as FACT #F0F0F8 {
+  class "MotorFactory\n(создание конфигов)" as MFACT
+}
+
+' === Utils ===
+package "Utils" as UTIL #F8F0E8 {
+  class "AppLogger\n(цветное логирование)" as LOG
+  class "ConfigManager\n(сохранение/загрузка)" as CFGMGR
+  class "ProgramExecutor\n(исполнение блоков)" as PROGEX
+}
+
+' === Controllers ===
+package "Controllers" as CTRL #F0F4F8 {
+  class "MotorController\n(implements IMotorController)" as MC
+  class "MotorMonitor\n(асинхронный мониторинг)" as MM
+}
+
+' === Connections ===
+MAIN --> MANUAL
+MAIN --> MAPPING
+MAIN --> KIN3D
+MAIN --> MONITOR
+MAIN --> BLOCKS
+MAIN --> TEACH
+MAIN --> REGS
+MAIN --> AI_PNL
+MAIN --> VIS_PNL
+MAIN --> ALARM
+MAIN --> STATUSBAR
+MANUAL --> ROBOT_SVC
+KIN3D --> KIN_SVC
+BLOCKS --> PROG_SVC
+MONITOR --> ROBOT_SVC
+MONITOR --> EVT
+TEACH --> ROBOT_SVC
+REGS --> ROBOT_SVC
+AI_PNL --> AI_SVC
+AI_PNL --> VIS_SVC
+VIS_PNL --> VIS_SVC
+ALARM --> EVT
+
+ROBOT_SVC --> BSVC
+ROBOT_SVC --> MC
+ROBOT_SVC --> MM
+ROBOT_SVC --> DATA
+ROBOT_SVC --> DI
+ROBOT_SVC --> CFGMGR
+KIN_SVC --> BSVC
+KIN_SVC --> EVT
+KIN_SVC --> FK
+KIN_SVC --> IK
+PROG_SVC --> BSVC
+PROG_SVC --> ROBOT_SVC
+PROG_SVC --> PROGEX
+PROGEX --> PROG
+PROGEX --> MC
+PROGEX --> KIN_SVC
+
+AI_SVC --> AI_PROV
+AI_SVC --> CAM_SVC
+AI_SVC --> ROBOT_SVC
+AI_SVC --> BSVC
+VIS_SVC --> AI_PROV
+VIS_SVC --> CAM_SVC
+VIS_SVC --> ROBOT_SVC
+VIS_SVC --> BSVC
+RL_SVC --> RL_ENV
+RL_SVC --> RL_AGENTS
+RL_SVC --> BSVC
+ML_SVC --> CAM_SVC
+ML_SVC --> BSVC
+
+MC --> IFACE
+MC --> MCFG
+MC --> MFACT
+MM --> MC
+MM --> EVT
+BSVC --> EVT
+DI --> BSVC
+DI --> LOG
+CFGMGR --> CONST
+CFGMGR --> MCFG
+MFACT --> MCFG
+
+@enduml

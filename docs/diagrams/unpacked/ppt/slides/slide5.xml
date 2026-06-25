@@ -1,0 +1,663 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name="Shape 199"/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="200" name="Google Shape;200;p27"/>
+          <p:cNvSpPr txBox="1">
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="sldNum" idx="12"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="10080171" y="5698671"/>
+            <a:ext cx="1788000" cy="1047300"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="91425" tIns="45700" rIns="91425" bIns="45700" anchor="ctr" anchorCtr="0">
+            <a:noAutofit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buClr>
+                <a:srgbClr val="000000"/>
+              </a:buClr>
+              <a:buFont typeface="Arial"/>
+              <a:buNone/>
+            </a:pPr>
+            <a:fld id="{00000000-1234-1234-1234-123412341234}" type="slidenum">
+              <a:rPr lang="ru-RU"/>
+              <a:t>5</a:t>
+            </a:fld>
+            <a:endParaRPr/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="201" name="Google Shape;201;p27"/>
+          <p:cNvSpPr txBox="1">
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="title"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="838200" y="555171"/>
+            <a:ext cx="8877300" cy="1135500"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="91425" tIns="45700" rIns="91425" bIns="45700" anchor="ctr" anchorCtr="0">
+            <a:normAutofit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="3600" b="1"/>
+              <a:t>Управление приводами Dynamixel</a:t>
+            </a:r>
+            <a:endParaRPr/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="202" name="Google Shape;202;p27"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="5767400" y="7218384"/>
+            <a:ext cx="5700600" cy="369300"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="t" anchorCtr="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" rtl="0">
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="2400" i="0" u="none" strike="noStrike" cap="none">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="Times New Roman"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>Технические детали</a:t>
+            </a:r>
+            <a:endParaRPr sz="2400">
+              <a:solidFill>
+                <a:schemeClr val="dk1"/>
+              </a:solidFill>
+              <a:latin typeface="Times New Roman"/>
+              <a:ea typeface="Times New Roman"/>
+              <a:cs typeface="Times New Roman"/>
+              <a:sym typeface="Times New Roman"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="203" name="Google Shape;203;p27"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="5944900" y="7800675"/>
+            <a:ext cx="5589600" cy="277200"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="66675" tIns="0" rIns="0" bIns="0" anchor="t" anchorCtr="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" rtl="0">
+              <a:lnSpc>
+                <a:spcPct val="149964"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" b="1" i="0" u="none" strike="noStrike" cap="none">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+                <a:latin typeface="Times New Roman"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>Протокол:</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" i="0" u="none" strike="noStrike" cap="none">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+                <a:latin typeface="Times New Roman"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t> UART Half-duplex (1 000 000 бод).</a:t>
+            </a:r>
+            <a:endParaRPr sz="1800">
+              <a:latin typeface="Times New Roman"/>
+              <a:ea typeface="Times New Roman"/>
+              <a:cs typeface="Times New Roman"/>
+              <a:sym typeface="Times New Roman"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="204" name="Google Shape;204;p27"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="5944900" y="8235815"/>
+            <a:ext cx="5589600" cy="692700"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="66675" tIns="0" rIns="0" bIns="0" anchor="t" anchorCtr="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" rtl="0">
+              <a:lnSpc>
+                <a:spcPct val="149964"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" b="1" i="0" u="none" strike="noStrike" cap="none">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+                <a:latin typeface="Times New Roman"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>Топология:</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" i="0" u="none" strike="noStrike" cap="none">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+                <a:latin typeface="Times New Roman"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t> Daisy-chain (до 253 устройств на одной шине).</a:t>
+            </a:r>
+            <a:endParaRPr sz="1800">
+              <a:latin typeface="Times New Roman"/>
+              <a:ea typeface="Times New Roman"/>
+              <a:cs typeface="Times New Roman"/>
+              <a:sym typeface="Times New Roman"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="205" name="Google Shape;205;p27"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="5944900" y="9096305"/>
+            <a:ext cx="5589600" cy="692700"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="66675" tIns="0" rIns="0" bIns="0" anchor="t" anchorCtr="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" rtl="0">
+              <a:lnSpc>
+                <a:spcPct val="149964"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" b="1" i="0" u="none" strike="noStrike" cap="none">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+                <a:latin typeface="Times New Roman"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>Контроль:</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" i="0" u="none" strike="noStrike" cap="none">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+                <a:latin typeface="Times New Roman"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t> Чтение позиции, тока (нагрузки), напряжения и температуры.</a:t>
+            </a:r>
+            <a:endParaRPr sz="1800">
+              <a:latin typeface="Times New Roman"/>
+              <a:ea typeface="Times New Roman"/>
+              <a:cs typeface="Times New Roman"/>
+              <a:sym typeface="Times New Roman"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="206" name="Google Shape;206;p27"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="5944900" y="9956771"/>
+            <a:ext cx="5589600" cy="692700"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="66675" tIns="0" rIns="0" bIns="0" anchor="t" anchorCtr="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="l" rtl="0">
+              <a:lnSpc>
+                <a:spcPct val="149964"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" b="1" i="0" u="none" strike="noStrike" cap="none">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+                <a:latin typeface="Times New Roman"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>Безопасность:</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" i="0" u="none" strike="noStrike" cap="none">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+                <a:latin typeface="Times New Roman"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t> Автоматическая программная блокировка при перегреве (&gt;70°C).</a:t>
+            </a:r>
+            <a:endParaRPr sz="1800">
+              <a:latin typeface="Times New Roman"/>
+              <a:ea typeface="Times New Roman"/>
+              <a:cs typeface="Times New Roman"/>
+              <a:sym typeface="Times New Roman"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:pic>
+        <p:nvPicPr>
+          <p:cNvPr id="207" name="Google Shape;207;p27"/>
+          <p:cNvPicPr preferRelativeResize="0"/>
+          <p:nvPr/>
+        </p:nvPicPr>
+        <p:blipFill>
+          <a:blip r:embed="rId3">
+            <a:alphaModFix/>
+          </a:blip>
+          <a:stretch>
+            <a:fillRect/>
+          </a:stretch>
+        </p:blipFill>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="641824" y="2687324"/>
+            <a:ext cx="4532050" cy="1626100"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+      </p:pic>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="208" name="Google Shape;208;p27"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="5173875" y="1652700"/>
+            <a:ext cx="6360600" cy="3688672"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="91425" tIns="91425" rIns="91425" bIns="91425" anchor="t" anchorCtr="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="457200" lvl="0" indent="-342900" algn="l" rtl="0">
+              <a:lnSpc>
+                <a:spcPct val="115000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buClr>
+                <a:schemeClr val="dk1"/>
+              </a:buClr>
+              <a:buSzPts val="1800"/>
+              <a:buChar char="●"/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Простота управления:</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t> сложные протоколы связи скрыты. Студентам не нужно писать драйверы они сразу управляют роботом через понятные команды.</a:t>
+            </a:r>
+            <a:endParaRPr sz="1800" dirty="0">
+              <a:solidFill>
+                <a:schemeClr val="dk1"/>
+              </a:solidFill>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr marL="457200" lvl="0" indent="-342900" algn="l" rtl="0">
+              <a:lnSpc>
+                <a:spcPct val="115000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buClr>
+                <a:schemeClr val="dk1"/>
+              </a:buClr>
+              <a:buSzPts val="1800"/>
+              <a:buChar char="●"/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Наглядная физика:</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t> Система непрерывно считывает данные о токе и температуре. Это помогает студентам видеть, как реальные нагрузки влияют на работу моторов.</a:t>
+            </a:r>
+            <a:endParaRPr sz="1800" dirty="0">
+              <a:solidFill>
+                <a:schemeClr val="dk1"/>
+              </a:solidFill>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr marL="457200" lvl="0" indent="-342900" algn="l" rtl="0">
+              <a:lnSpc>
+                <a:spcPct val="115000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buClr>
+                <a:schemeClr val="dk1"/>
+              </a:buClr>
+              <a:buSzPts val="1800"/>
+              <a:buChar char="●"/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Защита от ошибок:</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t> Встроена автоматическая блокировка приводов. Если студент ошибся в коде (например, задал неверный угол), система остановит робота и предотвратит его поломку.</a:t>
+            </a:r>
+            <a:endParaRPr sz="1800" dirty="0">
+              <a:solidFill>
+                <a:schemeClr val="dk1"/>
+              </a:solidFill>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="2" name="TextBox 1">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{92911279-4B8D-9EB1-7ED0-AA9089EB402B}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="641824" y="4313424"/>
+            <a:ext cx="4532050" cy="307777"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square" rtlCol="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:r>
+              <a:rPr lang="ru-RU" dirty="0"/>
+              <a:t>Схема подключения моторов по шине </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en" dirty="0"/>
+              <a:t>RS-485</a:t>
+            </a:r>
+            <a:endParaRPr lang="ru-FI" dirty="0"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+  <p:clrMapOvr>
+    <a:masterClrMapping/>
+  </p:clrMapOvr>
+</p:sld>

@@ -1,0 +1,29 @@
+@startuml tracking_diagram
+!theme plain
+skinparam backgroundColor #1E2A38
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam packageBorderColor #7DD3C0
+skinparam packageFontColor #7DD3C0
+skinparam rectangleBorderColor #7DD3C0
+skinparam rectangleFontColor #CDD6F4
+skinparam arrowColor #7DD3C0
+skinparam arrowThickness 2
+
+rectangle "VisionTracker\nService" as VIS #2A3A4A
+rectangle "MLTracking\nService" as ML #2A3A4A
+rectangle "AIProvider" as AI #2A3A4A
+rectangle "YOLOv8\n(PyTorch)" as YOLO #2A3A4A
+rectangle "CameraService" as CAM #2A3A4A
+rectangle "RobotService" as ROB #2A3A4A
+
+VIS --> AI : "detect(target)\n→ bounding box"
+VIS --> CAM : "get_frame()"
+VIS --> ROB : "PID correction\n→ move_joint()"
+VIS --> VIS : "PID: Kp=0.5\nKi=0.01 Kd=0.1"
+ML --> YOLO : "detect(frame)\ntrack(frame)"
+ML --> CAM : "get_frame()"
+YOLO --> YOLO : "30-60 FPS\nlocal GPU"
+@enduml

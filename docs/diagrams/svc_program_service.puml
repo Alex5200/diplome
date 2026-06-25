@@ -1,0 +1,25 @@
+@startuml program_service_diagram
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam rectangleBorderColor #333333
+skinparam rectangleFontColor #000000
+skinparam rectangleFontSize 10
+skinparam arrowColor #333333
+skinparam arrowThickness 2
+skinparam packageBorderColor #333333
+skinparam packageFontColor #333333
+rectangle "ProgramService" as MAIN #FFFFFF
+rectangle "ProgramExecutor" as ProgramExecutor_0 #FAFAFA
+MAIN --> ProgramExecutor_0 : "execute blocks async"
+rectangle "MotorController" as MotorController_1 #FAFAFA
+MAIN --> MotorController_1 : "move_joint / wait / torque"
+rectangle "BlockProgramming UI" as BlockProgramming_UI_2 #FAFAFA
+MAIN --> BlockProgramming_UI_2 : "get_program list"
+legend right
+  JSON program (22 block types)
+end legend
+@enduml

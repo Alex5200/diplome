@@ -1,0 +1,64 @@
+@startuml
+!theme plain
+skinparam BackgroundColor #1a1a2e
+skinparam ComponentBackgroundColor #16213e
+skinparam ComponentBorderColor #0f3460
+skinparam RectangleBackgroundColor #16213e
+skinparam RectangleBorderColor #0f3460
+skinparam ArrowColor #e94560
+skinparam PackageBackgroundColor #1a1a2e
+skinparam PackageBorderColor #0f3460
+skinparam defaultTextAlignment center
+skinparam component { FontSize 11 FontColor #eee BorderThickness 1 }
+skinparam rectangle { FontSize 10 FontColor #ddd BorderThickness 1 }
+skinparam node { FontSize 11 FontColor #7dd3c0 BorderThickness 1 }
+
+node "ros2/robot_control" as PKG {
+  rectangle "robot_node.py\n(JointState publisher)" as RN #16213e
+  rectangle "robot_node_v2.py\n(v2 with monitoring)" as RN2 #16213e
+  rectangle "hardware_interface.py\n(Dynamixel HAL)" as HW #16213e
+  rectangle "ik_service_node.py\n(IK service)" as IK #16213e
+  rectangle "monitor_node.py\n(motor monitor)" as MN #16213e
+  rectangle "monitor_node_v2.py" as MN2 #16213e
+  rectangle "bag_recorder.py\n(ROS2 bag record)" as BR #16213e
+  rectangle "ros2_control_bridge.py\n(ros2_control)" as RCB #16213e
+}
+
+node "ros2/launch" as LCH {
+  rectangle "robot.launch.py" as L1 #16213e
+  rectangle "robot_v2.launch.py" as L2 #16213e
+  rectangle "record_bag.launch.py" as L3 #16213e
+  rectangle "playback_bag.launch.py" as L4 #16213e
+  rectangle "gazebo.launch.py" as L5 #16213e
+  rectangle "ros2_control.launch.py" as L6 #16213e
+}
+
+node "ros2/urdf" as URDF {
+  rectangle "URDF model" as URF #16213e
+}
+
+node "ros2/config" as RCFG {
+  rectangle "config files" as RCF #16213e
+}
+
+node "ros2/tests" as RTST {
+  rectangle "test_hw_interface.py" as THW #16213e
+  rectangle "test_ik_node.py" as TIK #16213e
+  rectangle "test_motor_cache.py" as TMC #16213e
+  rectangle "test_position_math.py" as TPM #16213e
+}
+
+node "App Services (app/)" as APP #16213e {
+}
+
+PKG --> LCH : launched by
+PKG --> URDF : describes
+PKG --> RCFG : configured by
+RN --> HW : serial HAL
+RN2 --> MN2 : extended monitor
+IK --> RN : request IK
+BR --> RN : record state
+RCB --> RN2 : ros2_control API
+APP --> PKG : consumes JointState
+
+@enduml

@@ -1,0 +1,161 @@
+=== ОПИСАНИЕ МЕТОДОВ И КЛАССОВ ===
+
+  --- Views (CustomTkinter) ---
+  RobotControlGUI:
+    _create_widgets() - создание элементов интерфейса
+    _setup_tabs() - настройка вкладок
+    on_connect() - обработчик подключения
+    on_disconnect() - обработчик отключения
+    update_status() - обновление строки состояния
+
+  ManualControlPanel:
+    jog_forward(joint: int) - движение сустава вперед
+    jog_backward(joint: int) - движение сустава назад
+    set_speed(value: int) - установка скорости (100-3400)
+    home_position() - возврат всех суставов в 0
+    emergency_stop() - аварийная остановка
+
+  MotorMappingPanel:
+    scan_motors() - поиск моторов на шине
+    assign_motor(joint: int, id: int) - назначение ID суставу
+    auto_detect() - автоопределение конфигурации
+    save_config() - сохранение в robot_config.json
+
+  Kinematics3DPanel:
+    set_joint_angles(angles: list[float]) - ввод углов
+    update_3d() - обновление 3D сцены (Matplotlib)
+    show_workspace() - отображение рабочей зоны
+    apply_to_robot() - отправка углов на робота
+
+  BottomMonitorPanel:
+    update_telemetry(data: dict) - обновление телеметрии
+    show_temperature(motor: int) - отображение температуры
+    log_event(message: str) - запись в лог событий
+
+  BlockProgramming:
+    add_block(type: str, params: dict) - добавление блока
+    remove_block(id: int) - удаление блока
+    run_program() - запуск программы
+    pause_program() - пауза выполнения
+
+  --- Services ---
+  RobotService (extends BaseService):
+    connect(port: str) -> bool - подключение к COM-порту
+    disconnect() - отключение
+    move_joint(idx: int, angle: float, speed: int) -> bool
+      - движение сустава к углу (град)
+      - конвертация angle -> position мотора
+    move_joints(angles: list[float], speed: int) -> bool
+      - синхронное движение всех суставов
+    set_torque(idx: int, enable: bool) -> bool
+      - вкл/выкл момента (hold)
+    emergency_stop() - Torque=0 на все моторы
+    scan_motors() -> list[int] - поиск моторов
+    get_robot_state() -> RobotState
+    get_joint_angles() -> list[float]
+
+  KinematicsService (extends BaseService):
+    compute_fk(angles: list[float]) -> list[(x,y,z)]
+      - прямая кинематика (DH параметры)
+      - возвращает позиции всех суставов
+    compute_ik(x: float, y: float, z: float) -> list[float]
+      - обратная кинематика (Damped Least Squares)
+      - множественные начальные приближения
+      - приоритет elbow-up конфигурации
+    get_workspace_bounds() -> tuple
+    validate_angles(angles: list[float]) -> bool
+
+  ProgramService (extends BaseService):
+    load_program(blocks: list[ProgramBlock])
+    execute(async_mode: bool)
+    pause() / resume() / stop()
+    Типы блоков: motion, home, wait, torque_on/off
+
+  AIRobotControllerService (extends BaseService):
+    run_control_loop() - цикл: кадр -> VLM -> действие
+    stop_control_loop()
+    process_frame(frame: np.ndarray) - анализ кадра
+    execute_action(command: dict) - {joint, angle}
+
+  VisionTrackerService (extends BaseService):
+    start_tracking(target: str) - "ball", "red object"
+    stop_tracking()
+    compute_pid() -> float - PID коррекция
+
+  RLTrainingService (extends BaseService):
+    train(agent: str, timesteps: int)
+    evaluate(episodes: int) -> dict
+    save_model(path) / load_model(path)
+
+  CameraService (extends BaseService):
+    start_capture(source=0) - OpenCV
+    stop_capture()
+    get_frame() -> np.ndarray (BGR)
+    list_cameras() -> list[int]
+
+  AIProvider (Strategy Pattern):
+    chat(prompt, images) -> AIResponse
+    chat_json(prompt, images) -> AIResponse
+    is_available() -> bool
+    switch_provider(config) - смена бэкенда
+
+  MLTrackingService (extends BaseService):
+    load_model(path) - YOLO/PyTorch
+    detect(frame) -> list[Detection]
+    track(frame) -> list[Track]
+
+  --- Core ---
+  BaseService (Template Method):
+    initialize() -> bool
+    start() / stop()
+    get_status() -> dict
+    _do_initialize() / _do_start() / _do_stop()
+
+  Container (DI):
+    register(name, cls, factory)
+    get(name) -> Any
+    initialize_all()
+
+  EventBus (Pub-Sub Singleton):
+    on(event, callback, priority)
+    off(event, callback)
+    emit(event, data) -> Event
+
+  --- Controllers ---
+  MotorController (UART/RS-485 @ 1 Mbps):
+    connect() -> bool - serial.open()
+    scan_servos() -> list[int]
+    move_to_position(id, pos, speed) -> bool
+    move_joint(idx, pos, speed) -> bool
+    move_all_joints(poses[], speed) -> bool
+    read_motor_data(id) -> dict
+    toggle_torque(id, enable) -> bool
+    emergency_stop_all()
+    save_config(path) / load_config(path)
+
+  MotorMonitor:
+    start(motor_ids[]) - асинхронный polling
+    stop()
+    get_data(id) -> MotorInfo
+    set_callback(callback) - на обновления
+
+  --- Models ---
+  MotorData: motor_id, position(0-4095), temperature, voltage, load
+  JointState: index, name, angle_deg, position, torque_enabled
+  ProgramBlock: id, type, params, order
+  RL Environment: Gymnasium, 18-dim obs, 7-dim action
+  RL Agents: DQN (discrete), PPO (continuous)
+
+  === АББРЕВИАТУРЫ ===
+  DH = Denavit-Hartenberg (параметры кинематики)
+  DI = Dependency Injection
+  DLS = Damped Least Squares
+  DQN = Deep Q-Network
+  FK = Forward Kinematics
+  IK = Inverse Kinematics
+  PPO = Proximal Policy Optimization
+  PID = Proportional-Integral-Derivative
+  RL = Reinforcement Learning
+  UART = Universal Asynchronous Receiver/Transmitter
+  VLM = Vision Language Model
+  YOLO = You Only Look Once (детекция объектов)

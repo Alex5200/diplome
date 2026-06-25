@@ -1,0 +1,73 @@
+@startuml ros2_architecture
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+skinparam packageBorderColor #223344
+skinparam packageFontColor #223344
+skinparam rectangleBorderColor #223344
+skinparam arrowColor #223344
+skinparam arrowThickness 2
+skinparam noteFontSize 9
+
+title "Архитектура ROS2 интеграции (Humble)"
+
+' === ROS2 Nodes ===
+package "ROS2 Humble Nodes" as ROS2 #E8F0FE {
+  class "robot_node_v2.py" as ROBOT_NODE
+  class "monitor_node_v2.py" as MON_NODE
+  class "ik_service_node.py" as IK_NODE
+  class "bag_recorder.py" as BAG_NODE
+  class "ros2_control_bridge.py" as ROS2CTRL
+}
+
+' === Topics & Services ===
+package "ROS2 Topics / Services" as TOPICS #FFF3E0 {
+  class "/robot/joint_states\nsensor_msgs/JointState" as JS_TOPIC
+  class "/robot/joint_cmd\nFollowJointTrajectory" as JC_TOPIC
+  class "/robot/diagnostics\ndiagnostics_msgs" as DIAG_TOPIC
+  class "/robot/ik_service\nsrv/IKSolve" as IK_SRV
+}
+
+' === Hardware Abstraction ===
+package "Hardware Abstraction" as HW #F0F4F8 {
+  class "RobotHWInterface\n(Singleton)" as HW_INTF
+  class "Dynamixel Driver\n(Serial UART)" as Dynamixel_DRV
+}
+
+' === Simulation ===
+package "Simulation" as SIM #E8F5E9 {
+  class "Gazebo\n(physics sim)" as GZB
+  class "robot_gazebo.urdf.xacro\n(URDF модель)" as URDF
+}
+
+' === External Systems ===
+package "Desktop / External" as EXT #F5F0FF {
+  class "Desktop App\n(MotorController)" as DESKTOP
+  class "Docker Container\n(osrf/ros:humble)" as DOCKER
+}
+
+' === ROS2 Connections ===
+ROBOT_NODE --> JS_TOPIC : publish
+ROBOT_NODE --> JC_TOPIC : subscribe
+MON_NODE --> DIAG_TOPIC : publish
+MON_NODE <-- DIAG_TOPIC : subscribe
+IK_NODE --> IK_SRV : service
+BAG_NODE --> JS_TOPIC : subscribe
+BAG_NODE --> DIAG_TOPIC : subscribe
+ROS2CTRL --> JS_TOPIC : publish
+ROS2CTRL <-- JC_TOPIC : subscribe
+ROBOT_NODE --> HW_INTF : read/write
+MON_NODE --> HW_INTF : read
+ROS2CTRL --> HW_INTF : read/write
+IK_NODE --> HW_INTF : get_joint_names()
+HW_INTF --> Dynamixel_DRV : UART commands
+Dynamixel_DRV --> HW_INTF : servo data
+ROS2CTRL --> GZB : Gazebo HW
+GZB --> URDF : load model
+DESKTOP --> Dynamixel_DRV : direct UART
+ROS2_NODES --> DOCKER : container
+
+@enduml

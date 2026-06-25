@@ -1,0 +1,104 @@
+@startuml
+!theme plain
+skinparam BackgroundColor #1a1a2e
+skinparam ComponentBackgroundColor #16213e
+skinparam ComponentBorderColor #0f3460
+skinparam RectangleBackgroundColor #16213e
+skinparam RectangleBorderColor #0f3460
+skinparam ArrowColor #e94560
+skinparam PackageBackgroundColor #1a1a2e
+skinparam PackageBorderColor #0f3460
+skinparam noteBackgroundColor #1a1a2e
+skinparam noteBorderColor #e94560
+skinparam defaultTextAlignment center
+skinparam component { FontSize 11 FontColor #eee BorderThickness 1 }
+skinparam rectangle { FontSize 10 FontColor #ddd BorderThickness 1 }
+skinparam package { FontSize 12 FontColor #0f3460 BorderThickness 1 }
+skinparam node { FontSize 11 FontColor #7dd3c0 BorderThickness 1 }
+
+node "app/config" as CFG {
+  rectangle "constants.py" as CONST #16213e
+}
+
+node "app/controllers" as CTRL {
+  rectangle "MotorController" as MC #16213e
+  rectangle "MotorMonitor" as MM #16213e
+}
+
+node "app/core" as CORE {
+  rectangle "BaseService" as BS #16213e
+  rectangle "DIContainer" as DI #16213e
+  rectangle "EventBus" as EB #16213e
+  rectangle "Interfaces" as IF #16213e
+}
+
+node "app/services" as SVC {
+  rectangle "RobotService" as RS #16213e
+  rectangle "KinematicsService" as KS #16213e
+  rectangle "CameraService" as CS #16213e
+  rectangle "VisionTrackerService" as VTS #16213e
+  rectangle "AIProvider" as AI #16213e
+  rectangle "AI Robot Ctrl" as ARC #16213e
+  rectangle "ProgramService" as PS #16213e
+  rectangle "RLTrainingService" as RLS #16213e
+  rectangle "MLTrackingService" as MLS #16213e
+  rectangle "DatasetRecorder" as DRS #16213e
+}
+
+node "app/models" as MOD {
+  rectangle "RobotKinematics6DOF" as FK #16213e
+  rectangle "InverseKinematics" as IK #16213e
+  rectangle "MotorData" as MD #16213e
+  rectangle "MLModelManager" as MLM #16213e
+  rectangle "RL Base Agent" as RLA #16213e
+}
+
+node "app/views (12 panels)" as VWS {
+  rectangle "Dashboard" as DB #16213e
+  rectangle "Jog" as JOG #16213e
+  rectangle "3D View" as D3 #16213e
+  rectangle "Registers" as REG #16213e
+  rectangle "Teach" as TCH #16213e
+  rectangle "Program" as PRG #16213e
+  rectangle "Setup" as STP #16213e
+  rectangle "XYZ" as XYZ #16213e
+  rectangle "Alarms" as ALM #16213e
+  rectangle "AI Vision" as AIV #16213e
+  rectangle "AI Control" as AIC #16213e
+  rectangle "Dataset" as DTS #16213e
+}
+
+node "app/utils" as UT {
+  rectangle "ConfigManager" as CM #16213e
+  rectangle "Logger" as LOG #16213e
+  rectangle "ProgramExecutor" as PE #16213e
+}
+
+node "app/factories" as FAC {
+  rectangle "Factories" as F #16213e
+}
+
+CFG --> CORE : config
+CORE --> SVC : DI + Events
+SVC --> MOD : uses
+SVC --> CTRL : drives
+SVC --> UT : logging + config
+VWS --> SVC : consumes all services
+VWS --> CORE : EventBus
+FAC --> SVC : service factory
+
+RS --> MC : motor commands
+KS --> FK : forward kinematics
+KS --> IK : inverse kinematics
+CS --> VTS : frames
+AI --> ARC : strategy
+AI --> AIC : LLM provider
+DRS --> RS : joint states
+DRS --> CS : camera frames
+DRS --> KS : tool pose
+MLS --> CS : tracking
+PS --> PE : execute programs
+RLS --> MLM : train agents
+RLS --> RLA : DQN/PPO
+
+@enduml

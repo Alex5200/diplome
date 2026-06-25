@@ -1,0 +1,121 @@
+=== ОПИСАНИЕ КОМПОНЕНТОВ И ПРОТОКОЛОВ ===
+
+  --- Host PC (Windows / Linux) ---
+  Desktop App (CustomTkinter):
+    move_joint(idx, pos) - управление через прямой UART
+    read_telemetry() - чтение телеметрии (pos, temp, load)
+    run_ai_loop() - VLM цикл (кадр -> Ollama -> действие)
+    train_rl() - обучение DQN/PPO через MuJoCo
+    Camera capture - OpenCV VideoCapture (640x480 @ 30fps)
+
+  Web Backend (FastAPI :8000):
+    REST API: /api/status, /api/move, /api/ik, ...
+    WebSocket: /ws (телеметрия real-time)
+    JWT аутентификация
+    Режимы: --mock (без робота), --no-auth (без JWT)
+
+  Web Frontend (React :3000):
+    Three.js 3D viewer
+    Blockly visual programming editor
+    Zustand state management
+    REST + WebSocket clients
+
+  Ollama Server (:11434):
+    POST /api/chat - VLM запросы (qwen2.5-vl)
+    GET /api/tags - список моделей
+    Inference latency: 1-5 sec (зависит от модели)
+
+  MuJoCo Sim (Digital Twin):
+    mj_step() @ 10 000 FPS - симуляция физики
+    sync_from_real() - копия состояния с реального робота
+    sync_to_real() - применение траектории на реального робота
+    Используется для: RL training, trajectory validation
+
+  Camera (USB):
+    OpenCV VideoCapture (MSMF на Windows, V4L2 на Linux)
+    Разрешение: 640x480 @ 30 fps
+    Формат: BGR np.ndarray
+
+  --- Docker Container ---
+  ROS2 Humble (robot_node_v2):
+    publish /robot/joint_states @ 50 Hz
+    subscribe /robot/joint_cmd
+    Чтение/запись через RobotHWInterface (UART)
+
+  Gazebo (physics sim):
+    URDF модель робота
+    ros2_control hardware interface
+    Совместная симуляция с MuJoCo
+
+  --- Robot Controller (RPi / Embedded) ---
+  (Опционально - может быть заменен прямым USB с ПК)
+  UART Bridge:
+    forward() - перенаправление UART пакетов
+    Полудуплекс @ 1 Mbps
+    Питание: 12V через сервоприводы
+
+  --- Physical Robot ---
+  ST3215 Servos (6x ID 1-6):
+    Position: 0-4095 (0.088 deg/step, 360 deg)
+    Speed: 0-3400 step/s
+    Torque: 0.1-0.5 N.m (зависит от модели)
+    Temperature range: -20..+85 C
+    Feedback: position, temperature, voltage, current, load
+    Protocol: half-duplex UART (1 start + 8 data + 1 stop)
+
+  RS-485 Bus (daisy chain):
+    Wiring: D+ (A), D- (B), GND
+    Topology: daisy chain (последовательное подключение)
+    Termination: 120 Ohm resistor на концах
+    Max length: ~10 m
+
+  --- Протоколы ---
+  UART / RS-485 (@ 1 Mbps):
+    Latency: 3-15 ms
+    Применение: управление моторами (критический путь)
+    Через UART идут все команды движения и телеметрия
+    Прямое подключение (минуя ROS2 DDS) дает минимальную задержку
+
+  WebSocket:
+    Latency: 10-50 ms
+    Применение: real-time телеметрия в браузер
+    Формат: JSON {type:"telemetry", motors:{id:{pos,temp,...}}}
+    Порт: 8000/ws
+
+  HTTP REST:
+    Latency: 100-500 ms
+    Применение: API команды (connect, move, ik, config)
+    Формат: JSON request/response
+    Порт: 8000 (FastAPI)
+
+  DDS (ROS2):
+    Latency: 50-200 ms
+    Применение: мониторинг, диагностика, rosbag
+    Reliability: best-effort для joint_states, reliable для cmd
+    Топики: /robot/joint_states, /robot/joint_cmd, /robot/diagnostics
+
+  --- Ключевое архитектурное решение ---
+  Критический путь "зрение -> мотор" НЕ проходит через ROS2 DDS.
+  Используется прямой UART (3-15 ms) вместо DDS (50-200 ms).
+  ROS2 используется для мониторинга, диагностики и интеграции.
+
+  --- Latency Budget ---
+  UART/RS-485: 3-15 ms (управление моторами)
+  WebSocket:   10-50 ms (телеметрия)
+  HTTP REST:   100-500 ms (API команды)
+  DDS (ROS2):  50-200 ms (мониторинг)
+  VLM (Ollama): 1-5 sec (AI inference)
+
+  === АББРЕВИАТУРЫ ===
+  UART = Universal Asynchronous Receiver/Transmitter
+  RS-485 = Recommended Standard 485 (дифференциальная шина)
+  USB = Universal Serial Bus
+  DDS = Data Distribution Service
+  ROS2 = Robot Operating System 2
+  HTTP = HyperText Transfer Protocol
+  REST = Representational State Transfer
+  JSON = JavaScript Object Notation
+  RPi = Raspberry Pi
+  VLM = Vision Language Model
+  HW = Hardware
+  FPS = Frames Per Second

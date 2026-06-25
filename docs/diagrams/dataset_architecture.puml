@@ -1,0 +1,57 @@
+@startuml
+!theme plain
+skinparam BackgroundColor #1a1a2e
+skinparam ComponentBackgroundColor #16213e
+skinparam ComponentBorderColor #0f3460
+skinparam RectangleBackgroundColor #16213e
+skinparam RectangleBorderColor #0f3460
+skinparam ArrowColor #e94560
+skinparam PackageBackgroundColor #1a1a2e
+skinparam PackageBorderColor #0f3460
+skinparam noteBackgroundColor #1a1a2e
+skinparam noteBorderColor #e94560
+skinparam defaultTextAlignment center
+skinparam component {
+    FontSize 11
+    FontColor #eee
+    BorderThickness 1
+}
+skinparam rectangle {
+    FontSize 10
+    FontColor #ddd
+    BorderThickness 1
+}
+skinparam package {
+    FontSize 12
+    FontColor #0f3460
+    BorderThickness 1
+}
+
+rectangle "DatasetRecorderService" as DRS #0f3460 {
+    rectangle "VAMOS Writer" as VW #16213e
+    rectangle "LeRobot Writer" as LW #16213e
+    rectangle "Frame Buffer" as FB #16213e
+    rectangle "State Buffer" as SB #16213e
+    rectangle "Record Loop" as RL #16213e
+}
+
+rectangle "RobotService\n(joint angles,\nmotor data)" as RS #16213e
+rectangle "CameraService\n(RGB frames)" as CS #16213e
+rectangle "KinematicsService\n(tool pose)" as KS #16213e
+
+rectangle "Dataset Panel (UI)\nStart/Stop/Pause\nFormat: VAMOS/LeRobot\nFPS / Task / Command" as UI #16213e
+
+rectangle "VAMOS Format\nepisode_{idx}/\n  metadata.json\n  states.json\n  frames/*.png\n  command.txt" as VF #16213e
+rectangle "LeRobot Format\nepisodes/\n  episode_{idx}.json\nvideos/\n  observation.images.main/\n    episode_{idx}.mp4\nmeta/ (info.json, tasks.jsonl)" as LF #16213e
+
+UI --> DRS : configure / control
+RS --> DRS : joint angles\nmotor load/temp
+CS --> DRS : RGB frames
+KS --> DRS : tool pose\n(X, Y, Z)
+
+DRS --> VW : save to
+DRS --> LW : save to
+VW --> VF : writes
+LW --> LF : writes
+
+@enduml

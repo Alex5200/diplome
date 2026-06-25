@@ -1,0 +1,97 @@
+@startuml web_architecture
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+skinparam packageBorderColor #1A5276
+skinparam packageFontColor #1A5276
+skinparam rectangleBorderColor #1A5276
+skinparam arrowColor #1A5276
+skinparam arrowThickness 2
+skinparam noteFontSize 9
+
+title "Архитектура Web-приложения (React + FastAPI)"
+
+' === Frontend Layer ===
+package "Frontend (React 19 + TypeScript)" as FE #E8F0FE {
+  class "App.tsx\n(главный компонент)" as APP
+  class "robotStore.ts\n(Zustand state)" as STORE
+
+  package "Components" as COMP {
+    class "ConnectionPanel\n(подключение)" as CONN
+    class "JointSliders\n(слайдеры суставов)" as JOINTS
+    class "PosePresets\n(пресеты поз)" as PRESETS
+    class "MotorConfigPanel\n(настройки)" as CFG
+    class "EmergencyStop\n(аварийная остановка)" as ESTOP
+    class "RobotScene\n(Three.js)" as SCENE
+    class "MotorTable\n(телеметрия)" as TELEM
+    class "BlocklyEditor\n(Blockly 12)" as BLOCKLY
+    class "EventLog\n(лог событий)" as LOG
+  }
+
+  package "Services" as FE_SVC {
+    class "api.ts\n(REST client)" as API
+    class "websocket.ts\n(WebSocket)" as WS_CLIENT
+  }
+
+  package "Utils" as FE_UTIL {
+    class "kinematics.ts\n(FK расчет)" as FK
+    class "constants.ts\n(DH параметры)" as DH
+  }
+}
+
+' === Backend Layer ===
+package "Backend (FastAPI + Python)" as BE #F0F4F8 {
+  class "main.py\n(точка входа)" as MAIN
+
+  package "API" as API_LAYER {
+    class "routes.py\n(REST endpoints)" as ROUTES
+    class "auth.py\n(JWT аутентификация)" as AUTH
+    class "websocket.py\n(WS телеметрия)" as WS_SRV
+  }
+
+  package "Controllers" as BE_CTRL {
+    class "MotorController\n(UART)" as MC
+    class "MockMotorController\n(тестовый)" as MOCK
+  }
+}
+
+' === Hardware ===
+class "Dynamixel Robot Arm\n(6 DOF)" as HW #FFEBEE
+
+' === Frontend arrows ===
+APP --> STORE
+APP --> COMP
+CONN --> STORE
+JOINTS --> STORE
+PRESETS --> STORE
+CFG --> STORE
+ESTOP --> STORE
+SCENE --> STORE
+TELEM --> STORE
+BLOCKLY --> STORE
+LOG --> STORE
+STORE --> API
+STORE --> WS_CLIENT
+SCENE --> FK
+FK --> DH
+
+' === Frontend to Backend ===
+API --> ROUTES
+WS_CLIENT --> WS_SRV
+
+' === Backend arrows ===
+MAIN --> ROUTES
+MAIN --> AUTH
+MAIN --> WS_SRV
+MAIN --> MC
+MAIN --> MOCK
+ROUTES --> MC
+ROUTES --> MOCK
+WS_SRV --> MC
+MC --> HW
+MOCK --> HW
+
+@enduml

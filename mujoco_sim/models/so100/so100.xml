@@ -1,0 +1,83 @@
+<mujoco model="SO-ARM100">
+  <compiler angle="radian" autolimits="true"/>
+
+  <option timestep="0.002" integrator="Euler"/>
+
+  <asset>
+    <mesh file="assets/Base.stl" name="Base"/>
+    <mesh file="assets/Base_Motor.stl" name="Base_Motor"/>
+    <mesh file="assets/Fixed_Jaw.stl" name="Fixed_Jaw"/>
+    <mesh file="assets/Fixed_Jaw_Motor.stl" name="Fixed_Jaw_Motor"/>
+    <mesh file="assets/Lower_Arm.stl" name="Lower_Arm"/>
+    <mesh file="assets/Lower_Arm_Motor.stl" name="Lower_Arm_Motor"/>
+    <mesh file="assets/Moving_Jaw.stl" name="Moving_Jaw"/>
+    <mesh file="assets/Rotation_Pitch.stl" name="Rotation_Pitch"/>
+    <mesh file="assets/Rotation_Pitch_Motor.stl" name="Rotation_Pitch_Motor"/>
+    <mesh file="assets/Upper_Arm.stl" name="Upper_Arm"/>
+    <mesh file="assets/Upper_Arm_Motor.stl" name="Upper_Arm_Motor"/>
+    <mesh file="assets/Wrist_Pitch_Roll.stl" name="Wrist_Pitch_Roll"/>
+    <mesh file="assets/Wrist_Pitch_Roll_Motor.stl" name="Wrist_Pitch_Roll_Motor"/>
+  </asset>
+
+  <worldbody>
+    <light diffuse=".5 .5 .5" pos="0 0 3" dir="0 0 -1"/>
+    <geom type="plane" conaffinity="1" rgba=".9 .9 .9 1" size="1 1 0.01"/>
+
+    <!-- Base -->
+    <body name="base" pos="0 0 0">
+      <freejoint name="base"/>
+      <geom type="mesh" mesh="Base" rgba="1 0.82 0.12 1" mass="1"/>
+      <geom type="mesh" mesh="Base_Motor" rgba="0.1 0.1 0.1 1" contype="0"/>
+
+      <!-- Shoulder Pan: rot 90° around X, axis Y -->
+      <body name="shoulder" pos="0 -0.0452 0.0165" quat="0.707 0.707 0 0">
+        <joint name="shoulder_pan" type="hinge" axis="0 0 1" range="-2 2" damping="0.5"/>
+        <geom type="mesh" mesh="Rotation_Pitch" rgba="1 0.82 0.12 1"/>
+        <geom type="mesh" mesh="Rotation_Pitch_Motor" rgba="0.1 0.1 0.1 1" contype="0"/>
+
+        <!-- Shoulder Lift: rot -1.8 rad around X -->
+        <body name="upper_arm" pos="0 0.1025 0.0306" quat="0.239 0.971 0 0">
+          <joint name="shoulder_lift" type="hinge" axis="1 0 0" range="0 3.5" damping="0.5"/>
+          <geom type="mesh" mesh="Upper_Arm" rgba="1 0.82 0.12 1"/>
+          <geom type="mesh" mesh="Upper_Arm_Motor" rgba="0.1 0.1 0.1 1" contype="0"/>
+
+          <!-- Elbow Flex: rot 90° around X -->
+          <body name="lower_arm" pos="0 0.11257 0.028" quat="0.707 0.707 0 0">
+            <joint name="elbow_flex" type="hinge" axis="0 1 0" range="-3.14158 0" damping="0.5"/>
+            <geom type="mesh" mesh="Lower_Arm" rgba="1 0.82 0.12 1"/>
+            <geom type="mesh" mesh="Lower_Arm_Motor" rgba="0.1 0.1 0.1 1" contype="0"/>
+
+            <!-- Wrist Flex: rot -1 rad around X -->
+            <body name="wrist" pos="0 0.0052 0.1349" quat="0.479 0.878 0 0">
+              <joint name="wrist_flex" type="hinge" axis="1 0 0" range="-2.5 1.2" damping="0.5"/>
+              <geom type="mesh" mesh="Wrist_Pitch_Roll" rgba="1 0.82 0.12 1"/>
+              <geom type="mesh" mesh="Wrist_Pitch_Roll_Motor" rgba="0.1 0.1 0.1 1" contype="0"/>
+
+              <!-- Wrist Roll: rot 90° around Y -->
+              <body name="gripper" pos="0 -0.0601 0" quat="0.707 0 0.707 0">
+                <joint name="wrist_roll" type="hinge" axis="0 0 1" range="-3.14158 3.14158" damping="0.5"/>
+                <geom type="mesh" mesh="Fixed_Jaw" rgba="1 0.82 0.12 1"/>
+                <geom type="mesh" mesh="Fixed_Jaw_Motor" rgba="0.1 0.1 0.1 1" contype="0"/>
+
+                <!-- Gripper: rot 180° around Y -->
+                <body name="jaw" pos="-0.0202 -0.0244 0" quat="0 0 1 0">
+                  <joint name="gripper" type="hinge" axis="0 1 0" range="-0.2 2.0" damping="0.5"/>
+                  <geom type="mesh" mesh="Moving_Jaw" rgba="1 0.82 0.12 1"/>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor joint="shoulder_pan" gear="1"/>
+    <motor joint="shoulder_lift" gear="1"/>
+    <motor joint="elbow_flex" gear="1"/>
+    <motor joint="wrist_flex" gear="1"/>
+    <motor joint="wrist_roll" gear="1"/>
+    <motor joint="gripper" gear="1"/>
+  </actuator>
+</mujoco>

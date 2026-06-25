@@ -1,0 +1,30 @@
+@startuml rl_inference_diagram
+!theme plain
+skinparam backgroundColor #1E2A38
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam packageBorderColor #7DD3C0
+skinparam packageFontColor #7DD3C0
+skinparam rectangleBorderColor #7DD3C0
+skinparam rectangleFontColor #CDD6F4
+skinparam arrowColor #7DD3C0
+skinparam arrowThickness 2
+
+rectangle "RLTraining\nService" as RL #2A3A4A
+rectangle "Inference\nService" as INF #2A3A4A
+rectangle "MuJoCo\n(Digital Twin)" as MJ #2A3A4A
+rectangle "Hugging Face\nHub" as HF #2A3A4A
+rectangle "CameraService" as CAM #2A3A4A
+rectangle "RobotService" as ROB #2A3A4A
+rectangle "GPU (CUDA)\nTF32 + cuDNN" as GPU #2A3A4A
+
+RL --> MJ : "step() 10000fps\nreset() render()"
+RL --> RL : "DQN / PPO\nGymnasium Env"
+MJ --> MJ : "sync_from_real()\nsync_to_real()"
+INF --> HF : "make_policy()\npretrained model"
+INF --> CAM : "get_frame()"
+INF --> ROB : "move_to_position()"
+INF --> GPU : "select_action()\n10 ms latency"
+@enduml

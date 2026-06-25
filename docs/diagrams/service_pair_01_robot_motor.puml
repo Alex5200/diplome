@@ -1,0 +1,26 @@
+@startuml robot_motor_diagram
+!theme plain
+skinparam backgroundColor #1E2A38
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam packageBorderColor #7DD3C0
+skinparam packageFontColor #7DD3C0
+skinparam rectangleBorderColor #7DD3C0
+skinparam rectangleFontColor #CDD6F4
+skinparam arrowColor #7DD3C0
+skinparam arrowThickness 2
+
+rectangle "RobotService" as ROBOT #2A3A4A
+rectangle "MotorController\n(UART/RS-485)" as MOTOR #2A3A4A
+rectangle "Dynamixel\nServos (6 DOF)" as DXL #2A3A4A
+rectangle "MotorMonitor\n(Polling 10Hz)" as MON #2A3A4A
+rectangle "EventBus\n(Pub-Sub)" as EVT #2A3A4A
+
+ROBOT --> MOTOR : "move_joint()\nget_state()\ntorque()"
+ROBOT --> EVT : "position_changed\nalarm"
+MOTOR --> DXL : "Protocol 2.0\n@ 1 Mbps"
+MON --> MOTOR : "read_motor_data()"
+MON --> EVT : "temperature\nload\nvoltage"
+@enduml

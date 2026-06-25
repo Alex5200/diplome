@@ -1,0 +1,28 @@
+@startuml kin_cam_diagram
+!theme plain
+skinparam backgroundColor #1E2A38
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam packageBorderColor #7DD3C0
+skinparam packageFontColor #7DD3C0
+skinparam rectangleBorderColor #7DD3C0
+skinparam rectangleFontColor #CDD6F4
+skinparam arrowColor #7DD3C0
+skinparam arrowThickness 2
+
+rectangle "KinematicsService" as KIN #2A3A4A
+rectangle "CameraService" as CAM #2A3A4A
+rectangle "RobotKinematics6DOF\n(DH params)" as FK #2A3A4A
+rectangle "InverseKinematics6DOF\n(DLS)" as IK #2A3A4A
+rectangle "OpenCV\n(MSMF/DShow)" as CV #2A3A4A
+rectangle "USB Camera\n(640x480 @30fps)" as USB #2A3A4A
+
+KIN --> FK : "forward()\n→ XYZ (мм)"
+KIN --> IK : "solve(x,y,z)\n→ angles[6]"
+KIN --> IK : "get_workspace()\nvalidate()"
+CAM --> CV : "get_frame()\nlist_cameras()"
+CV --> USB : "capture"
+CAM --> CAM : "async buffer\nthread-safe"
+@enduml

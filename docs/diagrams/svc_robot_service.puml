@@ -1,0 +1,25 @@
+@startuml robot_service_diagram
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam rectangleBorderColor #333333
+skinparam rectangleFontColor #000000
+skinparam rectangleFontSize 10
+skinparam arrowColor #333333
+skinparam arrowThickness 2
+skinparam packageBorderColor #333333
+skinparam packageFontColor #333333
+rectangle "RobotService" as MAIN #FFFFFF
+rectangle "MotorController" as MotorController_0 #FAFAFA
+MAIN --> MotorController_0 : "move_joint / get_state / scan"
+rectangle "EventBus" as EventBus_1 #FAFAFA
+MAIN --> EventBus_1 : "position_changed / alarm"
+rectangle "MotorMonitor" as MotorMonitor_2 #FAFAFA
+MAIN --> MotorMonitor_2 : "read_motor_data"
+legend right
+  Dynamixel Servos (6 DOF)
+end legend
+@enduml

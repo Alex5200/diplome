@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name="Shape 296"/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="297" name="Google Shape;297;p32"/>
+          <p:cNvSpPr txBox="1">
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="sldNum" idx="12"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="10080171" y="5698671"/>
+            <a:ext cx="1788000" cy="1047300"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="91425" tIns="45700" rIns="91425" bIns="45700" anchor="ctr" anchorCtr="0">
+            <a:noAutofit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buClr>
+                <a:srgbClr val="000000"/>
+              </a:buClr>
+              <a:buFont typeface="Arial"/>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:t>7</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="298" name="Google Shape;298;p32"/>
+          <p:cNvSpPr txBox="1">
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="title"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="838200" y="555171"/>
+            <a:ext cx="8877300" cy="1135500"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="91425" tIns="45700" rIns="91425" bIns="45700" anchor="ctr" anchorCtr="0">
+            <a:normAutofit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="3600" b="1" dirty="0"/>
+              <a:t>Интерфейс оператора</a:t>
+            </a:r>
+            <a:endParaRPr dirty="0"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:pic>
+        <p:nvPicPr>
+          <p:cNvPr id="400" name="Screenshot"/>
+          <p:cNvPicPr>
+            <a:picLocks noChangeAspect="1"/>
+          </p:cNvPicPr>
+          <p:nvPr/>
+        </p:nvPicPr>
+        <p:blipFill>
+          <a:blip r:embed="rId3" cstate="print"/>
+          <a:stretch>
+            <a:fillRect/>
+          </a:stretch>
+        </p:blipFill>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="6519831" y="1794024"/>
+            <a:ext cx="4904924" cy="3269949"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+      </p:pic>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="300" name="Google Shape;300;p32"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="-7651079" y="2100174"/>
+            <a:ext cx="5906700" cy="4112700"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="91425" tIns="91425" rIns="91425" bIns="91425" anchor="t" anchorCtr="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0"/>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Стек GUI: PyQt5, архитектура MVC. 9 панелей: </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Dashboard</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Jog</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>, 3D </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>View</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Registers</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Teach</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Program</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Setup</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>, XYZ, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Alarms</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>. Связь UI с сервисами через </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>EventBus</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t> (</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Pub-Sub</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>).</a:t>
+            </a:r>
+            <a:endParaRPr lang="ru-RU" dirty="0"/>
+          </a:p>
+          <a:p>
+            <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0"/>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>3D-визуализация: </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>OpenGL</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>, DH-параметры, 60 FPS. Синхронизация с RobotKinematics6DOF в реальном времени. Отображение TCP и промежуточных систем координат.</a:t>
+            </a:r>
+            <a:endParaRPr lang="ru-RU" dirty="0"/>
+          </a:p>
+          <a:p>
+            <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0"/>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Телеметрия: асинхронный </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>polling</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t> моторов 100 Гц (</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>std</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>::</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>thread</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>). Графики тока, температуры, напряжения. Экспорт логов в CSV и ROS2 </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>bag</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600" b="1" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>.</a:t>
+            </a:r>
+            <a:endParaRPr lang="ru-RU" dirty="0"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:pic>
+        <p:nvPicPr>
+          <p:cNvPr id="3" name="Рисунок 2">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{D32C972A-98BF-4E37-A65F-F8A1EC0D0DBF}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvPicPr>
+            <a:picLocks noChangeAspect="1"/>
+          </p:cNvPicPr>
+          <p:nvPr/>
+        </p:nvPicPr>
+        <p:blipFill>
+          <a:blip r:embed="rId4"/>
+          <a:stretch>
+            <a:fillRect/>
+          </a:stretch>
+        </p:blipFill>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="147781" y="1898336"/>
+            <a:ext cx="6372050" cy="3061327"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+      </p:pic>
+    </p:spTree>
+  </p:cSld>
+  <p:clrMapOvr>
+    <a:masterClrMapping/>
+  </p:clrMapOvr>
+</p:sld>

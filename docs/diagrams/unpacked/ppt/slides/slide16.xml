@@ -1,0 +1,923 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name="Shape 261"/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="262" name="Google Shape;262;p30"/>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="0" y="0"/>
+            <a:ext cx="12192000" cy="6858000"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:solidFill>
+            <a:srgbClr val="FFFFFF"/>
+          </a:solidFill>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="ctr" anchorCtr="0">
+            <a:noAutofit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buNone/>
+            </a:pPr>
+            <a:endParaRPr/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:pic>
+        <p:nvPicPr>
+          <p:cNvPr id="263" name="Google Shape;263;p30"/>
+          <p:cNvPicPr preferRelativeResize="0"/>
+          <p:nvPr/>
+        </p:nvPicPr>
+        <p:blipFill rotWithShape="1">
+          <a:blip r:embed="rId3">
+            <a:alphaModFix/>
+          </a:blip>
+          <a:srcRect l="10" r="10"/>
+          <a:stretch/>
+        </p:blipFill>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="10858500" y="190500"/>
+            <a:ext cx="1143000" cy="809700"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+      </p:pic>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="264" name="Google Shape;264;p30"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="838200" y="428625"/>
+            <a:ext cx="10001400" cy="571500"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="ctr" anchorCtr="0">
+            <a:noAutofit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="600"/>
+              </a:spcAft>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="2831" b="1">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>3. Искусственный интеллект: от классики к VLA-моделям</a:t>
+            </a:r>
+            <a:endParaRPr sz="2831" b="1">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="265" name="Google Shape;265;p30"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="838200" y="1328419"/>
+            <a:ext cx="10477500" cy="333300"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="ctr" anchorCtr="0">
+            <a:noAutofit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="600"/>
+              </a:spcAft>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1600">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+              </a:rPr>
+              <a:t>Цель этапа: Практическое освоение передовых алгоритмов автономной робототехники.</a:t>
+            </a:r>
+            <a:endParaRPr sz="1600">
+              <a:solidFill>
+                <a:srgbClr val="333333"/>
+              </a:solidFill>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="266" name="Google Shape;266;p30"/>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="838200" y="1776993"/>
+            <a:ext cx="3429000" cy="3619500"/>
+            <a:chOff x="0" y="0"/>
+            <a:chExt cx="3429000" cy="3619500"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="267" name="Google Shape;267;p30"/>
+            <p:cNvSpPr/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="0" y="0"/>
+              <a:ext cx="3429000" cy="3619500"/>
+            </a:xfrm>
+            <a:prstGeom prst="roundRect">
+              <a:avLst>
+                <a:gd name="adj" fmla="val 5555"/>
+              </a:avLst>
+            </a:prstGeom>
+            <a:solidFill>
+              <a:srgbClr val="CFE2F3"/>
+            </a:solidFill>
+            <a:ln w="9525" cap="flat" cmpd="sng">
+              <a:solidFill>
+                <a:srgbClr val="171616"/>
+              </a:solidFill>
+              <a:prstDash val="solid"/>
+              <a:round/>
+              <a:headEnd type="none" w="sm" len="sm"/>
+              <a:tailEnd type="none" w="sm" len="sm"/>
+            </a:ln>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="ctr" anchorCtr="0">
+              <a:noAutofit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buNone/>
+              </a:pPr>
+              <a:endParaRPr/>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="268" name="Google Shape;268;p30"/>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="190500" y="0"/>
+              <a:ext cx="3048000" cy="3429000"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+            <a:ln>
+              <a:noFill/>
+            </a:ln>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="ctr" anchorCtr="0">
+              <a:noAutofit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buNone/>
+              </a:pPr>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1900" b="1">
+                  <a:solidFill>
+                    <a:srgbClr val="000000"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t>1. Компьютерное зрение</a:t>
+              </a:r>
+              <a:endParaRPr sz="1900" b="1">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+              </a:endParaRPr>
+            </a:p>
+            <a:p>
+              <a:pPr marL="457200" lvl="0" indent="-320675" algn="l" rtl="0">
+                <a:spcBef>
+                  <a:spcPts val="600"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClr>
+                  <a:srgbClr val="333333"/>
+                </a:buClr>
+                <a:buSzPts val="1450"/>
+                <a:buFont typeface="DM Sans"/>
+                <a:buChar char="●"/>
+              </a:pPr>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1450" b="1">
+                  <a:solidFill>
+                    <a:srgbClr val="000000"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t>Детекция объектов:</a:t>
+              </a:r>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1450">
+                  <a:solidFill>
+                    <a:srgbClr val="333333"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t> HSV-сегментация и ArUco-маркеры.</a:t>
+              </a:r>
+              <a:endParaRPr sz="1450">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+              </a:endParaRPr>
+            </a:p>
+            <a:p>
+              <a:pPr marL="457200" lvl="0" indent="-320675" algn="l" rtl="0">
+                <a:spcBef>
+                  <a:spcPts val="400"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="400"/>
+                </a:spcAft>
+                <a:buClr>
+                  <a:srgbClr val="333333"/>
+                </a:buClr>
+                <a:buSzPts val="1450"/>
+                <a:buFont typeface="DM Sans"/>
+                <a:buChar char="●"/>
+              </a:pPr>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1450" b="1">
+                  <a:solidFill>
+                    <a:srgbClr val="000000"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t>Eye-to-Hand:</a:t>
+              </a:r>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1450">
+                  <a:solidFill>
+                    <a:srgbClr val="333333"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t> Трансформация 2D-координат камеры в 3D-пространство робота.</a:t>
+              </a:r>
+              <a:endParaRPr sz="1450">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="269" name="Google Shape;269;p30"/>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="4381500" y="1776993"/>
+            <a:ext cx="3429000" cy="3619500"/>
+            <a:chOff x="0" y="0"/>
+            <a:chExt cx="3429000" cy="3619500"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="270" name="Google Shape;270;p30"/>
+            <p:cNvSpPr/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="0" y="0"/>
+              <a:ext cx="3429000" cy="3619500"/>
+            </a:xfrm>
+            <a:prstGeom prst="roundRect">
+              <a:avLst>
+                <a:gd name="adj" fmla="val 5555"/>
+              </a:avLst>
+            </a:prstGeom>
+            <a:solidFill>
+              <a:srgbClr val="CFE2F3"/>
+            </a:solidFill>
+            <a:ln w="9525" cap="flat" cmpd="sng">
+              <a:solidFill>
+                <a:srgbClr val="171616"/>
+              </a:solidFill>
+              <a:prstDash val="solid"/>
+              <a:round/>
+              <a:headEnd type="none" w="sm" len="sm"/>
+              <a:tailEnd type="none" w="sm" len="sm"/>
+            </a:ln>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="ctr" anchorCtr="0">
+              <a:noAutofit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buNone/>
+              </a:pPr>
+              <a:endParaRPr sz="1600"/>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="271" name="Google Shape;271;p30"/>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="190500" y="0"/>
+              <a:ext cx="3048000" cy="3429000"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+            <a:ln>
+              <a:noFill/>
+            </a:ln>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="ctr" anchorCtr="0">
+              <a:noAutofit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buNone/>
+              </a:pPr>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1900" b="1">
+                  <a:solidFill>
+                    <a:srgbClr val="000000"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t>2. Обучение с подкреплением</a:t>
+              </a:r>
+              <a:endParaRPr sz="1900" b="1">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+              </a:endParaRPr>
+            </a:p>
+            <a:p>
+              <a:pPr marL="457200" lvl="0" indent="-320675" algn="l" rtl="0">
+                <a:spcBef>
+                  <a:spcPts val="600"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClr>
+                  <a:srgbClr val="333333"/>
+                </a:buClr>
+                <a:buSzPts val="1450"/>
+                <a:buFont typeface="DM Sans"/>
+                <a:buChar char="●"/>
+              </a:pPr>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1450" b="1">
+                  <a:solidFill>
+                    <a:srgbClr val="000000"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t>RL-агенты:</a:t>
+              </a:r>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1450">
+                  <a:solidFill>
+                    <a:srgbClr val="333333"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t> Тренировка PPO/SAC в среде MuJoCo.</a:t>
+              </a:r>
+              <a:endParaRPr sz="1450">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+              </a:endParaRPr>
+            </a:p>
+            <a:p>
+              <a:pPr marL="457200" lvl="0" indent="-320675" algn="l" rtl="0">
+                <a:spcBef>
+                  <a:spcPts val="400"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="400"/>
+                </a:spcAft>
+                <a:buClr>
+                  <a:srgbClr val="333333"/>
+                </a:buClr>
+                <a:buSzPts val="1450"/>
+                <a:buFont typeface="DM Sans"/>
+                <a:buChar char="●"/>
+              </a:pPr>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1450" b="1">
+                  <a:solidFill>
+                    <a:srgbClr val="000000"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t>HIL-SERL:</a:t>
+              </a:r>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1450">
+                  <a:solidFill>
+                    <a:srgbClr val="333333"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t> Human-in-the-Loop для коррекции ошибок и дообучения классификаторов наград.</a:t>
+              </a:r>
+              <a:endParaRPr sz="1450">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="272" name="Google Shape;272;p30"/>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="7924800" y="1776993"/>
+            <a:ext cx="3429000" cy="3619500"/>
+            <a:chOff x="0" y="0"/>
+            <a:chExt cx="3429000" cy="3619500"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="273" name="Google Shape;273;p30"/>
+            <p:cNvSpPr/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="0" y="0"/>
+              <a:ext cx="3429000" cy="3619500"/>
+            </a:xfrm>
+            <a:prstGeom prst="roundRect">
+              <a:avLst>
+                <a:gd name="adj" fmla="val 5555"/>
+              </a:avLst>
+            </a:prstGeom>
+            <a:solidFill>
+              <a:srgbClr val="CFE2F3"/>
+            </a:solidFill>
+            <a:ln w="9525" cap="flat" cmpd="sng">
+              <a:solidFill>
+                <a:srgbClr val="171616"/>
+              </a:solidFill>
+              <a:prstDash val="solid"/>
+              <a:round/>
+              <a:headEnd type="none" w="sm" len="sm"/>
+              <a:tailEnd type="none" w="sm" len="sm"/>
+            </a:ln>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="ctr" anchorCtr="0">
+              <a:noAutofit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buNone/>
+              </a:pPr>
+              <a:endParaRPr/>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="274" name="Google Shape;274;p30"/>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="190500" y="0"/>
+              <a:ext cx="3048000" cy="3429000"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+            <a:ln>
+              <a:noFill/>
+            </a:ln>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="ctr" anchorCtr="0">
+              <a:noAutofit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buNone/>
+              </a:pPr>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1900" b="1">
+                  <a:solidFill>
+                    <a:srgbClr val="000000"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t>3. Имитационное обучение</a:t>
+              </a:r>
+              <a:endParaRPr sz="1900" b="1">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+              </a:endParaRPr>
+            </a:p>
+            <a:p>
+              <a:pPr marL="457200" lvl="0" indent="-320675" algn="l" rtl="0">
+                <a:spcBef>
+                  <a:spcPts val="600"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buClr>
+                  <a:srgbClr val="333333"/>
+                </a:buClr>
+                <a:buSzPts val="1450"/>
+                <a:buFont typeface="DM Sans"/>
+                <a:buChar char="●"/>
+              </a:pPr>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1450" b="1">
+                  <a:solidFill>
+                    <a:srgbClr val="000000"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t>Behavioral Cloning:</a:t>
+              </a:r>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1450">
+                  <a:solidFill>
+                    <a:srgbClr val="333333"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t> Политики ACT и Diffusion на базе LeRobot.</a:t>
+              </a:r>
+              <a:endParaRPr sz="1450">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+              </a:endParaRPr>
+            </a:p>
+            <a:p>
+              <a:pPr marL="457200" lvl="0" indent="-320675" algn="l" rtl="0">
+                <a:spcBef>
+                  <a:spcPts val="400"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="400"/>
+                </a:spcAft>
+                <a:buClr>
+                  <a:srgbClr val="333333"/>
+                </a:buClr>
+                <a:buSzPts val="1450"/>
+                <a:buFont typeface="DM Sans"/>
+                <a:buChar char="●"/>
+              </a:pPr>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1450" b="1">
+                  <a:solidFill>
+                    <a:srgbClr val="000000"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t>VLA-модели:</a:t>
+              </a:r>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1450">
+                  <a:solidFill>
+                    <a:srgbClr val="333333"/>
+                  </a:solidFill>
+                </a:rPr>
+                <a:t> SmolVLA и π0. Управление через естественный язык и прямой видеопоток.</a:t>
+              </a:r>
+              <a:endParaRPr sz="1450">
+                <a:solidFill>
+                  <a:srgbClr val="333333"/>
+                </a:solidFill>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:grpSp>
+        <p:nvGrpSpPr>
+          <p:cNvPr id="275" name="Google Shape;275;p30"/>
+          <p:cNvGrpSpPr/>
+          <p:nvPr/>
+        </p:nvGrpSpPr>
+        <p:grpSpPr>
+          <a:xfrm>
+            <a:off x="838200" y="5620125"/>
+            <a:ext cx="8833207" cy="1047300"/>
+            <a:chOff x="0" y="238500"/>
+            <a:chExt cx="6972300" cy="1047300"/>
+          </a:xfrm>
+        </p:grpSpPr>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="276" name="Google Shape;276;p30"/>
+            <p:cNvSpPr/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="0" y="238500"/>
+              <a:ext cx="6972300" cy="1047300"/>
+            </a:xfrm>
+            <a:prstGeom prst="roundRect">
+              <a:avLst>
+                <a:gd name="adj" fmla="val 11111"/>
+              </a:avLst>
+            </a:prstGeom>
+            <a:solidFill>
+              <a:srgbClr val="F3F3F3"/>
+            </a:solidFill>
+            <a:ln w="9525" cap="flat" cmpd="sng">
+              <a:solidFill>
+                <a:srgbClr val="CCCCCC"/>
+              </a:solidFill>
+              <a:prstDash val="solid"/>
+              <a:round/>
+              <a:headEnd type="none" w="sm" len="sm"/>
+              <a:tailEnd type="none" w="sm" len="sm"/>
+            </a:ln>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="ctr" anchorCtr="0">
+              <a:noAutofit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="0"/>
+                </a:spcAft>
+                <a:buNone/>
+              </a:pPr>
+              <a:endParaRPr/>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+        <p:sp>
+          <p:nvSpPr>
+            <p:cNvPr id="277" name="Google Shape;277;p30"/>
+            <p:cNvSpPr txBox="1"/>
+            <p:nvPr/>
+          </p:nvSpPr>
+          <p:spPr>
+            <a:xfrm>
+              <a:off x="190500" y="354873"/>
+              <a:ext cx="6591300" cy="814800"/>
+            </a:xfrm>
+            <a:prstGeom prst="rect">
+              <a:avLst/>
+            </a:prstGeom>
+            <a:noFill/>
+            <a:ln>
+              <a:noFill/>
+            </a:ln>
+          </p:spPr>
+          <p:txBody>
+            <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="ctr" anchorCtr="0">
+              <a:noAutofit/>
+            </a:bodyPr>
+            <a:lstStyle/>
+            <a:p>
+              <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+                <a:spcBef>
+                  <a:spcPts val="0"/>
+                </a:spcBef>
+                <a:spcAft>
+                  <a:spcPts val="600"/>
+                </a:spcAft>
+                <a:buNone/>
+              </a:pPr>
+              <a:r>
+                <a:rPr lang="ru-RU" sz="1150">
+                  <a:solidFill>
+                    <a:srgbClr val="444444"/>
+                  </a:solidFill>
+                  <a:latin typeface="Arial"/>
+                  <a:ea typeface="Arial"/>
+                  <a:cs typeface="Arial"/>
+                  <a:sym typeface="Arial"/>
+                </a:rPr>
+                <a:t>«Система совместима с библиотекой LeRobot от Hugging Face. Это позволяет студентам перейти от классического OpenCV к современному имитационному обучению и RL, разворачивая передовые VLA-модели, где робот понимает текстовые команды».</a:t>
+              </a:r>
+              <a:endParaRPr sz="1150">
+                <a:solidFill>
+                  <a:srgbClr val="444444"/>
+                </a:solidFill>
+                <a:latin typeface="Arial"/>
+                <a:ea typeface="Arial"/>
+                <a:cs typeface="Arial"/>
+                <a:sym typeface="Arial"/>
+              </a:endParaRPr>
+            </a:p>
+          </p:txBody>
+        </p:sp>
+      </p:grpSp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="278" name="Google Shape;278;p30"/>
+          <p:cNvSpPr txBox="1">
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="sldNum" idx="4294967295"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="10080171" y="5698671"/>
+            <a:ext cx="1788000" cy="1047300"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="91425" tIns="45700" rIns="91425" bIns="45700" anchor="ctr" anchorCtr="0">
+            <a:noAutofit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" lvl="0" indent="0" algn="l" rtl="0">
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buClr>
+                <a:srgbClr val="000000"/>
+              </a:buClr>
+              <a:buFont typeface="Arial"/>
+              <a:buNone/>
+            </a:pPr>
+            <a:fld id="{00000000-1234-1234-1234-123412341234}" type="slidenum">
+              <a:rPr lang="ru-RU"/>
+              <a:t>16</a:t>
+            </a:fld>
+            <a:endParaRPr/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+    <p:extLst>
+      <p:ext uri="{BB962C8B-B14F-4D97-AF65-F5344CB8AC3E}">
+        <p14:creationId xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" val="3159752067"/>
+      </p:ext>
+    </p:extLst>
+  </p:cSld>
+  <p:clrMapOvr>
+    <a:masterClrMapping/>
+  </p:clrMapOvr>
+</p:sld>

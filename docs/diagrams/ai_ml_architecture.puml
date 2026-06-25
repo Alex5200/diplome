@@ -1,0 +1,70 @@
+@startuml ai_ml_architecture
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+skinparam packageBorderColor #4A148C
+skinparam packageFontColor #4A148C
+skinparam rectangleBorderColor #4A148C
+skinparam arrowColor #4A148C
+skinparam arrowThickness 2
+skinparam noteFontSize 9
+
+title "Архитектура AI / ML подсистемы"
+
+' === Vision & Camera ===
+package "Vision Pipeline" as VIS #F3E5F5 {
+  class "CameraService\nextends BaseService" as CAM
+  class "MLTrackingService\nextends BaseService" as ML_TRK
+}
+
+' === AI Provider (Strategy Pattern) ===
+package "AI Provider (Strategy Pattern)" as AI #E8EAF6 {
+  class "AIProvider\n(Фасад)" as FACADE
+  class "OllamaBackend\n(локальный Qwen3 VL)" as OLLAMA
+  class "OpenAICompatibleBackend\n(LM Studio / vLLM)" as OAI
+  class "AIConfig" as CFG
+}
+
+' === AI Services ===
+package "AI Services" as SVC #F0F4F8 {
+  class "AIRobotControllerService\nextends BaseService" as AI_ROBOT
+  class "VisionTrackerService\nextends BaseService" as VIS_TRK
+}
+
+' === RL Subsystem ===
+package "Reinforcement Learning" as RL #FFF3E0 {
+  class "RLTrainingService\nextends BaseService" as RL_SVC
+  class "RobotArmEnv\n(Gymnasium)" as ENV
+  class "DQNAgent\n(Deep Q-Network)" as DQN
+  class "PPOAgent\n(Proximal Policy Opt.)" as PPO
+  class "Curriculum Learning" as CURR
+}
+
+' === Robot Interface ===
+package "Robot" as ROBOT #FFEBEE {
+  class "RobotService\n(API управления)" as ROBOT_SVC
+  class "MuJoCo Sim\n(Digital Twin)" as MJC
+}
+
+' === Data Flow ===
+CAM --> ML_TRK : raw frames
+CAM --> FACADE : frames for VLM
+AI_ROBOT --> FACADE : chat(prompt, images)
+AI_ROBOT --> CAM : get_frame()
+AI_ROBOT --> ROBOT_SVC : move_joint()
+VIS_TRK --> FACADE : detect_object()
+VIS_TRK --> CAM : get_frame()
+VIS_TRK --> ROBOT_SVC : PID correction
+RL_SVC --> ENV : train(agent)
+RL_SVC --> CURR : adjust_difficulty
+ENV --> ROBOT_SVC : step() / reset()
+ENV --> MJC : simulation step
+DQN --> ENV : learn()
+PPO --> ENV : learn()
+FACADE --> OLLAMA : HTTP /api/chat
+FACADE --> OAI : HTTP /v1/chat/completions
+
+@enduml

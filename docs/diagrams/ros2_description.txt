@@ -1,0 +1,111 @@
+=== ОПИСАНИЕ МЕТОДОВ И КЛАССОВ ===
+
+  --- ROS2 Humble Nodes ---
+  robot_node_v2.py:
+    __init__(node_name='robot_control') - создание ноды
+    publish_joint_states() - публикация /robot/joint_states (50 Hz)
+      msg: sensor_msgs/JointState {name[6], position[6], velocity[6], effort[6]}
+    subscribe_joint_commands() - подписка на /robot/joint_cmd
+      callback: парсит FollowJointTrajectory -> write_hardware()
+    read_hardware() -> JointState[] - чтение через RobotHWInterface
+    write_hardware(commands: list[float]) - запись через RobotHWInterface
+    spin() - rclpy.spin()
+
+  monitor_node_v2.py:
+    __init__(node_name='robot_monitor')
+    publish_diagnostics() - публикация /robot/diagnostics
+      temp, voltage, load для каждого мотора
+    check_temperature() - проверка превышения 70 C
+    check_voltage() - проверка напряжения (9-12V)
+
+  ik_service_node.py:
+    __init__(node_name='ik_service')
+    handle_ik_request(req) -> resp
+      REQ: {x, y, z} -> RESP: {angles[6], error_mm}
+    solve_ik(x, y, z) -> JointState[] - через InverseKinematics6DOF
+
+  bag_recorder.py:
+    record_topics(topics: list[str]) - выбор топиков для записи
+    start_recording() - rosbag record
+    stop_recording() - rosbag stop
+    playback(bag_file) - rosbag play
+
+  ros2_control_bridge.py:
+    on_activate(state) - активация hardware interface
+    on_deactivate(state) - деактивация
+    on_write(state, commands) - запись команд в моторы
+    read(state) -> JointState[] - чтение состояния
+    configure(state) - конфигурация через URDF
+
+  --- ROS2 Topics / Services ---
+  /robot/joint_states (sensor_msgs/JointState):
+    name: string[6] - имена суставов
+    position: float64[6] - текущие позиции (рад)
+    velocity: float64[6] - скорости
+    effort: float64[6] - усилия (нагрузка)
+
+  /robot/joint_cmd (FollowJointTrajectory):
+    joint_names: string[6]
+    points: JointTrajectoryPoint[] - {positions[6], velocities[6]}
+
+  /robot/diagnostics (diagnostics_msgs):
+    status: DiagnosticStatus[] - {name, level, message}
+
+  /robot/ik_service (srv/IKSolve):
+    Request: float64 x, y, z
+    Response: float64[6] angles, float64 error_mm
+
+  --- Hardware Abstraction ---
+  RobotHWInterface (Singleton):
+    -_instance: RobotHWInterface - единственный экземпляр
+    -_controller: MotorController - доступ к UART
+    get_instance() -> RobotHWInterface - получение экземпляра
+    read() -> list[JointState] - чтение позиций всех моторов
+    write(commands: list[float]) - запись позиций
+    get_joint_names() -> list[str] - имена суставов
+    connect(port: str) - открытие порта
+    disconnect() - закрытие порта
+    Общий доступ: robot_node_v2, monitor_node_v2, ros2_control_bridge
+
+  ST3215 Driver (Serial UART):
+    open(port, baud) - serial.Serial(port, 1000000)
+    close() - serial.close()
+    send(cmd: bytes) - отправка пакета
+    receive() -> bytes - прием ответа
+    packet_encode(id, cmd, data) -> bytes - формирование пакета
+    packet_decode(data) -> dict - парсинг ответа
+
+  --- Simulation ---
+  Gazebo:
+    load_world(urdf_path) - загрузка URDF модели
+    step_simulation() - шаг физики
+    get_joint_states() - получение состояний суставов
+    apply_joint_commands(commands) - применение команд
+
+  robot_gazebo.urdf.xacro:
+    <link>: base_link, link_1..link_6
+    <joint>: joint_1..joint_6 (revolute)
+    <transmission>: 6 transmission blocks
+    <ros2_control>: hardware interface config
+
+  --- External Systems ---
+  Desktop App (MotorController):
+    Прямой доступ к UART (минуя ROS2 DDS)
+    Используется для критического пути "зрение -> мотор"
+    Задержка: 3-15 ms (vs 50-200 ms через DDS)
+
+  Docker Container (osrf/ros:humble):
+    Python 3.10 + rclpy
+    Монтирование ./ros2/ как source
+
+  === АББРЕВИАТУРЫ ===
+  DDS = Data Distribution Service
+  HW = Hardware
+  IK = Inverse Kinematics
+  ROS2 = Robot Operating System 2
+  SDK = Software Development Kit
+  SRV = Service (ROS2)
+  UART = Universal Asynchronous Receiver/Transmitter
+  URDF = Unified Robot Description Format
+  xacro = XML Macros (URDF генератор)
+  rclpy = ROS Client Library for Python

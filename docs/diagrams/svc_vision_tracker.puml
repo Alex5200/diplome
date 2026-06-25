@@ -1,0 +1,25 @@
+@startuml vision_tracker_diagram
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam rectangleBorderColor #333333
+skinparam rectangleFontColor #000000
+skinparam rectangleFontSize 10
+skinparam arrowColor #333333
+skinparam arrowThickness 2
+skinparam packageBorderColor #333333
+skinparam packageFontColor #333333
+rectangle "VisionTracker Service" as MAIN #FFFFFF
+rectangle "AIProvider" as AIProvider_0 #FAFAFA
+MAIN --> AIProvider_0 : "detect -> bounding box"
+rectangle "CameraService" as CameraService_1 #FAFAFA
+MAIN --> CameraService_1 : "get_frame()"
+rectangle "RobotService" as RobotService_2 #FAFAFA
+MAIN --> RobotService_2 : "PID -> move_joint()"
+legend right
+  PID Kp=0.5 Ki=0.01 Kd=0.1
+end legend
+@enduml

@@ -14,6 +14,8 @@ GUI компоненты приложения на основе Tkinter:
 
 from app.views.block_programming import BlockPalette, ProgramCanvas
 from app.views.bottom_monitor_panel import BottomMonitorPanel
+from app.views.dataset_panel import DatasetPanel
+from app.views.inference_panel import InferencePanel
 from app.views.kinematics_3d_panel import Kinematics3DPanel
 from app.views.main_window import RobotControlGUI
 from app.views.manual_control_panel import ManualControlPanel
@@ -22,6 +24,8 @@ from app.views.motor_mapping_panel import MotorMappingPanel
 __all__ = [
     "BlockPalette",
     "BottomMonitorPanel",
+    "DatasetPanel",
+    "InferencePanel",
     "Kinematics3DPanel",
     "ManualControlPanel",
     "MotorMappingPanel",

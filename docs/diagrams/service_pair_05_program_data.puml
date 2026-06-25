@@ -1,0 +1,32 @@
+@startuml program_dataset_diagram
+!theme plain
+skinparam backgroundColor #1E2A38
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam packageBorderColor #7DD3C0
+skinparam packageFontColor #7DD3C0
+skinparam rectangleBorderColor #7DD3C0
+skinparam rectangleFontColor #CDD6F4
+skinparam arrowColor #7DD3C0
+skinparam arrowThickness 2
+
+rectangle "ProgramService" as PROG #2A3A4A
+rectangle "DatasetRecorder\nService" as DATA #2A3A4A
+rectangle "ProgramExecutor\n(async)" as EXEC #2A3A4A
+rectangle "MotorController" as MOT #2A3A4A
+rectangle "VAMOS Writer\n(PNG+JSON)" as VAM #2A3A4A
+rectangle "LeRobot Writer\n(MP4+JSON)" as LR #2A3A4A
+rectangle "CameraService" as CAM #2A3A4A
+rectangle "RobotService" as ROB #2A3A4A
+
+PROG --> EXEC : "load_program()\nexecute()"
+EXEC --> MOT : "move_joint()\nwait()"
+EXEC --> EXEC : "loops/conditions\nsubroutines"
+DATA --> ROB : "joint_angles[6]\nmotor_load[6]"
+DATA --> CAM : "RGB frame"
+DATA --> VAM : "episode_{idx}/"
+DATA --> LR : "episode_{idx}.json\n+ MP4"
+DATA --> DATA : "record loop\n30 FPS"
+@enduml

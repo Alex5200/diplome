@@ -20,6 +20,23 @@ from app.style import config_styles, setup_ctk
 
 setup_ctk()
 
+# ── Patch CTkScrollableFrame for CustomTkinter 5.2.2 mouse-wheel crash ────
+import customtkinter as ctk
+
+_orig_check = ctk.CTkScrollableFrame.check_if_master_is_canvas
+
+
+def _patched_check(self, widget):
+    if isinstance(widget, str):
+        return False
+    try:
+        return _orig_check(self, widget)
+    except AttributeError:
+        return False
+
+
+ctk.CTkScrollableFrame.check_if_master_is_canvas = _patched_check
+
 # ── Now safe to import the rest ─────────────────────────────────────────────
 from app.views.main_window import RobotControlGUI
 

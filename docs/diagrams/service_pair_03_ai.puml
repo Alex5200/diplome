@@ -1,0 +1,28 @@
+@startuml ai_provider_controller_diagram
+!theme plain
+skinparam backgroundColor #1E2A38
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam packageBorderColor #7DD3C0
+skinparam packageFontColor #7DD3C0
+skinparam rectangleBorderColor #7DD3C0
+skinparam rectangleFontColor #CDD6F4
+skinparam arrowColor #7DD3C0
+skinparam arrowThickness 2
+
+rectangle "AIProvider\n(Strategy)" as AI #2A3A4A
+rectangle "AIRobotController\nService" as CTRL #2A3A4A
+rectangle "OllamaBackend" as OLL #2A3A4A
+rectangle "OpenAICompatible\nBackend" as OAI #2A3A4A
+rectangle "CameraService" as CAM #2A3A4A
+rectangle "RobotService" as ROB #2A3A4A
+
+AI --> OLL : "chat(images+prompt)\n/api/chat"
+AI --> OAI : "chat(images+prompt)\n/v1/chat/completions"
+CTRL --> AI : "process_frame()"
+CTRL --> CAM : "get_frame()"
+CTRL --> ROB : "move_joint()"
+CTRL --> CTRL : "AUTO / STEP / WATCH\n2-5 Hz"
+@enduml

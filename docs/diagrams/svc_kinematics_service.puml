@@ -1,0 +1,22 @@
+@startuml kinematics_service_diagram
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam rectangleBorderColor #333333
+skinparam rectangleFontColor #000000
+skinparam rectangleFontSize 10
+skinparam arrowColor #333333
+skinparam arrowThickness 2
+skinparam packageBorderColor #333333
+skinparam packageFontColor #333333
+rectangle "KinematicsService" as MAIN #FFFFFF
+rectangle "RobotKinematics6DOF" as RobotKinematics6DOF_0 #FAFAFA
+MAIN --> RobotKinematics6DOF_0 : "FK: angles -> pose (DH)"
+rectangle "InverseKinematics6DOF" as InverseKinematics6DOF_1 #FAFAFA
+MAIN --> InverseKinematics6DOF_1 : "IK: xyz -> angles (DLS)"
+rectangle "3D View Panel" as 3D_View_Panel_2 #FAFAFA
+MAIN --> 3D_View_Panel_2 : "visualization"
+@enduml

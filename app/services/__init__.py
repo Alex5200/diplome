@@ -10,6 +10,8 @@ Services Module - Бизнес-логика приложения
 """
 
 from .ai_provider import AIProvider
+from .dataset_recorder_service import DatasetRecorderService
+from .inference_service import InferenceService
 from .kinematics_service import KinematicsService
 from .program_service import ProgramService
 from .robot_service import RobotService
@@ -17,6 +19,8 @@ from .vision_tracker_service import VisionTrackerService
 
 __all__ = [
     "AIProvider",
+    "DatasetRecorderService",
+    "InferenceService",
     "KinematicsService",
     "ProgramService",
     "RobotService",

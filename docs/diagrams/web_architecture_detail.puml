@@ -1,0 +1,62 @@
+@startuml
+!theme plain
+skinparam BackgroundColor #1a1a2e
+skinparam ComponentBackgroundColor #16213e
+skinparam ComponentBorderColor #0f3460
+skinparam RectangleBackgroundColor #16213e
+skinparam RectangleBorderColor #0f3460
+skinparam ArrowColor #e94560
+skinparam PackageBackgroundColor #1a1a2e
+skinparam PackageBorderColor #0f3460
+skinparam defaultTextAlignment center
+skinparam component { FontSize 11 FontColor #eee BorderThickness 1 }
+skinparam rectangle { FontSize 10 FontColor #ddd BorderThickness 1 }
+skinparam node { FontSize 11 FontColor #7dd3c0 BorderThickness 1 }
+
+node "web/api" as API {
+  rectangle "routes.py\n(REST: /api/*)" as RT #16213e
+  rectangle "auth.py\n(JWT login)" as ATH #16213e
+  rectangle "websocket.py\n(WS /ws)" as WS #16213e
+}
+
+node "web/core" as WC {
+  rectangle "core (shared)" as WCORE #16213e
+}
+
+node "web/config" as WCFG {
+  rectangle "config" as WCONF #16213e
+}
+
+node "web/frontend" as FE {
+  rectangle "React 19 + TS\nVite" as REACT #16213e
+  rectangle "Three.js 3D" as THREE #16213e
+  rectangle "Blockly Editor" as BLK #16213e
+}
+
+node "web/static" as STAT {
+  rectangle "dist/ (built)" as DIST #16213e
+}
+
+node "web/tests" as WT {
+  rectangle "conftest.py" as WTF #16213e
+}
+
+node "FastAPI App (main.py)" as FAST {
+}
+
+node "Desktop App (app/)" as DESKTOP #16213e {
+}
+
+FAST --> API : mounts
+API --> ATH : authenticates
+API --> RT : dispatches
+WS --> API : real-time
+ATH --> DESKTOP : JWT shared
+FAST --> WC : core logic
+FAST --> WCFG : config
+FE --> API : fetch/WS
+FE --> THREE : 3D viewer
+FE --> BLK : blocks
+FE --> STAT : built assets
+
+@enduml

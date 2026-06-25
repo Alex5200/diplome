@@ -1,0 +1,154 @@
+=== ОПИСАНИЕ МЕТОДОВ И КЛАССОВ ===
+
+  --- Vision Pipeline ---
+  CameraService (extends BaseService):
+    start_capture(source=0) - запуск захвата (OpenCV MSMF/DShow)
+    stop_capture() - остановка захвата
+    get_frame() -> np.ndarray (BGR) - получение кадра
+    list_cameras() -> list[int] - список доступных камер
+    set_resolution(w, h) - установка разрешения
+    set_fps(fps) - установка FPS (по умолч. 30)
+
+  MLTrackingService (extends BaseService):
+    load_model(path) - загрузка YOLOv8 или PyTorch модели
+    detect(frame) -> list[Detection]
+      Detection: {bbox: [x1,y1,x2,y2], class: str, confidence: float}
+    track(frame) -> list[Track]
+      Track: {id: int, bbox: [x1,y1,x2,y2], class: str}
+
+  --- AI Provider (Strategy Pattern) ---
+  AIProvider (Фасад):
+    chat(prompt: str, images: list[np.ndarray] | None) -> AIResponse
+      - отправка текстового/VLM запроса
+      - возвращает AIResponse {success, content, json_data, latency, tokens_used}
+    chat_json(prompt, images) -> AIResponse
+      - запрос с автопарсингом JSON из ответа
+      - для structured output (детекция, классификация)
+    is_available() -> bool - проверка сервера
+    list_models() -> list[str] - список доступных моделей
+    switch_provider(config: AIConfig) - смена бэкенда
+    switch_model(model: str) - смена модели
+
+  OllamaBackend:
+    chat(prompt, images) -> AIResponse
+      POST http://localhost:11434/api/chat
+      images: base64 JPEG
+    is_available() -> bool
+      GET http://localhost:11434/api/tags
+
+  OpenAICompatibleBackend:
+    chat(prompt, images) -> AIResponse
+      POST /v1/chat/completions (OpenAI format)
+      images: data:image/jpeg;base64,...
+    Поддержка: LM Studio, vLLM, LocalAI, OpenAI
+
+  AIConfig:
+    provider_type: ollama | lm_studio | openai | openai_compatible
+    base_url: str - URL сервера
+    model: str - имя модели (qwen2.5-vl, gpt-4o, ...)
+    api_key: str - для OpenAI/LM Studio
+    temperature: float (0.0-1.0, default 0.1)
+    max_tokens: int (default 300)
+    timeout: int (default 30 sec)
+
+  --- AI Services ---
+  AIRobotControllerService (extends BaseService):
+    run_control_loop() - запуск цикла управления
+      Цикл (2-5 Hz):
+      1. get_frame() из CameraService
+      2. chat(prompt, [frame]) - "Which joint to move?"
+      3. Парсинг JSON ответа: {joint: int, angle: float}
+      4. move_joint(joint, angle) через RobotService
+      5. Повтор
+    stop_control_loop() - остановка цикла
+    process_frame(frame) - однократный анализ кадра
+    execute_action(command: dict) - выполнение {joint, angle}
+
+  VisionTrackerService (extends BaseService):
+    start_tracking(target: str) - начало трекинга
+      - chat_json("Find {target}") -> {found, bbox, cx, cy}
+    stop_tracking() - остановка
+    compute_pid_correction() -> float
+      PID: error = (cx - frame_center_x)
+      output = Kp*e + Ki*integral(e) + Kd*derivative(e)
+      Kp=0.5, Ki=0.01, Kd=0.1
+
+  --- Reinforcement Learning ---
+  RLTrainingService (extends BaseService):
+    train(agent_type: str, timesteps: int)
+      - Создает среду RobotArmEnv
+      - Обучает DQN или PPO агента
+      - Параметры: learning_rate=3e-4, gamma=0.99
+    evaluate(episodes: int) -> dict
+      - {mean_reward, success_rate, mean_steps}
+    save_model(path) / load_model(path)
+    set_curriculum_level(level: int)
+      - Уровень 1: reach fixed point
+      - Уровень 2: reach random point
+      - Уровень 3: pick and place
+
+  RobotArmEnv (Gymnasium.Env):
+    action_space: Box(low=-1, high=1, shape=(7,))
+      [J1_delta, J2_delta, ..., J6_delta, gripper]
+    observation_space: Box(low=-inf, high=inf, shape=(18,))
+      [sin(J1),cos(J1), sin(J2),cos(J2), ...,  sin(J6),cos(J6),
+       target_x, target_y, target_z,
+       ee_x, ee_y, ee_z]
+    step(action) -> (obs, reward, done, info)
+      - Применяет action к симуляции
+      - Reward: -0.1*dist_to_target + 100.0*(dist<5cm) -10.0*(limit_violation)
+      - done: True если target reached или timeout (100 steps)
+    reset(seed) -> obs - сброс с random target
+    render() -> np.ndarray - визуализация
+
+  DQNAgent:
+    learn(total_timesteps) - обучение DQN
+      Network: MLP [256, 256], replay buffer 100k
+      Exploration: epsilon-greedy (1.0 -> 0.01)
+    predict(obs) -> action - выбор действия
+    save(path) / load(path)
+
+  PPOAgent:
+    learn(total_timesteps) - обучение PPO
+      Network: MLP [512, 256]
+      clip_ratio=0.2, lr=3e-4
+    predict(obs) -> action
+    save(path) / load(path)
+
+  Curriculum Learning:
+    get_current_level() -> int
+    adjust_difficulty(reward_history) - повышение уровня
+    get_target() -> (x,y,z) - генерация цели
+
+  --- Robot Interface ---
+  RobotService:
+    move_joint(idx, angle) -> bool - движение сустава
+    move_joints(angles[]) -> bool - синхронное движение
+    get_joint_angles() -> list[float] - текущие углы
+    emergency_stop() - остановка
+
+  MuJoCo Sim (Digital Twin):
+    step() -> obs - mj_step()
+    reset() -> obs - mj_reset()
+    render() -> np.ndarray - рендер (RGB)
+    get_state() -> JointState - текущее состояние
+    set_state(joints) - установка состояния
+    sync_from_real(joints) - копия с реального робота
+    sync_to_real() -> joints - применение к реальному
+    FPS: до 10 000 (sim) vs реальное время
+
+  === АББРЕВИАТУРЫ ===
+  VLM = Vision Language Model (зрение + язык)
+  DLS = Damped Least Squares (демпфированные наименьшие квадраты)
+  PID = Proportional-Integral-Derivative (регулятор)
+  DQN = Deep Q-Network (глубокое Q-обучение)
+  PPO = Proximal Policy Optimization (оптимизация политики)
+  RL = Reinforcement Learning (обучение с подкреплением)
+  ML = Machine Learning
+  AI = Artificial Intelligence
+  YOLO = You Only Look Once (детекция)
+  CNN = Convolutional Neural Network
+  MLP = Multilayer Perceptron
+  Gym = OpenAI Gymnasium (среда RL)
+  BGR = Blue-Green-Red (формат OpenCV)
+  FPS = Frames Per Second

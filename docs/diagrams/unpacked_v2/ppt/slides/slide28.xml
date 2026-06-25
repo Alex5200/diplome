@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:bg>
+      <p:bgPr>
+        <a:solidFill>
+          <a:srgbClr val="1A1A2E"/>
+        </a:solidFill>
+        <a:effectLst/>
+      </p:bgPr>
+    </p:bg>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name=""/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="2" name="TextBox 1"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="457200" y="274320"/>
+            <a:ext cx="8229600" cy="548640"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="l">
+              <a:defRPr sz="2400" b="1">
+                <a:solidFill>
+                  <a:srgbClr val="FFFFFF"/>
+                </a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:r>
+              <a:t>СБОР ДАННЫХ — VAMOS + LEROBOT</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="3" name="TextBox 2"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="457200" y="1005840"/>
+            <a:ext cx="8229600" cy="5029200"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="l">
+              <a:defRPr sz="1000" b="0">
+                <a:solidFill>
+                  <a:srgbClr val="AAAAAA"/>
+                </a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:r>
+              <a:t>Вкладка Dataset (12-я вкладка интерфейса)</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  DatasetPanel → DatasetRecorderService → два формата параллельно</a:t>
+            </a:r>
+            <a:br/>
+            <a:br/>
+            <a:r>
+              <a:t>Элементы управления:</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  • Чекбоксы: VAMOS ☑ / LeRobot ☑ — выбор формата</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  • FPS: 5-60 кадров/с (спинбокс)</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  • Task: текстовое имя задачи (pick_and_place, reach_target, push_object, ...)</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  • Command: естественно-языковая команда (&quot;Pick up the red object&quot;)</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  • Preset Tasks: 6 быстрых кнопок (Pick &amp; Place, Reach Target, Push Object, Draw Circle, Grasp &amp; Hold, Screw Insertion)</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  • START RECORDING → STOP (красная), PAUSE/RESUME</a:t>
+            </a:r>
+            <a:br/>
+            <a:br/>
+            <a:r>
+              <a:t>VAMOS (custom format):</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  datasets/vamos/episode_{idx}/</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>    ├── metadata.json — индекс эпизода, задача, FPS, длительность, joint_names</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>    ├── command.txt — текст команды (если задана)</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>    ├── states.json — per-frame: timestamp, joint_angles[6], tool_pose[3], motor_load[6], motor_temp[6]</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>    └── frames/ — кадры frame_{:06d}.png</a:t>
+            </a:r>
+            <a:br/>
+            <a:br/>
+            <a:r>
+              <a:t>LeRobot (v2.1 compatible):</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  datasets/lerobot/</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>    ├── meta/info.json — FPS, robot_type, features schema (observation.state, action, images)</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>    ├── meta/tasks.jsonl — задача на каждый эпизод</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>    ├── episodes/episode_{idx}.json — per-step: obs.state, action, timestamp, next.done</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>    └── videos/observation.images.main/episode_{idx}.mp4 — H.264 видео всех кадров</a:t>
+            </a:r>
+            <a:br/>
+            <a:br/>
+            <a:r>
+              <a:t>Поток кадра (30 FPS по умолчанию):</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  RobotService._read_joint_angles() + _read_tool_pose() + _read_motor_data() + CameraService.get_frame() → state dict + RGB frame → буфер → VAMOS (PNG+JSON) + LeRobot (MP4+JSON)</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+  <p:clrMapOvr>
+    <a:masterClrMapping/>
+  </p:clrMapOvr>
+</p:sld>

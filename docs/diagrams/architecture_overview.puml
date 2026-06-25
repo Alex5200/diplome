@@ -1,0 +1,107 @@
+@startuml architecture_overview
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+skinparam packageBorderColor #2E4057
+skinparam packageFontColor #2E4057
+skinparam rectangleBorderColor #2E4057
+skinparam arrowColor #2E4057
+skinparam arrowThickness 2
+skinparam noteFontSize 9
+
+title "Общая архитектура системы управления 6-осевым роботом-манипулятором"
+
+' === User Interfaces Layer ===
+package "Пользовательские интерфейсы" as UI #F0F4F8 {
+  class "Desktop GUI\n(CustomTkinter)" as DESKTOP
+  class "Web UI\n(React + Three.js)" as WEB
+  class "CLI\nROS2 терминал" as CLI
+}
+
+' === Application Layer ===
+package "Прикладной слой (Application Services)" as APP #E8F0FE {
+  class "RobotService" as ROBOT_SVC
+  class "KinematicsService" as KIN_SVC
+  class "ProgramService" as PROG_SVC
+  class "AIRobotControllerService" as AI_SVC
+  class "VisionTrackerService" as VIS_SVC
+  class "RLTrainingService" as RL_SVC
+  class "CameraService" as CAM_SVC
+  class "AIProvider" as AI_PROV
+  class "MLTrackingService" as ML_SVC
+}
+
+' === Core Layer ===
+package "Ядро (Core Modules)" as CORE #F3E8FF {
+  class "EventBus\n(Pub-Sub Singleton)" as EVT
+  class "Container\n(DI)" as DI
+  class "BaseService\n(Template Method)" as BSVC
+  class "RobotKinematics6DOF" as KIN
+  class "InverseKinematics6DOF" as IK
+  class "IMotorController\n(Interface)" as INTF
+  class "MotorData / JointState\n(Models)" as MODELS
+}
+
+' === Communication Layer ===
+package "Коммуникационный слой" as COMM #FFF3E0 {
+  class "MotorController\n(UART / RS-485)" as MC
+  class "ROS2 HardwareInterface\n(DDS)" as ROS2_HW
+  class "WebSocket\n(Real-time telemetry)" as WS
+  class "REST API\n(FastAPI)" as REST
+}
+
+' === Simulation Layer ===
+package "Симуляция" as SIM #E8F5E9 {
+  class "MuJoCo\n(Digital Twin)" as MJC
+  class "Gazebo\n(ROS2)" as GZB
+}
+
+' === Hardware Layer ===
+package "Аппаратный слой" as HW #FFEBEE {
+  class "Dynamixel Servos\n(6 DOF)" as Dynamixel
+  class "USB-Serial\n(UART / RS-485)" as USB
+}
+
+' === Connections ===
+DESKTOP --> ROBOT_SVC
+DESKTOP --> KIN_SVC
+DESKTOP --> PROG_SVC
+DESKTOP --> AI_SVC
+DESKTOP --> RL_SVC
+WEB --> REST
+WEB --> WS
+CLI --> ROS2_HW
+ROBOT_SVC --> EVT
+ROBOT_SVC --> DI
+ROBOT_SVC --> BSVC
+KIN_SVC --> KIN
+KIN_SVC --> IK
+KIN_SVC --> EVT
+PROG_SVC --> EVT
+PROG_SVC --> MODELS
+AI_SVC --> AI_PROV
+AI_SVC --> CAM_SVC
+AI_SVC --> ROBOT_SVC
+VIS_SVC --> AI_PROV
+VIS_SVC --> CAM_SVC
+VIS_SVC --> ROBOT_SVC
+RL_SVC --> KIN
+RL_SVC --> MJC
+ML_SVC --> CAM_SVC
+EVT --> INTF
+DI --> INTF
+BSVC --> EVT
+ROBOT_SVC --> MC
+ROBOT_SVC --> ROS2_HW
+MC --> USB
+ROS2_HW --> USB
+USB --> Dynamixel
+REST --> MC
+WS --> MC
+MJC --> MC
+GZB --> ROS2_HW
+
+@enduml

@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name="Shape 135"/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+      <p:cxnSp>
+        <p:nvCxnSpPr>
+          <p:cNvPr id="136" name="Google Shape;136;p23"/>
+          <p:cNvCxnSpPr/>
+          <p:nvPr/>
+        </p:nvCxnSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="0" y="0"/>
+            <a:ext cx="914400" cy="0"/>
+          </a:xfrm>
+          <a:prstGeom prst="straightConnector1">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="9525" cap="flat" cmpd="sng">
+            <a:solidFill>
+              <a:srgbClr val="FBFFFF"/>
+            </a:solidFill>
+            <a:prstDash val="solid"/>
+            <a:miter lim="8000"/>
+            <a:headEnd type="none" w="sm" len="sm"/>
+            <a:tailEnd type="none" w="sm" len="sm"/>
+          </a:ln>
+        </p:spPr>
+      </p:cxnSp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="137" name="Google Shape;137;p23"/>
+          <p:cNvSpPr txBox="1">
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="ctrTitle"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="1039528" y="2001837"/>
+            <a:ext cx="10087276" cy="1508125"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="91425" tIns="45700" rIns="91425" bIns="45700" anchor="b" anchorCtr="0">
+            <a:normAutofit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" lvl="0" indent="0" algn="ctr" rtl="0">
+              <a:lnSpc>
+                <a:spcPct val="90000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buClr>
+                <a:schemeClr val="dk1"/>
+              </a:buClr>
+              <a:buSzPts val="4800"/>
+              <a:buFont typeface="Arial"/>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="3000" dirty="0"/>
+              <a:t>Разработка программного обеспечения учебного </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="3000" dirty="0" err="1"/>
+              <a:t>шестиосевого</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="3000" dirty="0"/>
+              <a:t> робота-манипулятора с использованием </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="3000" dirty="0" err="1"/>
+              <a:t>Dynamixel</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="3000" dirty="0"/>
+              <a:t> и технического зрения</a:t>
+            </a:r>
+            <a:endParaRPr sz="3000" dirty="0"/>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="138" name="Google Shape;138;p23"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="1958766" y="4163145"/>
+            <a:ext cx="8248800" cy="553998"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="t" anchorCtr="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" rtl="0">
+              <a:lnSpc>
+                <a:spcPct val="149964"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="2400" i="0" u="none" strike="noStrike" cap="none" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>Студент: Ляхов Александр Алексеевич</a:t>
+            </a:r>
+            <a:endParaRPr sz="2400" dirty="0">
+              <a:solidFill>
+                <a:schemeClr val="dk1"/>
+              </a:solidFill>
+              <a:latin typeface="+mj-lt"/>
+              <a:ea typeface="Times New Roman"/>
+              <a:cs typeface="Times New Roman"/>
+              <a:sym typeface="Times New Roman"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="139" name="Google Shape;139;p23"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="1971675" y="5605839"/>
+            <a:ext cx="8248800" cy="415498"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="t" anchorCtr="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" rtl="0">
+              <a:lnSpc>
+                <a:spcPct val="149964"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="1800" i="0" u="none" strike="noStrike" cap="none" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>Московский Политех, 2026</a:t>
+            </a:r>
+            <a:endParaRPr sz="1800" dirty="0">
+              <a:solidFill>
+                <a:schemeClr val="dk1"/>
+              </a:solidFill>
+              <a:latin typeface="+mj-lt"/>
+              <a:ea typeface="Times New Roman"/>
+              <a:cs typeface="Times New Roman"/>
+              <a:sym typeface="Times New Roman"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="2" name="Google Shape;138;p23">
+            <a:extLst>
+              <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+                <a16:creationId xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" id="{13609700-21DE-C65E-6960-941038AC326E}"/>
+              </a:ext>
+            </a:extLst>
+          </p:cNvPr>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="1786270" y="4717143"/>
+            <a:ext cx="8434205" cy="553998"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln>
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr spcFirstLastPara="1" wrap="square" lIns="0" tIns="0" rIns="0" bIns="0" anchor="t" anchorCtr="0">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr marL="0" marR="0" lvl="0" indent="0" algn="ctr" rtl="0">
+              <a:lnSpc>
+                <a:spcPct val="149964"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="0"/>
+              </a:spcBef>
+              <a:spcAft>
+                <a:spcPts val="0"/>
+              </a:spcAft>
+              <a:buNone/>
+            </a:pPr>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="2400" i="0" u="none" strike="noStrike" cap="none" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>Руководитель</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="2400" i="0" u="none" strike="noStrike" cap="none" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>: </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="2400" i="0" u="none" strike="noStrike" cap="none" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>Идиатуллов</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="2400" i="0" u="none" strike="noStrike" cap="none" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t> Тимур </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="2400" i="0" u="none" strike="noStrike" cap="none" dirty="0" err="1">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>Тофикович</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="2400" i="0" u="none" strike="noStrike" cap="none" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t> к</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="2400" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>.</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="2400" i="0" u="none" strike="noStrike" cap="none" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>т</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="2400" i="0" u="none" strike="noStrike" cap="none" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>.</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="2400" i="0" u="none" strike="noStrike" cap="none" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>н</a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="en-US" sz="2400" i="0" u="none" strike="noStrike" cap="none" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>, </a:t>
+            </a:r>
+            <a:r>
+              <a:rPr lang="ru-RU" sz="2400" i="0" u="none" strike="noStrike" cap="none" dirty="0">
+                <a:solidFill>
+                  <a:schemeClr val="dk1"/>
+                </a:solidFill>
+                <a:latin typeface="+mj-lt"/>
+                <a:ea typeface="Times New Roman"/>
+                <a:cs typeface="Times New Roman"/>
+                <a:sym typeface="Times New Roman"/>
+              </a:rPr>
+              <a:t>доцент</a:t>
+            </a:r>
+            <a:endParaRPr sz="2400" dirty="0">
+              <a:solidFill>
+                <a:schemeClr val="dk1"/>
+              </a:solidFill>
+              <a:latin typeface="+mj-lt"/>
+              <a:ea typeface="Times New Roman"/>
+              <a:cs typeface="Times New Roman"/>
+              <a:sym typeface="Times New Roman"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+  <p:clrMapOvr>
+    <a:masterClrMapping/>
+  </p:clrMapOvr>
+</p:sld>

@@ -49,6 +49,9 @@ from app.views.kinematics_3d_panel import Kinematics3DPanel
 from app.views.manual_control_panel import ManualControlPanel
 from app.views.motor_mapping_panel import MotorMappingPanel
 from app.views.vision_tracker_panel import VisionTrackerPanel
+from app.views.dataset_panel import DatasetPanel
+from app.views.inference_panel import InferencePanel
+from app.views.text_programming_panel import TextProgrammingPanel
 
 # ── Palette ──────────────────────────────────────────────────────────────────
 _ACCENT = "#7dd3c0"
@@ -969,11 +972,14 @@ class RobotControlGUI(ctk.CTk):
         self.pr_tab = self.tabview.add("Registers")
         self.teach_tab = self.tabview.add("Teach")
         self.block_tab = self.tabview.add("Program")
+        self.code_tab = self.tabview.add("Code")
         self.mapping_tab = self.tabview.add("Setup")
         self.coord_tab = self.tabview.add("XYZ")
         self.alarm_tab = self.tabview.add("Alarms")
         self.vision_tab = self.tabview.add("AI Vision")
         self.ai_control_tab = self.tabview.add("AI Control")
+        self.dataset_tab = self.tabview.add("Dataset")
+        self.inference_tab = self.tabview.add("Inference")
 
         self._create_dashboard_tab()
 
@@ -996,6 +1002,7 @@ class RobotControlGUI(ctk.CTk):
         self.teach_panel.pack(fill="both", expand=True)
 
         self._create_block_tab()
+        self._create_code_tab()
 
         self.motor_mapping_panel = MotorMappingPanel(self.mapping_tab, self.controller, self._log)
         self.motor_mapping_panel.pack(fill="both", expand=True)
@@ -1020,6 +1027,22 @@ class RobotControlGUI(ctk.CTk):
             log_callback=self._log,
         )
         self.ai_control_panel.pack(fill="both", expand=True)
+
+        self.dataset_panel = DatasetPanel(
+            self.dataset_tab,
+            robot_service=self.controller,
+            kinematics_service=self.kinematics,
+            log_callback=self._log,
+        )
+        self.dataset_panel.pack(fill="both", expand=True)
+
+        self.inference_panel = InferencePanel(
+            self.inference_tab,
+            robot_service=self.controller,
+            kinematics_service=self.kinematics,
+            log_callback=self._log,
+        )
+        self.inference_panel.pack(fill="both", expand=True)
 
         self._refresh_ports()
 
@@ -1373,6 +1396,16 @@ class RobotControlGUI(ctk.CTk):
                 font=ctk.CTkFont("Segoe UI", 10, "bold"),
                 command=cmd,
             ).pack(side="left", padx=3)
+
+    # ── Text Code Tab ─────────────────────────────────────────────────────────
+    def _create_code_tab(self):
+        self.text_prog_panel = TextProgrammingPanel(
+            self.code_tab,
+            robot_service=self.controller,
+            kinematics_service=self.kinematics,
+            log_callback=self._log,
+        )
+        self.text_prog_panel.pack(fill="both", expand=True)
 
     # ── Coordinates Tab ───────────────────────────────────────────────────────
     def _create_coordinates_tab(self):

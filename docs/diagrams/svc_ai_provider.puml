@@ -1,0 +1,22 @@
+@startuml ai_provider_diagram
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam rectangleBorderColor #333333
+skinparam rectangleFontColor #000000
+skinparam rectangleFontSize 10
+skinparam arrowColor #333333
+skinparam arrowThickness 2
+skinparam packageBorderColor #333333
+skinparam packageFontColor #333333
+rectangle "AIProvider" as MAIN #FFFFFF
+rectangle "Ollama" as Ollama_0 #FAFAFA
+MAIN --> Ollama_0 : "POST /api/chat base64 images"
+rectangle "LM Studio / OpenAI" as LM_Studio___OpenAI_1 #FAFAFA
+MAIN --> LM_Studio___OpenAI_1 : "POST /v1/chat/completions"
+rectangle "AI / VisionTracker" as AI___VisionTracker_2 #FAFAFA
+MAIN --> AI___VisionTracker_2 : "chat() process_frame()"
+@enduml

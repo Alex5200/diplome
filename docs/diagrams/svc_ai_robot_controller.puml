@@ -1,0 +1,25 @@
+@startuml ai_robot_controller_diagram
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam rectangleBorderColor #333333
+skinparam rectangleFontColor #000000
+skinparam rectangleFontSize 10
+skinparam arrowColor #333333
+skinparam arrowThickness 2
+skinparam packageBorderColor #333333
+skinparam packageFontColor #333333
+rectangle "AIRobotController Service" as MAIN #FFFFFF
+rectangle "AIProvider" as AIProvider_0 #FAFAFA
+MAIN --> AIProvider_0 : "process_frame chat+img"
+rectangle "CameraService" as CameraService_1 #FAFAFA
+MAIN --> CameraService_1 : "get_frame RGB 640x480"
+rectangle "RobotService" as RobotService_2 #FAFAFA
+MAIN --> RobotService_2 : "move_joint / move_xyz"
+legend right
+  VLM 2-5 Hz loop
+end legend
+@enduml

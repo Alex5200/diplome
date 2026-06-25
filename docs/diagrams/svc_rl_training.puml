@@ -1,0 +1,25 @@
+@startuml rl_training_diagram
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam rectangleBorderColor #333333
+skinparam rectangleFontColor #000000
+skinparam rectangleFontSize 10
+skinparam arrowColor #333333
+skinparam arrowThickness 2
+skinparam packageBorderColor #333333
+skinparam packageFontColor #333333
+rectangle "RLTraining Service" as MAIN #FFFFFF
+rectangle "MuJoCo" as MuJoCo_0 #FAFAFA
+MAIN --> MuJoCo_0 : "step @ 10000fps reset render"
+rectangle "Gymnasium Env" as Gymnasium_Env_1 #FAFAFA
+MAIN --> Gymnasium_Env_1 : "RobotArmEnv 18-dim"
+rectangle "RobotService" as RobotService_2 #FAFAFA
+MAIN --> RobotService_2 : "sync_from / sync_to"
+legend right
+  DQN / PPO MLP [256,256]
+end legend
+@enduml

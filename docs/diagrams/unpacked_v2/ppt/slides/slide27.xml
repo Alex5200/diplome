@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <p:cSld>
+    <p:bg>
+      <p:bgPr>
+        <a:solidFill>
+          <a:srgbClr val="1A1A2E"/>
+        </a:solidFill>
+        <a:effectLst/>
+      </p:bgPr>
+    </p:bg>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name=""/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm>
+          <a:off x="0" y="0"/>
+          <a:ext cx="0" cy="0"/>
+          <a:chOff x="0" y="0"/>
+          <a:chExt cx="0" cy="0"/>
+        </a:xfrm>
+      </p:grpSpPr>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="2" name="TextBox 1"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="457200" y="274320"/>
+            <a:ext cx="8229600" cy="548640"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="l">
+              <a:defRPr sz="2400" b="1">
+                <a:solidFill>
+                  <a:srgbClr val="FFFFFF"/>
+                </a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:r>
+              <a:t>DATASET RECORDER SERVICE — ARCHITECTURE</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="3" name="TextBox 2"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="457200" y="1005840"/>
+            <a:ext cx="4114800" cy="5029200"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="l">
+              <a:defRPr sz="1100" b="0">
+                <a:solidFill>
+                  <a:srgbClr val="AAAAAA"/>
+                </a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:r>
+              <a:t>Сервис записи датасетов — модуль для сбора тренировочных данных с реального робота.</a:t>
+            </a:r>
+            <a:br/>
+            <a:br/>
+            <a:r>
+              <a:t>Источники данных:</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  • RobotService — углы суставов J1-J6, нагрузка (%), температура (°C), raw-позиции</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  • CameraService — RGB-кадры с камеры (640×480), захват через OpenCV</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  • KinematicsService — декартовы координаты инструмента (X, Y, Z мм)</a:t>
+            </a:r>
+            <a:br/>
+            <a:br/>
+            <a:r>
+              <a:t>Форматы сохранения:</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  • VAMOS (custom) — episode_{idx}/metadata.json, states.json, frames/*.png, command.txt</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  • LeRobot (v2.1) — episodes/episode_{idx}.json, videos/observation.images.main/*.mp4, meta/</a:t>
+            </a:r>
+            <a:br/>
+            <a:br/>
+            <a:r>
+              <a:t>Поток записи:</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  1. UI (DatasetPanel) → DatasetRecorderService → потоковый захват кадров</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  2. Каждый кадр: joint_angles[6] + tool_pose[3] + motor_load[6] + motor_temp[6] + camera_frame</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  3. Одновременная запись в оба формата (VAMOS + LeRobot) или выборочно</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  4. UI: Start/Stop/Pause, выбор FPS (5-60), preset задач, текст команды</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="4" name="TextBox 3"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="5029200" y="1188720"/>
+            <a:ext cx="1828800" cy="822960"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="l">
+              <a:defRPr sz="1000" b="0">
+                <a:solidFill>
+                  <a:srgbClr val="FFFFFF"/>
+                </a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:r>
+              <a:t>RobotService</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>J1-J6 angles</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>Motor load/temp</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>Raw positions</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="5" name="TextBox 4"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="5029200" y="2148840"/>
+            <a:ext cx="1828800" cy="822960"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="l">
+              <a:defRPr sz="1000" b="0">
+                <a:solidFill>
+                  <a:srgbClr val="FFFFFF"/>
+                </a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:r>
+              <a:t>CameraService</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>RGB frames</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>640×480</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>OpenCV capture</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="6" name="TextBox 5"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="5029200" y="3108960"/>
+            <a:ext cx="1828800" cy="822960"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="l">
+              <a:defRPr sz="1000" b="0">
+                <a:solidFill>
+                  <a:srgbClr val="FFFFFF"/>
+                </a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:r>
+              <a:t>KinematicsService</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>Tool pose</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>X, Y, Z (mm)</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="7" name="TextBox 6"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="7132320" y="1463040"/>
+            <a:ext cx="2011680" cy="2286000"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="l">
+              <a:defRPr sz="1000" b="0">
+                <a:solidFill>
+                  <a:srgbClr val="7DD3C0"/>
+                </a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:r>
+              <a:t>DatasetRecorderService</a:t>
+            </a:r>
+            <a:br/>
+            <a:br/>
+            <a:r>
+              <a:t>├ VAMOS Writer</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>├ LeRobot Writer</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>├ Frame Buffer</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>├ State Buffer</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>└ Record Loop</a:t>
+            </a:r>
+            <a:br/>
+            <a:br/>
+            <a:r>
+              <a:t>(VAMOS + LeRobot)</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="8" name="TextBox 7"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="5029200" y="4114800"/>
+            <a:ext cx="1828800" cy="1097280"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="l">
+              <a:defRPr sz="900" b="0">
+                <a:solidFill>
+                  <a:srgbClr val="E94560"/>
+                </a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:r>
+              <a:t>VAMOS Format</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>episode_{idx}/</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  metadata.json</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  states.json</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  frames/</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="9" name="TextBox 8"/>
+          <p:cNvSpPr txBox="1"/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="7132320" y="4114800"/>
+            <a:ext cx="2011680" cy="1097280"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr wrap="square">
+            <a:spAutoFit/>
+          </a:bodyPr>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr algn="l">
+              <a:defRPr sz="900" b="0">
+                <a:solidFill>
+                  <a:srgbClr val="E94560"/>
+                </a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:r>
+              <a:t>LeRobot Format</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>episodes/</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  episode_{idx}.json</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>videos/ observation.images.main/</a:t>
+            </a:r>
+            <a:br/>
+            <a:r>
+              <a:t>  episode_{idx}.mp4</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+  <p:clrMapOvr>
+    <a:masterClrMapping/>
+  </p:clrMapOvr>
+</p:sld>

@@ -1,0 +1,23 @@
+@startuml ml_tracking_diagram
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam rectangleBorderColor #333333
+skinparam rectangleFontColor #000000
+skinparam rectangleFontSize 10
+skinparam arrowColor #333333
+skinparam arrowThickness 2
+skinparam packageBorderColor #333333
+skinparam packageFontColor #333333
+rectangle "MLTracking Service" as MAIN #FFFFFF
+rectangle "YOLOv8 / PyTorch" as YOLOv8___PyTorch_0 #FAFAFA
+MAIN --> YOLOv8___PyTorch_0 : "detect 30-60 FPS GPU"
+rectangle "CameraService" as CameraService_1 #FAFAFA
+MAIN --> CameraService_1 : "get_frame() -> RGB"
+legend right
+  Local GPU (offline)
+end legend
+@enduml

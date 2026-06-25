@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
+  <TotalTime>86</TotalTime>
+  <Words>1313</Words>
+  <Application>Microsoft Macintosh PowerPoint</Application>
+  <PresentationFormat>Широкоэкранный</PresentationFormat>
+  <Paragraphs>177</Paragraphs>
+  <Slides>18</Slides>
+  <Notes>16</Notes>
+  <HiddenSlides>0</HiddenSlides>
+  <MMClips>3</MMClips>
+  <ScaleCrop>false</ScaleCrop>
+  <HeadingPairs>
+    <vt:vector size="6" baseType="variant">
+      <vt:variant>
+        <vt:lpstr>Использованные шрифты</vt:lpstr>
+      </vt:variant>
+      <vt:variant>
+        <vt:i4>5</vt:i4>
+      </vt:variant>
+      <vt:variant>
+        <vt:lpstr>Тема</vt:lpstr>
+      </vt:variant>
+      <vt:variant>
+        <vt:i4>2</vt:i4>
+      </vt:variant>
+      <vt:variant>
+        <vt:lpstr>Заголовки слайдов</vt:lpstr>
+      </vt:variant>
+      <vt:variant>
+        <vt:i4>18</vt:i4>
+      </vt:variant>
+    </vt:vector>
+  </HeadingPairs>
+  <TitlesOfParts>
+    <vt:vector size="25" baseType="lpstr">
+      <vt:lpstr>Arial</vt:lpstr>
+      <vt:lpstr>Calibri</vt:lpstr>
+      <vt:lpstr>DM Sans</vt:lpstr>
+      <vt:lpstr>Times New Roman</vt:lpstr>
+      <vt:lpstr>Verdana</vt:lpstr>
+      <vt:lpstr>Тема2</vt:lpstr>
+      <vt:lpstr>Тема2</vt:lpstr>
+      <vt:lpstr>Разработка программного обеспечения учебного шестиосевого робота-манипулятора с использованием Dynamixel и технического зрения</vt:lpstr>
+      <vt:lpstr>Презентация PowerPoint</vt:lpstr>
+      <vt:lpstr>Проблематика и актуальность в образовательном процессе</vt:lpstr>
+      <vt:lpstr>Анализ аналогов</vt:lpstr>
+      <vt:lpstr>Управление приводами Dynamixel</vt:lpstr>
+      <vt:lpstr>Интерфейс оператора</vt:lpstr>
+      <vt:lpstr>Вычислительное ядро: Кинематика</vt:lpstr>
+      <vt:lpstr>Система технического зрения</vt:lpstr>
+      <vt:lpstr>Web-интерфейс и REST API</vt:lpstr>
+      <vt:lpstr>Web-интерфейс</vt:lpstr>
+      <vt:lpstr>Интеграция с экосистемой ROS2</vt:lpstr>
+      <vt:lpstr>Спасибо за внимание </vt:lpstr>
+      <vt:lpstr>Визуализация в mujoco</vt:lpstr>
+      <vt:lpstr>Презентация PowerPoint</vt:lpstr>
+      <vt:lpstr>Презентация PowerPoint</vt:lpstr>
+      <vt:lpstr>Презентация PowerPoint</vt:lpstr>
+      <vt:lpstr>Сценарии использования ПО</vt:lpstr>
+      <vt:lpstr>Архитектура программного кода </vt:lpstr>
+    </vt:vector>
+  </TitlesOfParts>
+  <LinksUpToDate>false</LinksUpToDate>
+  <SharedDoc>false</SharedDoc>
+  <HyperlinksChanged>false</HyperlinksChanged>
+  <AppVersion>16.0000</AppVersion>
+</Properties>

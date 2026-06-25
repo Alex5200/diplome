@@ -1,0 +1,71 @@
+@startuml deployment_communication
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 10
+skinparam packageBorderColor #1B4F72
+skinparam packageFontColor #1B4F72
+skinparam rectangleBorderColor #1B4F72
+skinparam arrowColor #1B4F72
+skinparam arrowThickness 2
+skinparam noteFontSize 9
+
+title "Диаграмма развертывания и коммуникации"
+
+' === Nodes ===
+node "Host PC (Windows / Linux)" as HOST #F0F4F8 {
+  class "Desktop App\n(CustomTkinter)" as DESKTOP
+  class "Web Backend\n(FastAPI :8000)" as API
+  class "Web Frontend\n(React :3000)" as WEB
+  class "Ollama Server\n(Qwen3 VL :11434)" as OLLAMA
+  class "MuJoCo Sim\n(Digital Twin)" as MJC
+  class "Camera\n(USB / OpenCV)" as CAM
+}
+
+node "Docker Container" as DOCKER #E8F8F5 {
+  class "ROS2 Humble\n(robot_node_v2)" as ROS2
+  class "Gazebo\n(simulation)" as GZB
+}
+
+node "Robot Controller (RPi / Embedded)" as RPI #FFF3E0 {
+  class "UART Bridge\n(serial proxy)" as UART_BRIDGE
+}
+
+node "Physical Robot" as ROBOT #FFEBEE {
+  class "Dynamixel Servos\n(6x ID 1-6)" as Dynamixel
+  class "RS-485 Bus\n(daisy chain)" as RS485
+}
+
+' === Communication Protocols ===
+package "Протоколы" as PROTO #E8F8F5 {
+  class "UART / RS-485\n(@ 1 Mbps)" as UART
+  class "WebSocket\n(real-time)" as WS
+  class "HTTP REST\n(JSON API)" as HTTP
+  class "DDS (ROS2)\n(pub-sub)" as DDS
+}
+
+' === Connections ===
+DESKTOP --> UART : MotorController
+UART --> RS485 : serial frames
+RS485 --> Dynamixel : position/torque commands
+Dynamixel --> RS485 : telemetry data
+API --> UART : via serial proxy
+API --> WS : to browser clients
+WEB --> WS : connect
+WEB --> HTTP : REST calls
+DESKTOP --> HTTP : to API (optional)
+ROS2 --> DDS : topics
+ROS2 --> UART : RobotHWInterface
+OLLAMA --> HTTP : AI requests
+DESKTOP --> OLLAMA : VLM queries (HTTP)
+MJC --> UART : Sim-to-Real mirror
+DESKTOP --> MJC : simulation control
+CAM --> DESKTOP : video frames
+CAM --> API : via CameraService
+UART_BRIDGE --> UART : serial forwarding
+UART_BRIDGE --> RS485 : physical connection
+GZB --> DDS : simulation topics
+
+@enduml
