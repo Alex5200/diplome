@@ -1,0 +1,113 @@
+@startuml architecture_bw
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam packageBorderColor #000000
+skinparam packageFontColor #000000
+skinparam packageFontSize 13
+skinparam rectangleBorderColor #000000
+skinparam rectangleFontColor #000000
+skinparam arrowColor #000000
+skinparam arrowThickness 2
+skinparam noteFontSize 9
+skinparam noteBorderColor #000000
+skinparam noteFontColor #000000
+skinparam defaultTextAlignment center
+skinparam linetype ortho
+
+title "Система управления 6-осевым роботом-манипулятором\nАрхитектура программного обеспечения"
+
+' === User Interfaces ===
+package "Пользовательские интерфейсы" as UI {
+  rectangle "Desktop GUI\nCustomTkinter" as DESKTOP
+  rectangle "Web UI\nReact 19 + Three.js" as WEB
+  rectangle "ROS2\nHumble Nodes" as ROS2
+}
+
+' === Application Services ===
+package "Сервисы приложения" as SVC {
+  rectangle "RobotService" as ROBOT
+  rectangle "KinematicsService" as KIN
+  rectangle "ProgramService" as PROG
+  rectangle "CameraService" as CAM
+  rectangle "AIProvider\n(Strategy)" as AI
+  rectangle "AIRobotController" as AI_ROB
+  rectangle "VisionTracker" as VIS
+  rectangle "RLTraining\nDQN / PPO" as RL
+  rectangle "InferenceService\nACT / Diffusion" as INF
+}
+
+' === Core ===
+package "Ядро" as CORE {
+  rectangle "EventBus\n(Pub-Sub)" as EVT
+  rectangle "Container\n(DI)" as DI
+  rectangle "BaseService" as BSVC
+  rectangle "Kinematics\nDH + DLS" as FKIK
+  rectangle "RobotState\nMotorData" as DATA
+}
+
+' === HW Layer ===
+package "Аппаратный уровень" as HW {
+  rectangle "MotorController\nUART / RS-485" as MC
+  rectangle "MotorMonitor\n10 Гц polling" as MM
+  rectangle "ST3215\n6 DOF" as ST
+  rectangle "USB-Serial" as USB
+}
+
+' === Connections ===
+DESKTOP --> ROBOT
+DESKTOP --> KIN
+DESKTOP --> PROG
+DESKTOP --> AI_ROB
+DESKTOP --> VIS
+DESKTOP --> RL
+
+WEB --> ROBOT : REST + WS
+ROS2 --> MC : DDS bridge
+
+ROBOT --> MC
+ROBOT --> MM
+ROBOT --> EVT
+ROBOT --> BSVC
+
+KIN --> FKIK
+KIN --> EVT
+KIN --> BSVC
+
+PROG --> ROBOT
+PROG --> BSVC
+
+CAM --> EVT
+AI_ROB --> AI
+AI_ROB --> CAM
+AI_ROB --> ROBOT
+AI_ROB --> BSVC
+
+VIS --> AI
+VIS --> CAM
+VIS --> ROBOT
+
+RL --> FKIK
+RL --> BSVC
+
+INF --> BSVC
+
+MC --> USB
+USB --> ST
+MM --> MC
+
+EVT --> DI
+BSVC --> EVT
+DI --> BSVC
+DI --> DATA
+
+note right of MC
+  Критический путь:
+  камера → AI → UART
+  3-15 мс latency
+end note
+
+@enduml
